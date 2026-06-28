@@ -1,0 +1,89 @@
+{
+  "type": "profile",
+
+  "identity": {
+    "name": "Ryan Laird",
+    "headline": "Director of Green Orbit Digital | Sustainable Marketing for the Space Sector",
+    "location": "Leicester, United Kingdom"
+  },
+
+  "contact": {
+    "email": "ryan@example.com"
+  },
+
+  "links": {
+    "website": "https://greenorbit.space",
+    "dev": "https://rjmlaird.dev",
+    "digital": "https://rjmlaird.digital",
+    "space": "https://rjmlaird.space",
+    "linkedin": "rjmlaird",
+    "github": "rjmlaird"
+  },
+
+  "roles": [
+    {
+      "title": "Director",
+      "organisation": "Green Orbit Digital"
+    },
+    {
+      "title": "Chartered Marketer",
+      "abbreviation": "CMktr"
+    },
+    {
+      "title": "Member",
+      "organisation": "Chartered Institute of Public Relations",
+      "abbreviation": "MCIPR"
+    },
+    {
+      "title": "Member",
+      "organisation": "Institute of Physics",
+      "abbreviation": "MInstP"
+    }
+  ],
+
+  "keywords": [
+    "Sustainable Marketing",
+    "Space Industry Communications",
+    "Digital Strategy",
+    "SEO",
+    "Science Communication",
+    "Earth Observation",
+    "Public Relations",
+    "Data-Driven Marketing",
+    "Leadership",
+    "Climate Communication"
+  ],
+
+  "languages": [
+    {
+      "language": "English",
+      "level": "Native"
+    },
+    {
+      "language": "French",
+      "level": "Intermediate"
+    },
+    {
+      "language": "Spanish",
+      "level": "Intermediate"
+    },
+    {
+      "language": "German",
+      "level": "Basic"
+    }
+  ],
+
+  "summary": {
+    "ats": "Communications and marketing professional with over a decade of experience in the space sector, specialising in sustainable marketing, science communication, and data-driven digital strategy. Chartered Marketer (CMktr) with expertise spanning SEO, content strategy, and space industry communications across ESA-related programmes, research initiatives, and commercial space organisations.",
+
+    "human": "I work at the intersection of space, sustainability, and communication—helping organisations translate complex technical ideas into clear, impactful narratives. With a background in physics and astrophysics and over a decade in the space sector, I focus on building strategies that connect science, industry, and public engagement through thoughtful, data-informed marketing."
+  },
+
+  "focus_areas": [
+    "Space industry communications and outreach",
+    "Sustainable and ESG-aligned marketing strategy",
+    "Science and technical storytelling",
+    "Digital growth strategy for B2B space organisations",
+    "Earth observation and climate services communication"
+  ]
+}

@@ -15,10 +15,11 @@ const jobPositions = defineCollection({
   }),
 });
 
-const sideProjects = defineCollection({
+const institutePositions = defineCollection({
   schema: z.object({
     title: z.string(),
-    githubRepo: z.string().optional(),
+    organization: z.string(),
+    orgURL: z.string().url(),
     from: date,
     to: date.optional(),
   }),
@@ -36,6 +37,6 @@ const volunteerActivities = defineCollection({
 
 export const collections = {
   ["job-positions"]: jobPositions,
-  ["side-projects"]: sideProjects,
+  ["education"]: institutePositions,
   ["volunteer-activities"]: volunteerActivities,
 };

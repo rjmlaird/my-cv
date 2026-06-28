@@ -1,0 +1,351 @@
+{
+  "memberships": [
+    {
+      "group": "Professional & Chartered Bodies",
+      "items": [
+        {
+          "organisation": "Chartered Institute of Marketing (CIM)",
+          "role": "Chartered Marketer",
+          "abbreviation": "CMktr",
+          "type": "chartered_body",
+          "keywords": [
+            "Digital Marketing",
+            "Marketing Strategy",
+            "Professional Accreditation",
+            "Chartered Marketer"
+          ]
+        },
+        {
+          "organisation": "Chartered Institute of Public Relations (CIPR)",
+          "role": "Member",
+          "type": "chartered_body",
+          "keywords": [
+            "Public Relations",
+            "Strategic Communications",
+            "Corporate Communications"
+          ]
+        },
+        {
+          "organisation": "Association for Project Management (APM)",
+          "role": "Associate",
+          "type": "professional_body",
+          "keywords": [
+            "Project Management",
+            "Agile Delivery",
+            "Stakeholder Management"
+          ]
+        },
+        {
+          "organisation": "Institute of Physics (IOP)",
+          "role": "Member",
+          "abbreviation": "MInstP",
+          "type": "scientific_body",
+          "keywords": [
+            "Physics",
+            "Astrophysics",
+            "Scientific Research"
+          ]
+        },
+        {
+          "organisation": "Royal Astronomical Society (RAS)",
+          "role": "Fellow",
+          "abbreviation": "FRAS",
+          "type": "scientific_body",
+          "keywords": [
+            "Astronomy",
+            "Space Science",
+            "Research Community"
+          ]
+        },
+        {
+          "organisation": "ISC2 (International Information System Security Certification Consortium)",
+          "role": "Certified Member",
+          "type": "security_body",
+          "keywords": [
+            "Cybersecurity",
+            "Information Security",
+            "Risk Management"
+          ]
+        }
+      ]
+    },
+
+    {
+      "group": "Space & Science Networks",
+      "items": [
+        {
+          "organisation": "UKspace",
+          "role": "Member",
+          "type": "industry_association",
+          "keywords": [
+            "UK Space Industry",
+            "Space Policy",
+            "Space Economy"
+          ]
+        },
+        {
+          "organisation": "European Association of Remote Sensing Companies (EARSC)",
+          "role": "Member",
+          "type": "industry_association",
+          "keywords": [
+            "Earth Observation",
+            "Remote Sensing",
+            "Satellite Data"
+          ]
+        },
+        {
+          "organisation": "Space4Climate",
+          "role": "Member",
+          "type": "climate_network",
+          "keywords": [
+            "Climate Services",
+            "Earth Observation",
+            "Climate Data"
+          ]
+        },
+        {
+          "organisation": "IAU Centre for the Protection of Dark and Quiet Skies (CPS)",
+          "role": "Member",
+          "type": "astronomy_network",
+          "keywords": [
+            "Astronomy Protection",
+            "Dark Skies",
+            "Space Sustainability"
+          ]
+        },
+        {
+          "organisation": "Global Space Enablers Network",
+          "role": "Member",
+          "type": "network",
+          "keywords": [
+            "Space Innovation",
+            "International Collaboration",
+            "Space Industry"
+          ]
+        },
+        {
+          "organisation": "Association of British Science Writers (ABSW)",
+          "role": "Member",
+          "type": "media_network",
+          "keywords": [
+            "Science Communication",
+            "Science Journalism",
+            "Public Engagement"
+          ]
+        },
+        {
+          "organisation": "Designers in Space Community",
+          "role": "Member",
+          "type": "community",
+          "keywords": [
+            "Space Design",
+            "UX for Space",
+            "Space Innovation"
+          ]
+        }
+      ]
+    },
+
+    {
+      "group": "Climate, Sustainability & Environmental Networks",
+      "items": [
+        {
+          "organisation": "Leaders for Climate Action",
+          "role": "Member",
+          "type": "climate_network",
+          "keywords": [
+            "Climate Action",
+            "Sustainability",
+            "Net Zero Transition"
+          ]
+        },
+        {
+          "organisation": "Circular Economy Club",
+          "role": "Member",
+          "type": "sustainability_network",
+          "keywords": [
+            "Circular Economy",
+            "Sustainable Systems",
+            "Resource Efficiency"
+          ]
+        },
+        {
+          "organisation": "Future Earth",
+          "role": "Member",
+          "type": "research_network",
+          "keywords": [
+            "Earth Systems Science",
+            "Climate Research",
+            "Sustainability Science"
+          ]
+        },
+        {
+          "organisation": "Rainforest Foundation UK",
+          "role": "Supporter",
+          "type": "environmental_ngo",
+          "keywords": [
+            "Deforestation",
+            "Rainforest Protection",
+            "Biodiversity"
+          ]
+        },
+        {
+          "organisation": "ACT Climate Labs",
+          "role": "Member",
+          "type": "climate_lab",
+          "keywords": [
+            "Climate Innovation",
+            "Carbon Reduction",
+            "Climate Tech"
+          ]
+        },
+        {
+          "organisation": "Climate Voice",
+          "role": "Member",
+          "type": "advocacy_network",
+          "keywords": [
+            "Climate Advocacy",
+            "Sustainability Communication",
+            "Public Engagement"
+          ]
+        },
+        {
+          "organisation": "Creatives for Climate",
+          "role": "Member",
+          "type": "creative_network",
+          "keywords": [
+            "Sustainable Creativity",
+            "Climate Communication",
+            "Creative Industries"
+          ]
+        },
+        {
+          "organisation": "SmartCitiesWorld",
+          "role": "Member",
+          "type": "urban_network",
+          "keywords": [
+            "Smart Cities",
+            "Urban Innovation",
+            "Sustainable Infrastructure"
+          ]
+        },
+        {
+          "organisation": "Zero Emissions Network",
+          "role": "Member",
+          "type": "sustainability_network",
+          "keywords": [
+            "Net Zero",
+            "Carbon Reduction",
+            "Emissions Strategy"
+          ]
+        },
+        {
+          "organisation": "SME Climate Hub",
+          "role": "Member",
+          "type": "business_network",
+          "keywords": [
+            "SME Sustainability",
+            "Climate Commitments",
+            "Net Zero Business"
+          ]
+        },
+        {
+          "organisation": "Taskforce on Nature-related Financial Disclosures (TNFD)",
+          "role": "Member",
+          "type": "framework_network",
+          "keywords": [
+            "Nature Risk",
+            "ESG Reporting",
+            "Sustainability Disclosure"
+          ]
+        },
+        {
+          "organisation": "Supply Chain Sustainability School",
+          "role": "Member",
+          "type": "education_network",
+          "keywords": [
+            "Supply Chain ESG",
+            "Sustainable Procurement",
+            "Green Supply Chains"
+          ]
+        },
+        {
+          "organisation": "Green Economy Network",
+          "role": "Member",
+          "type": "economic_network",
+          "keywords": [
+            "Green Economy",
+            "Sustainable Business",
+            "Low Carbon Transition"
+          ]
+        }
+      ]
+    },
+
+    {
+      "group": "Business, Nonprofit & Community Networks",
+      "items": [
+        {
+          "organisation": "Federation of Small Businesses (FSB)",
+          "role": "Member",
+          "type": "business_network",
+          "keywords": [
+            "SME Support",
+            "Entrepreneurship",
+            "Business Growth"
+          ]
+        },
+        {
+          "organisation": "Enterprise Nation",
+          "role": "Member",
+          "type": "startup_network",
+          "keywords": [
+            "Startups",
+            "Entrepreneurship",
+            "Business Development"
+          ]
+        },
+        {
+          "organisation": "CharityComms",
+          "role": "Member",
+          "type": "nonprofit_network",
+          "keywords": [
+            "Charity Communications",
+            "Nonprofit Marketing",
+            "Public Engagement"
+          ]
+        },
+        {
+          "organisation": "Locality",
+          "role": "Member",
+          "type": "community_network",
+          "keywords": [
+            "Community Development",
+            "Local Impact",
+            "Social Enterprise"
+          ]
+        },
+        {
+          "organisation": "Good Business Charter",
+          "role": "Member",
+          "type": "ethics_network",
+          "keywords": [
+            "Ethical Business",
+            "Responsible Business",
+            "Corporate Responsibility"
+          ]
+        },
+        {
+          "organisation": "Net Zero Carbon Events Initiative",
+          "role": "Member",
+          "type": "industry_initiative",
+          "keywords": [
+            "Net Zero Events",
+            "Sustainable Events",
+            "Carbon Reduction"
+          ]
+        }
+      ]
+    }
+  ]
+}

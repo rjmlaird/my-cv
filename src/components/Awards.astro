@@ -1,0 +1,82 @@
+---
+import awardsData from "../data/awards.json";
+
+const { mode = "human" } = Astro.props;
+
+// Normalise data safely
+const awards = Array.isArray(awardsData?.awards)
+  ? awardsData.awards
+  : [];
+
+const isATS = mode === "ats";
+
+// Flatten for ATS (still useful even without UI pills)
+const atsStream = awards
+  .flatMap((a) => a?.keywords ?? [])
+  .filter((k) => typeof k === "string" && k.trim().length > 0)
+  .map((k) => k.trim())
+  .sort((a, b) => a.localeCompare(b));
+---
+
+<section class="awards">
+
+  {isATS ? (
+    <div class="ats-mode text-xs text-gray-700 leading-relaxed">
+      {atsStream.length > 0 ? (
+        <p>
+          {atsStream.join(" · ")}
+        </p>
+      ) : (
+        <p class="text-gray-400">No awards data available</p>
+      )}
+    </div>
+  ) : (
+    <div class="human-mode space-y-5">
+      {awards.length > 0 ? (
+        awards.map((award) => (
+          <article class="award-entry break-inside-avoid">
+            <header class="mb-1">
+              <h3 class="font-semibold text-base leading-snug">
+                {award.title ?? "Untitled Award"}
+              </h3>
+
+              <p class="text-sm text-gray-600">
+                {award.issuer ?? "Unknown issuer"}
+                {award.year ? ` · ${award.year}` : ""}
+              </p>
+            </header>
+
+            {/* Contextual description (no tags, narrative only) */}
+            <div class="text-sm text-gray-700 leading-relaxed">
+              {award.description && (
+                <p>{award.description}</p>
+              )}
+
+              {/* Optional structured context fields */}
+              {award.event && (
+                <p>
+                  Event: {award.event}
+                  {award.location ? ` · ${award.location}` : ""}
+                </p>
+              )}
+
+              {award.project && (
+                <p>Project: {award.project}</p>
+              )}
+
+              {award.programme && (
+                <p>Programme: {award.programme}</p>
+              )}
+
+              {award.value && (
+                <p>Award value: {award.value}</p>
+              )}
+            </div>
+          </article>
+        ))
+      ) : (
+        <p class="text-sm text-gray-500">No awards available</p>
+      )}
+    </div>
+  )}
+</section>

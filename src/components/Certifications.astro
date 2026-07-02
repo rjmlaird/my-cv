@@ -1,75 +1,30 @@
 ---
-import certificationsData from "../data/certifications.json";
-
-const { mode = "human" } = Astro.props;
-
-// Normalise input
-const certifications = Array.isArray(certificationsData?.certifications)
-  ? certificationsData.certifications
-  : [];
-
-const isATS = mode === "ats";
-
-// ATS flattened stream (clean keyword-style output)
-const atsStream = certifications
-  .flatMap((c) => c?.items ?? [])
-  .filter((v) => typeof v === "string" && v.trim().length > 0)
-  .map((v) => v.trim())
-  .sort((a, b) => a.localeCompare(b));
+import { certifications } from '@/data/certifications';
 ---
 
-<section class="certifications">
-
-  {isATS ? (
-    <div class="ats-mode text-xs text-gray-700 leading-relaxed">
-      {atsStream.length > 0 ? (
-        <p>{atsStream.join(" · ")}</p>
-      ) : (
-        <p class="text-gray-400">No certification data available</p>
-      )}
-    </div>
-  ) : (
-    <div class="human-mode space-y-6">
-      {certifications.length > 0 ? (
-        certifications.map((certGroup) => (
-          <article class="cert-group break-inside-avoid">
-            <header class="mb-2">
-              <h3 class="font-semibold text-base">
-                {certGroup.organisation ?? "Organisation"}
-              </h3>
-
-              {certGroup.url && (
-                <p class="text-xs text-gray-500">
-                  {certGroup.url}
-                </p>
-              )}
-            </header>
-
-            {Array.isArray(certGroup.items) && certGroup.items.length > 0 ? (
-              <ul class="space-y-1 text-sm text-gray-700">
-                {certGroup.items.map((item) => (
-                  <li class="cert-item">
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p class="text-sm text-gray-400">
-                No certifications listed
-              </p>
-            )}
-          </article>
-        ))
-      ) : (
-        <p class="text-sm text-gray-500">No certifications available</p>
-      )}
-    </div>
-  )}
+<section id="certifications" aria-labelledby="cert-heading">
+  <p class="eyebrow">Credentials</p>
+  <h2 id="cert-heading">Certifications</h2>
+  <div class="cert-grid">
+    {certifications.map((group) => (
+      <div class="cert-group">
+        <h3>{group.title}</h3>
+        <ul>
+          {group.items.map((item) => (
+            <li>{item.href ? <a href={item.href} target="_blank" rel="noopener">{item.label}</a> : item.label}</li>
+          ))}
+        </ul>
+        {group.subgroups?.map((sub) => (
+          <>
+            <p class="cert-subhead">{sub.subhead}</p>
+            <ul>
+              {sub.items.map((item) => (
+                <li>{item.href ? <a href={item.href} target="_blank" rel="noopener">{item.label}</a> : item.label}</li>
+              ))}
+            </ul>
+          </>
+        ))}
+      </div>
+    ))}
+  </div>
 </section>
-
-<style>
-
-  .cert-item {
-    @apply leading-snug;
-  }
-</style>

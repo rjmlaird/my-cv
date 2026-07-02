@@ -1,23 +1,18 @@
 ---
-import { getCollection } from "astro:content";
-import Institution from "./Institution.astro";
-
-const institutePositions = (await getCollection("education")).sort(
-  (a, b) => b.data.from.getTime() - a.data.from.getTime(),
-);
+import { education } from '@/data/education';
 ---
 
-<ul class="list-none pl-0 mb-0">
-  {
-    institutePositions.map(async (institutePosition) => {
-      const { Content } = await institutePosition.render();
-      return (
-        <li class="pl-0 mb-6 last:mb-0">
-          <Institution {...institutePosition.data}>
-            <Content />
-          </Institution>
-        </li>
-      );
-    })
-  }
-</ul>
+<section id="education" aria-labelledby="education-heading">
+  <p class="eyebrow">Academic background</p>
+  <h2 id="education-heading">Education</h2>
+  {education.map((item) => (
+    <div class="edu-item">
+      <div class="role-header">
+        <div><span class="role-title">{item.title}</span></div>
+        <time class="role-dates">{item.dates}</time>
+      </div>
+      <p class="role-org">{item.org}</p>
+      <p>{item.description}</p>
+    </div>
+  ))}
+</section>

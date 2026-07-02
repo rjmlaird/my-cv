@@ -1,0 +1,37 @@
+---
+import { profile } from '@/data/profile';
+---
+
+<section class="hero" aria-labelledby="hero-heading">
+  <svg class="orbit-decor" viewBox="0 0 150 150" aria-hidden="true" focusable="false">
+    <circle cx="75" cy="75" r="70" fill="none" stroke="#2dd4bf" stroke-opacity="0.25" stroke-width="1"/>
+    <circle cx="75" cy="75" r="48" fill="none" stroke="#f2b544" stroke-opacity="0.2" stroke-width="1" stroke-dasharray="3 5"/>
+    <circle cx="75" cy="5" r="3.5" fill="#2dd4bf"/>
+    <circle cx="123" cy="75" r="2.5" fill="#f2b544"/>
+  </svg>
+
+  <p class="eyebrow">Curriculum Vitae</p>
+  <h1 id="hero-heading">{profile.name}</h1>
+  <p class="role" set:html={profile.role.replace('Green Orbit Digital', '<strong>Green Orbit Digital</strong>')} />
+  <p class="credentials">{profile.credentials}</p>
+
+  <div class="hero-summary">
+    {profile.summary.map((paragraph) => <p>{paragraph}</p>)}
+    <p>
+      Portfolio:
+      {profile.portfolioLinks.map((link, i) => (
+        <>
+          {' '}<a href={link.href} target="_blank" rel="noopener">{link.label}</a>{i < profile.portfolioLinks.length - 1 ? ',' : ''}
+        </>
+      ))}
+    </p>
+  </div>
+
+  <div class="tag-row" aria-label="Core competencies">
+    {profile.tags.map((tag) => <span class="tag">{tag}</span>)}
+  </div>
+
+  <div class="contact-row">
+    {profile.contact.map((c) => <a href={c.href} target={c.href.startsWith('mailto') ? undefined : '_blank'} rel={c.href.startsWith('mailto') ? undefined : 'noopener'}>{c.label}</a>)}
+  </div>
+</section>

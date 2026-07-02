@@ -1,27 +1,58 @@
 ---
-import "../styles/global.css";
+import '@/styles/global.css';
 
 export interface Props {
-  title: string;
+  title?: string;
+  description?: string;
 }
 
-const { title } = Astro.props;
+const {
+  title = 'Ryan Laird — CV | Director, Green Orbit Digital',
+  description = 'Ryan Laird — Chartered Marketer (CMktr), Director of Green Orbit Digital, sustainable marketing specialist for the space sector. Full CV: experience, education, skills, certifications.',
+} = Astro.props;
 ---
 
 <!DOCTYPE html>
-<html lang="en" class="print:text-[12px]">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="generator" content={Astro.generator} />
-    <link rel="preconnect" href="https://rsms.me/" />
-    <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <title>{title}</title>
-  </head>
-  <body class="bg-zinc-100 print:bg-white">
-    <slot />
-  </body>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+  <title>{title}</title>
+  <meta name="description" content={description} />
+  <meta name="author" content="Ryan Laird" />
+  <meta name="keywords" content="Ryan Laird, CV, Curriculum Vitae, Green Orbit Digital, sustainable marketing, space sector, Chartered Marketer, Leicester, UKspace" />
+  <meta property="og:title" content="Ryan Laird — CV | Green Orbit Digital" />
+  <meta property="og:description" content="Director and Founder of Green Orbit Digital, specialising in sustainable marketing for the space sector." />
+  <meta property="og:type" content="profile" />
+  <meta name="theme-color" content="#0a0f1a" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="canonical" href="https://cv.rjmlaird.co.uk/" />
+
+  <script type="application/ld+json" set:html={JSON.stringify({
+    '@context': 'https://schema.org',
+    '@type': 'Person',
+    name: 'Ryan Laird',
+    jobTitle: 'Director, Green Orbit Digital',
+    url: 'https://cv.rjmlaird.co.uk/',
+    sameAs: [
+      'https://linkedin.com/in/rjmlaird87',
+      'https://github.com/rjmlaird',
+      'https://x.com/rjmlaird',
+      'https://orcid.org/0000-0002-5992-684X',
+    ],
+    alumniOf: ['University of Leicester', 'University of Kent', 'International Space University'],
+    email: 'mailto:rjmlaird@gmail.com',
+  })} />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet"
+  />
+</head>
+<body>
+  <a class="skip-link" href="#about">Skip to content</a>
+  <slot />
+</body>
 </html>

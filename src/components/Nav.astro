@@ -1,0 +1,30 @@
+---
+import { profile, navLinks } from '@/data/profile';
+---
+
+<header class="site-nav">
+  <div class="nav-inner">
+    <div class="nav-name">Ryan <span>Laird</span></div>
+    <nav class="nav-links" aria-label="Section navigation">
+      {navLinks.map((link) => <a href={link.href}>{link.label}</a>)}
+    </nav>
+    <div class="nav-actions">
+      <button class="btn" id="ats-toggle" type="button" aria-pressed="false">ATS view</button>
+      <button class="btn primary" id="print-btn" type="button">Download / Print</button>
+    </div>
+  </div>
+</header>
+
+<script>
+  const toggleBtn = document.getElementById('ats-toggle') as HTMLButtonElement | null;
+  const printBtn = document.getElementById('print-btn') as HTMLButtonElement | null;
+
+  toggleBtn?.addEventListener('click', () => {
+    const isAts = document.body.classList.toggle('ats-mode');
+    toggleBtn.setAttribute('aria-pressed', String(isAts));
+    toggleBtn.textContent = isAts ? 'Visual view' : 'ATS view';
+    if (isAts) window.scrollTo(0, 0);
+  });
+
+  printBtn?.addEventListener('click', () => window.print());
+</script>

@@ -1,0 +1,12 @@
+---
+import { causes } from '@/data/awards';
+---
+
+<section id="causes" aria-labelledby="causes-heading">
+  <p class="eyebrow">Values</p>
+  <h2 id="causes-heading">Causes</h2>
+  <p>{causes.description}</p>
+  <div class="cause-row">
+    {causes.tags.map((tag) => <span class="tag">{tag}</span>)}
+  </div>
+</section>

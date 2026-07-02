@@ -1,0 +1,73 @@
+---
+// Plain-text, high-contrast, single-column view for ATS parsers and printing.
+// Built from the same data sources as the visual site — single source of truth.
+import { profile } from '@/data/profile';
+import { experience } from '@/data/experience';
+import { education } from '@/data/education';
+import { skills } from '@/data/skills';
+import { certifications } from '@/data/certifications';
+import { memberships } from '@/data/memberships';
+import { languages } from '@/data/languages';
+import { research, teaching, awards as awardsList, volunteering as _unused } from '@/data/awards';
+import { volunteering } from '@/data/volunteering';
+
+const skillsFlat = skills.map((g) => g.items.join(', ')).join(', ');
+const certsFlat = certifications
+  .map((g) => `${g.title}: ${g.items.map((i) => i.label).join(', ')}`)
+  .join('. ');
+const membershipsFlat = memberships.map((g) => g.items.join('; ')).join('; ');
+const languagesFlat = languages.map((l) => `${l.name} (${l.level})`).join('; ');
+const volunteeringFlat = volunteering.map((g) => g.items.join('; ')).join('; ');
+---
+
+<div id="ats-view">
+  <h1>{profile.name}</h1>
+  <p class="ats-meta">
+    Director of Green Orbit Digital · Chartered Marketer (CMktr) · {profile.credentials}<br />
+    Email: rjmlaird@gmail.com &nbsp;|&nbsp; LinkedIn: linkedin.com/in/rjmlaird87 &nbsp;|&nbsp;
+    GitHub: github.com/rjmlaird &nbsp;|&nbsp; ORCID: 0000-0002-5992-684X
+  </p>
+
+  <h2>Summary</h2>
+  {profile.summary.map((p) => <p>{p}</p>)}
+
+  <h2>Core Skills</h2>
+  <p>{profile.tags.join(', ')}. Technical: {skillsFlat}.</p>
+
+  <h2>Experience</h2>
+  {experience.map((role) => (
+    <div class="ats-entry">
+      <strong>{role.title}</strong> — {role.org} <span class="ats-meta">({role.dates})</span>
+      <ul><li>{role.description}</li></ul>
+    </div>
+  ))}
+
+  <h2>Education</h2>
+  <ul>
+    {education.map((item) => (
+      <li>{item.title} — {item.org}, {item.dates}</li>
+    ))}
+  </ul>
+
+  <h2>Certifications</h2>
+  <p>{certsFlat}.</p>
+
+  <h2>Professional Memberships</h2>
+  <p>{membershipsFlat}.</p>
+
+  <h2>Languages</h2>
+  <p>{languagesFlat}.</p>
+
+  <h2>Research</h2>
+  {research.paragraphs.map((p) => <p>{p}</p>)}
+  <p>Full record: orcid.org/0000-0002-5992-684X.</p>
+
+  <h2>Teaching</h2>
+  <p>{teaching.org}: {teaching.items.join('; ')}.</p>
+
+  <h2>Awards</h2>
+  <p>{awardsList.join('; ')}.</p>
+
+  <h2>Volunteering</h2>
+  <p>{volunteeringFlat}.</p>
+</div>

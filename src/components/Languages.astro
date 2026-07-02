@@ -1,0 +1,17 @@
+---
+import { languages } from '@/data/languages';
+---
+
+<section id="languages" aria-labelledby="lang-heading">
+  <p class="eyebrow">Communication</p>
+  <h2 id="lang-heading">Languages</h2>
+  <div class="lang-grid">
+    {languages.map((lang) => (
+      <div class="lang-card">
+        <div class="lang-name">{lang.name}</div>
+        <div class="lang-level">{lang.level}</div>
+        <div class="lang-bar"><span style={`width:${lang.proficiency}%`}></span></div>
+      </div>
+    ))}
+  </div>
+</section>

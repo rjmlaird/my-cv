@@ -1,96 +1,43 @@
 ---
-import { getEntry } from "astro:content";
-import Layout from "../layouts/Layout.astro";
-import { Content as Summary } from "../content/misc/summary.mdx";
-import WorkExperience from "../components/WorkExperience.astro";
-import Skills from "../components/Skills.astro";
-import Education from "../components/Education.astro";
-import Awards from "../components/Awards.astro";
-import Certifications from "../components/Certifications.astro";
-import Memberships from "../components/Memberships.astro";
-import Volunteering from "../components/Volunteering.astro";
-
-const profileEntry = await getEntry("profile", "profile");
-const profile = profileEntry?.data ?? {};
-
-const FULL_NAME = profile.name ?? "Unnamed";
-const TITLE = profile.headline ?? "";
-const LOCATION = profile.location ?? "";
-const EMAIL_ADDRESS = profile.contact?.email ?? "";
-const LINKED_IN_SLUG = profile.links?.linkedin ?? "";
-const GITHUB_USERNAME = profile.links?.github ?? "";
+import Layout from '@/layouts/Layout.astro';
+import Nav from '@/components/Nav.astro';
+import Hero from '@/components/Hero.astro';
+import Experience from '@/components/Experience.astro';
+import Education from '@/components/Education.astro';
+import Skills from '@/components/Skills.astro';
+import Certifications from '@/components/Certifications.astro';
+import Memberships from '@/components/Memberships.astro';
+import Languages from '@/components/Languages.astro';
+import Research from '@/components/Research.astro';
+import Teaching from '@/components/Teaching.astro';
+import Awards from '@/components/Awards.astro';
+import Causes from '@/components/Causes.astro';
+import Volunteering from '@/components/Volunteering.astro';
+import Contact from '@/components/Contact.astro';
+import Footer from '@/components/Footer.astro';
+import AtsView from '@/components/AtsView.astro';
 ---
 
-<Layout title={`CV - ${FULL_NAME}`}>
-  <main class="mx-auto max-w-4xl bg-white p-6 text-gray-900 print:m-0 print:max-w-none print:p-0 print:shadow-none md:p-10">
-    <header class="mb-8 border-b border-gray-200 pb-6">
-      <h1 class="text-4xl font-bold leading-tight text-gray-900">{FULL_NAME}</h1>
-      <p class="mt-2 text-lg font-medium text-gray-700">{TITLE}</p>
+<Layout>
+  <Nav />
+  <Hero />
 
-      <div class="mt-4 space-y-1 text-sm text-gray-600">
-        <p>{LOCATION}</p>
-        <p>
-          Email: <a href={`mailto:${EMAIL_ADDRESS}`} class="text-indigo-700 underline">{EMAIL_ADDRESS}</a>
-        </p>
-        <p>
-          LinkedIn: <a href={`https://linkedin.com/in/${LINKED_IN_SLUG}`} class="text-indigo-700 underline" target="_blank" rel="noreferrer">linkedin.com/in/{LINKED_IN_SLUG}</a>
-        </p>
-        <p>
-          GitHub: <a href={`https://github.com/${GITHUB_USERNAME}`} class="text-indigo-700 underline" target="_blank" rel="noreferrer">github.com/{GITHUB_USERNAME}</a>
-        </p>
-      </div>
-
-      <div class="mt-6 text-base leading-relaxed text-gray-800">
-        <Summary />
-      </div>
-    </header>
-
-    <section class="mb-8">
-      <h2 class="mb-3 text-2xl font-semibold text-gray-900">Skills</h2>
-      <Skills />
-    </section>
-
-    <section class="mb-8">
-      <h2 class="mb-3 text-2xl font-semibold text-gray-900">Work Experience</h2>
-      <WorkExperience />
-    </section>
-
-    <section class="mb-8">
-      <h2 class="mb-3 text-2xl font-semibold text-gray-900">Education</h2>
-      <Education />
-    </section>
-
-    <section class="mb-8">
-      <h2 class="mb-3 text-2xl font-semibold text-gray-900">Awards</h2>
-      <Awards />
-    </section>
-
-    <section class="mb-8">
-      <h2 class="mb-3 text-2xl font-semibold text-gray-900">Certifications</h2>
-      <Certifications />
-    </section>
-
-    <section class="mb-8">
-      <h2 class="mb-3 text-2xl font-semibold text-gray-900">Memberships</h2>
-      <Memberships />
-    </section>
-
-    <section class="mb-8">
-      <h2 class="mb-3 text-2xl font-semibold text-gray-900">Volunteering</h2>
-      <Volunteering />
-    </section>
+  <main id="about">
+    <Experience />
+    <Education />
+    <Skills />
+    <Certifications />
+    <Memberships />
+    <Languages />
+    <Research />
+    <Teaching />
+    <Awards />
+    <Causes />
+    <Volunteering />
+    <Contact />
   </main>
+
+  <Footer />
+
+  <AtsView />
 </Layout>
-
-<style>
-  @media print {
-    a {
-      color: inherit;
-      text-decoration: none;
-    }
-  }
-
-  section {
-    break-inside: avoid;
-  }
-</style>

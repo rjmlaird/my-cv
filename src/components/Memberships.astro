@@ -1,110 +1,16 @@
 ---
-import membershipsData from "../data/memberships.json";
-
-const { mode = "human" } = Astro.props;
-
-// Root data extraction (matches your JSON shape)
-const groups = Array.isArray(membershipsData?.memberships)
-  ? membershipsData.memberships
-  : [];
-
-// Flatten for ATS mode
-const flatItems = groups.flatMap((group) =>
-  (group?.items ?? []).map((item) => ({
-    group: group.group,
-    organisation: item.organisation,
-    role: item.role,
-    abbreviation: item.abbreviation ?? "",
-    type: item.type ?? "",
-    keywords: Array.isArray(item.keywords) ? item.keywords : []
-  }))
-);
-
-// Keyword stream for ATS keyword indexing
-const flatKeywords = flatItems
-  .flatMap((item) => item.keywords)
-  .filter(Boolean)
-  .sort((a, b) => a.localeCompare(b));
-
-const isATS = mode === "ats";
+import { memberships } from '@/data/memberships';
 ---
 
-<section class="memberships">
-
-
-  {/* =========================
-      ATS MODE (Flat + Parseable)
-  ========================== */}
-  {isATS ? (
-    <div>
-      <p class="text-xs text-gray-500 mb-3">
-        Organisation | Role | Group | Keywords
-      </p>
-
-      <ul class="space-y-1 text-sm">
-        {flatItems.length > 0 ? (
-          flatItems.map((item) => (
-            <li>
-              <strong>{item.organisation}</strong>
-              {" — "}
-              {item.role}
-              {" — "}
-              <span class="text-gray-500">{item.group}</span>
-            </li>
-          ))
-        ) : (
-          <li class="text-gray-400">No memberships available</li>
-        )}
-      </ul>
-
-      {/* Hidden keyword stream for ATS indexing */}
-      <div class="hidden">
-        {flatKeywords.join(", ")}
+<section id="memberships" aria-labelledby="memberships-heading">
+  <p class="eyebrow">Professional standing</p>
+  <h2 id="memberships-heading">Professional Memberships &amp; Affiliations</h2>
+  <div class="cert-grid">
+    {memberships.map((group) => (
+      <div class="cert-group">
+        <h3>{group.title}</h3>
+        <ul>{group.items.map((item) => <li>{item}</li>)}</ul>
       </div>
-    </div>
-  ) : (
-    /* =========================
-        HUMAN MODE (Structured)
-    ========================== */
-    <div class="space-y-8">
-      {groups.length > 0 ? (
-        groups.map((group) => (
-          <div class="break-inside-avoid">
-            <h3 class="text-lg font-semibold mb-3">
-              {group.group}
-            </h3>
-
-            <ul class="space-y-3">
-              {(group.items ?? []).map((item) => (
-                <li class="border-l-2 border-gray-200 pl-3">
-                  <div class="font-medium">
-                    {item.organisation}
-                  </div>
-
-                  <div class="text-sm text-gray-600">
-                    {item.role}
-                    {item.abbreviation ? ` (${item.abbreviation})` : ""}
-                  </div>
-
-                  {Array.isArray(item.keywords) && item.keywords.length > 0 && (
-                    <div class="text-xs text-gray-400 mt-1">
-                      {item.keywords.join(" · ")}
-                    </div>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))
-      ) : (
-        <p class="text-sm text-gray-500">No memberships available</p>
-      )}
-    </div>
-  )}
+    ))}
+  </div>
 </section>
-
-<style>
-  .memberships {
-    @apply w-full;
-  }
-</style>

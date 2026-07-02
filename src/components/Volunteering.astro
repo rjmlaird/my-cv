@@ -1,23 +1,16 @@
 ---
-import { getCollection } from "astro:content";
-import VolunteerActivity from "./VolunteerActivity.astro";
-
-const volunteerActivities = (await getCollection("volunteer-activities")).sort(
-  (a, b) => b.data.from.getTime() - a.data.from.getTime(),
-);
+import { volunteering } from '@/data/volunteering';
 ---
 
-<ul class="list-none pl-0">
-  {
-    volunteerActivities.map(async (volunteerActivity) => {
-      const { Content } = await volunteerActivity.render();
-      return (
-        <li class="pl-0 prose-ul:list-outside mb-6 break-inside-avoid-page">
-          <VolunteerActivity {...volunteerActivity.data}>
-            <Content />
-          </VolunteerActivity>
-        </li>
-      );
-    })
-  }
-</ul>
+<section id="volunteering" aria-labelledby="volunteering-heading">
+  <p class="eyebrow">Community</p>
+  <h2 id="volunteering-heading">Volunteering</h2>
+  <div class="cert-grid">
+    {volunteering.map((group) => (
+      <div class="cert-group">
+        <h3>{group.title}</h3>
+        <ul>{group.items.map((item) => <li>{item}</li>)}</ul>
+      </div>
+    ))}
+  </div>
+</section>

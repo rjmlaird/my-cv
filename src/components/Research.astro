@@ -1,0 +1,10 @@
+---
+import { research } from '@/data/awards';
+---
+
+<section id="research" aria-labelledby="research-heading">
+  <p class="eyebrow">Publications</p>
+  <h2 id="research-heading">Research</h2>
+  {research.paragraphs.map((p) => <p>{p}</p>)}
+  <p>Full publication record: <a href={research.orcid} target="_blank" rel="noopener">orcid.org/0000-0002-5992-684X</a></p>
+</section>

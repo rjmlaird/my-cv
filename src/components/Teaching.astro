@@ -1,0 +1,12 @@
+---
+import { teaching } from '@/data/awards';
+---
+
+<section id="teaching" aria-labelledby="teaching-heading">
+  <p class="eyebrow">Academic instruction</p>
+  <h2 id="teaching-heading">Teaching</h2>
+  <p class="teaching-org">{teaching.org}</p>
+  <ul class="teaching-list">
+    {teaching.items.map((item) => <li>{item}</li>)}
+  </ul>
+</section>

@@ -1,0 +1,19 @@
+---
+import { experience } from '@/data/experience';
+---
+
+<section id="experience" aria-labelledby="experience-heading">
+  <p class="eyebrow">Career history</p>
+  <h2 id="experience-heading">Experience</h2>
+  <div class="timeline">
+    {experience.map((role) => (
+      <article class:list={['role-item', { dim: role.dim }]}>
+        <div class="role-header">
+          <div><span class="role-title">{role.title}</span> · <span class="role-org">{role.org}</span></div>
+          <time class="role-dates">{role.dates}</time>
+        </div>
+        <p>{role.description}</p>
+      </article>
+    ))}
+  </div>
+</section>

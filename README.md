@@ -1,38 +1,80 @@
-# astro-cv
+# Ryan Laird — CV
 
-Template for a CV website, built with Astro and Tailwind CSS. Includes a script
-to generate a PDF.
+Source for [cv.rjmlaird.co.uk](https://cv.rjmlaird.co.uk), built with [Astro](https://astro.build).
 
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/dstotijn/astro-cv/tree/main)
-[![Open with CodeSandbox](https://assets.codesandbox.io/github/button-edit-lime.svg)](https://codesandbox.io/p/sandbox/github/dstotijn/astro-cv/tree/main)
+## Stack
 
-## Installation
+- **Astro** (static output, no client-side framework needed)
+- Plain CSS with design tokens (no Tailwind/build-step CSS framework — see `src/styles/global.css`)
+- Fonts: Space Grotesk (display), Inter (body), JetBrains Mono (data/labels)
+
+## Structure
 
 ```
-npm create astro@latest my-cv -- --template dstotijn/astro-cv
+src/
+├── data/            # All CV content lives here as typed .ts files.
+│   ├── profile.ts       # Name, summary, tags, contact links, nav links
+│   ├── experience.ts     # Work history (timeline)
+│   ├── education.ts
+│   ├── skills.ts
+│   ├── certifications.ts
+│   ├── memberships.ts
+│   ├── languages.ts
+│   ├── awards.ts          # Also exports causes, teaching, research
+│   └── volunteering.ts
+├── layouts/
+│   └── Layout.astro     # <head>, fonts, JSON-LD schema, global CSS import
+├── components/
+│   ├── Nav.astro          # Sticky nav + ATS view toggle + print button
+│   ├── Hero.astro
+│   ├── Experience.astro
+│   ├── Education.astro
+│   ├── Skills.astro
+│   ├── Certifications.astro
+│   ├── Memberships.astro
+│   ├── Languages.astro
+│   ├── Research.astro
+│   ├── Teaching.astro
+│   ├── Awards.astro
+│   ├── Causes.astro
+│   ├── Volunteering.astro
+│   ├── Contact.astro
+│   ├── Footer.astro
+│   └── AtsView.astro     # Plain-text single-column version, built from the
+│                          # same data files, shown via the ATS toggle and
+│                          # @media print
+├── styles/
+│   └── global.css        # All design tokens + component styles
+└── pages/
+    └── index.astro        # Assembles everything above
 ```
 
-Alternatively, you can simply download or `git clone` the repository.
+## Updating content
 
-## Usage
-
-The template comes with a few pre-defined content collections for job positions,
-side projects and volunteering activities. See
-[`src/content/config.ts`](src/content/config.ts) for more details.
-
-The basic bio information (name, title, contact details, etcetera) are defined
-as constants at the top of [`src/pages/index.astro`](src/pages/index.astro).
+Everything you'd normally edit lives in `src/data/*.ts` — add a role, a
+certification, a membership, etc. there and it flows through to both the
+visual site and the ATS/print view automatically, since `AtsView.astro`
+reads from the same files rather than duplicating content.
 
 ## Commands
 
-All commands are run from the root of the project, from a terminal:
+Run these from the project root, in a terminal:
 
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:3000`      |
-| `npm run build`           | Build production site to `./dist/`               |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run generate:pdf`    | Build site, and generate PDF in `./dist/cv.pdf`  |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
+| Command             | Action                                       |
+|----------------------|-----------------------------------------------|
+| `npm install`        | Install dependencies                          |
+| `npm run dev`         | Start local dev server at `localhost:4321`    |
+| `npm run build`       | Build production site to `./dist/`            |
+| `npm run preview`     | Preview the production build locally          |
+
+## Deploying
+
+`npm run build` outputs a fully static site to `dist/` — deploy it to
+Netlify, Vercel, Cloudflare Pages, GitHub Pages, or any static host. Update
+`site` in `astro.config.mjs` if the domain changes.
+
+## ATS / print view
+
+The "ATS view" button (and printing the page via Cmd/Ctrl+P) switches to a
+plain black-on-white, single-column layout with proper heading hierarchy —
+built for resume parsers and for producing a clean PDF.

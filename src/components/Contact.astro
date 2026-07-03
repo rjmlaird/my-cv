@@ -1,5 +1,6 @@
 ---
-import { profile } from '@/data/profile';
+import {getContact} from '@/lib/api';
+const contact = await getContact();
 ---
 
 <section id="contact" aria-labelledby="contact-heading">

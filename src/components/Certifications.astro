@@ -1,29 +1,73 @@
 ---
-import { certifications } from '@/data/certifications';
+import { getCertifications } from '@/lib/api';
+
+type CertItem = {
+  label: string;
+  href?: string;
+};
+
+type CertSubgroup = {
+  subhead: string;
+  items: CertItem[];
+};
+
+type CertGroup = {
+  title: string;
+  items: CertItem[];
+  subgroups?: CertSubgroup[];
+};
+
+const rawCertifications = await getCertifications<CertGroup[] | Record<string, CertGroup>>();
+const certifications = Array.isArray(rawCertifications)
+  ? rawCertifications
+  : rawCertifications && typeof rawCertifications === 'object'
+    ? Object.values(rawCertifications)
+    : [];
 ---
 
 <section id="certifications" aria-labelledby="cert-heading">
   <p class="eyebrow">Credentials</p>
   <h2 id="cert-heading">Certifications</h2>
+
   <div class="cert-grid">
     {certifications.map((group) => (
       <div class="cert-group">
         <h3>{group.title}</h3>
         <ul>
-          {group.items.map((item) => (
-            <li>{item.href ? <a href={item.href} target="_blank" rel="noopener">{item.label}</a> : item.label}</li>
-          ))}
+          {Array.isArray(group.items) &&
+            group.items.map((item) => (
+              <li>
+                {item.href ? (
+                  <a href={item.href} target="_blank" rel="noopener">
+                    {item.label}
+                  </a>
+                ) : (
+                  item.label
+                )}
+              </li>
+            ))}
         </ul>
-        {group.subgroups?.map((sub) => (
-          <>
-            <p class="cert-subhead">{sub.subhead}</p>
-            <ul>
-              {sub.items.map((item) => (
-                <li>{item.href ? <a href={item.href} target="_blank" rel="noopener">{item.label}</a> : item.label}</li>
-              ))}
-            </ul>
-          </>
-        ))}
+
+        {Array.isArray(group.subgroups) &&
+          group.subgroups.map((sub) => (
+            <>
+              <p class="cert-subhead">{sub.subhead}</p>
+              <ul>
+                {Array.isArray(sub.items) &&
+                  sub.items.map((item) => (
+                    <li>
+                      {item.href ? (
+                        <a href={item.href} target="_blank" rel="noopener">
+                          {item.label}
+                        </a>
+                      ) : (
+                        item.label
+                      )}
+                    </li>
+                  ))}
+              </ul>
+            </>
+          ))}
       </div>
     ))}
   </div>

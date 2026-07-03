@@ -1,18 +1,32 @@
 ---
-import { education } from '@/data/education';
+import { getEducation } from '@/lib/api';
+
+type EducationItem = {
+  title: string;
+  dates: string;
+  org: string;
+  description?: string;
+};
+
+const education = (await getEducation<EducationItem[]>()) ?? [];
 ---
 
 <section id="education" aria-labelledby="education-heading">
   <p class="eyebrow">Academic background</p>
   <h2 id="education-heading">Education</h2>
+
   {education.map((item) => (
     <div class="edu-item">
       <div class="role-header">
-        <div><span class="role-title">{item.title}</span></div>
+        <div>
+          <span class="role-title">{item.title}</span>
+        </div>
         <time class="role-dates">{item.dates}</time>
       </div>
+
       <p class="role-org">{item.org}</p>
-      <p>{item.description}</p>
+
+      {item.description && <p>{item.description}</p>}
     </div>
   ))}
 </section>

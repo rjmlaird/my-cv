@@ -1,5 +1,6 @@
 ---
-import { volunteering } from '@/data/volunteering';
+import {getVolunteering} from '@/lib/api';
+const volunteering = await getVolunteering();
 ---
 
 <section id="volunteering" aria-labelledby="volunteering-heading">

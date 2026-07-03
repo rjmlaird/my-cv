@@ -1,15 +1,30 @@
 ---
-import { skills } from '@/data/skills';
+import { getSkills } from '@/lib/api';
+
+type SkillGroup = {
+  title: string;
+  items: string[];
+};
+
+const rawSkills = await getSkills<SkillGroup[] | Record<string, SkillGroup>>();
+const skills = Array.isArray(rawSkills)
+  ? rawSkills
+  : rawSkills && typeof rawSkills === 'object'
+    ? Object.values(rawSkills)
+    : [];
 ---
 
 <section id="skills" aria-labelledby="skills-heading">
   <p class="eyebrow">Capabilities</p>
   <h2 id="skills-heading">Skills</h2>
+
   <div class="skills-grid">
     {skills.map((group) => (
       <div class="skill-group">
         <h3>{group.title}</h3>
-        <ul>{group.items.map((item) => <li>{item}</li>)}</ul>
+        <ul>
+          {Array.isArray(group.items) && group.items.map((item) => <li>{item}</li>)}
+        </ul>
       </div>
     ))}
   </div>

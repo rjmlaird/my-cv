@@ -1,5 +1,6 @@
 ---
-import { teaching } from '@/data/awards';
+import {getTeaching} from '@/lib/api';
+const teaching = await getTeaching();
 ---
 
 <section id="teaching" aria-labelledby="teaching-heading">

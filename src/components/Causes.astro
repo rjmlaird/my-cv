@@ -1,5 +1,6 @@
 ---
-import { causes } from '@/data/awards';
+import {getCauses} from '@/lib/api';
+const causes = await getCauses();
 ---
 
 <section id="causes" aria-labelledby="causes-heading">

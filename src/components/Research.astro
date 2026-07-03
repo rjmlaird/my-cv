@@ -1,5 +1,6 @@
 ---
-import { research } from '@/data/awards';
+import {getMemberships} from '@/lib/api';
+const memberships = await getMemberships();
 ---
 
 <section id="research" aria-labelledby="research-heading">

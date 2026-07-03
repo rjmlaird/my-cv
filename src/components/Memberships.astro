@@ -1,15 +1,45 @@
 ---
-import { memberships } from '@/data/memberships';
+import { getMemberships } from '@/lib/api';
+
+type MembershipItem = string | { label: string; href?: string };
+
+type MembershipGroup = {
+  title: string;
+  items: MembershipItem[];
+};
+
+const rawMemberships = await getMemberships<MembershipGroup[] | Record<string, MembershipGroup>>();
+const memberships = Array.isArray(rawMemberships)
+  ? rawMemberships
+  : rawMemberships && typeof rawMemberships === 'object'
+    ? Object.values(rawMemberships)
+    : [];
 ---
 
 <section id="memberships" aria-labelledby="memberships-heading">
   <p class="eyebrow">Professional standing</p>
   <h2 id="memberships-heading">Professional Memberships &amp; Affiliations</h2>
+
   <div class="cert-grid">
     {memberships.map((group) => (
       <div class="cert-group">
         <h3>{group.title}</h3>
-        <ul>{group.items.map((item) => <li>{item}</li>)}</ul>
+        <ul>
+          {Array.isArray(group.items) &&
+            group.items.map((item) => (
+              <li>
+                {typeof item === 'string' ? (
+                  item
+                ) : item.href ? (
+                  <a href={item.href} target="_blank" rel="noopener">
+                    {item.label}
+                  </a>
+                ) : (
+                  item.label
+                )}
+              </li>
+            ))}
+        </ul>
       </div>
     ))}
   </div>

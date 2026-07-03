@@ -1,15 +1,34 @@
 ---
 // Plain-text, high-contrast, single-column view for ATS parsers and printing.
 // Built from the same data sources as the visual site — single source of truth.
-import { profile } from '@/data/profile';
-import { experience } from '@/data/experience';
-import { education } from '@/data/education';
-import { skills } from '@/data/skills';
-import { certifications } from '@/data/certifications';
-import { memberships } from '@/data/memberships';
-import { languages } from '@/data/languages';
-import { research, teaching, awards as awardsList, volunteering as _unused } from '@/data/awards';
-import { volunteering } from '@/data/volunteering';
+
+import * as api from '@/lib/api';
+
+const {
+  getProfile,
+  getExperience,
+  getEducation,
+  getSkills,
+  getCertifications,
+  getMemberships,
+  getLanguages,
+  getResearch,
+  getTeaching,
+  getAwards,
+  getVolunteering,
+} = api;
+
+const profile = await getProfile();
+const experience = await getExperience();
+const education = await getEducation();
+const skills = await getSkills();
+const certifications = await getCertifications();
+const memberships = await getMemberships();
+const languages = await getLanguages();
+const research = await getResearch();
+const teaching = await getTeaching();
+const awardsList = await getAwards();
+const volunteering = await getVolunteering();
 
 const skillsFlat = skills.map((g) => g.items.join(', ')).join(', ');
 const certsFlat = certifications

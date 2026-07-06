@@ -1,4 +1,12 @@
-// src/lib/api.ts
+import { z } from 'astro/zod';
+
+import { experienceItemSchema, type ExperienceItem } from '@/lib/schemas/experience.schema';
+import { educationItemSchema, type EducationItem } from '@/lib/schemas/education.schema';
+import { skillItemSchema, type SkillItem } from '@/lib/schemas/skill.schema';
+import { certificationItemSchema, type CertificationItem } from '@/lib/schemas/certification.schema';
+import { membershipItemSchema, type MembershipItem } from '@/lib/schemas/membership.schema';
+import { awardItemSchema, type AwardItem } from '@/lib/schemas/award.schema';
+import { languageItemSchema, type LanguageItem } from '@/lib/schemas/languages.schema';
 
 const API_BASE = 'https://api.rjmlaird.co.uk/api';
 
@@ -6,10 +14,8 @@ type ApiCollectionName =
   | 'awards'
   | 'education'
   | 'memberships'
-  | 'volunteering'
   | 'certifications'
   | 'experience'
-  | 'profile'
   | 'languages'
   | 'skills';
 
@@ -29,38 +35,38 @@ export function getCollection<T>(collection: ApiCollectionName) {
   return fetchJson<T>(collection);
 }
 
-export function getAwards<T>() {
-  return fetchJson<T>('awards');
+const experienceResponseSchema = z.array(experienceItemSchema);
+const educationResponseSchema = z.array(educationItemSchema);
+const skillsResponseSchema = z.array(skillItemSchema);
+const certificationsResponseSchema = z.array(certificationItemSchema);
+const membershipsResponseSchema = z.array(membershipItemSchema);
+const awardsResponseSchema = z.array(awardItemSchema);
+const languagesResponseSchema = z.array(languageItemSchema);
+
+export async function getExperience(): Promise<ExperienceItem[]> {
+  return experienceResponseSchema.parse(await fetchJson<unknown>('experience'));
 }
 
-export function getEducation<T>() {
-  return fetchJson<T>('education');
+export async function getEducation(): Promise<EducationItem[]> {
+  return educationResponseSchema.parse(await fetchJson<unknown>('education'));
 }
 
-export function getMemberships<T>() {
-  return fetchJson<T>('memberships');
+export async function getSkills(): Promise<SkillItem[]> {
+  return skillsResponseSchema.parse(await fetchJson<unknown>('skills'));
 }
 
-export function getVolunteering<T>() {
-  return fetchJson<T>('volunteering');
+export async function getCertifications(): Promise<CertificationItem[]> {
+  return certificationsResponseSchema.parse(await fetchJson<unknown>('certifications'));
 }
 
-export function getCertifications<T>() {
-  return fetchJson<T>('certifications');
+export async function getMemberships(): Promise<MembershipItem[]> {
+  return membershipsResponseSchema.parse(await fetchJson<unknown>('memberships'));
 }
 
-export function getExperience<T>() {
-  return fetchJson<T>('experience');
+export async function getAwards(): Promise<AwardItem[]> {
+  return awardsResponseSchema.parse(await fetchJson<unknown>('awards'));
 }
 
-export function getProfile<T>() {
-  return fetchJson<T>('profile');
-}
-
-export function getLanguages<T>() {
-  return fetchJson<T>('languages');
-}
-
-export function getSkills<T>() {
-  return fetchJson<T>('skills');
+export async function getLanguages(): Promise<LanguageItem[]> {
+  return languagesResponseSchema.parse(await fetchJson<unknown>('languages'));
 }

@@ -1,16 +1,7 @@
 ---
 import { getExperience } from '@/lib/api';
 
-type ExperienceItem = {
-  title: string;
-  org: string;
-  dates: string;
-  description?: string;
-  dim?: boolean;
-};
-
-const rawExperience = await getExperience<ExperienceItem[]>();
-const experience = Array.isArray(rawExperience) ? rawExperience : [];
+const experience = await getExperience();
 ---
 
 <section id="experience" aria-labelledby="experience-heading">
@@ -18,17 +9,36 @@ const experience = Array.isArray(rawExperience) ? rawExperience : [];
   <h2 id="experience-heading">Experience</h2>
 
   {experience.map((role) => (
-    <article class={['role-item', role.dim ? 'dim' : ''].filter(Boolean).join(' ')}>
+    <article class={['role-item', role.current ? '' : 'dim'].filter(Boolean).join(' ')}>
       <div class="role-header">
         <div>
-          <span class="role-title">{role.title}</span>
+          <span class="role-title">{role.role}</span>
           {' · '}
-          <span class="role-org">{role.org}</span>
+          <span class="role-org">{role.organisation ?? 'Self-employed'}</span>
         </div>
-        <time class="role-dates">{role.dates}</time>
+        <time class="role-dates">
+          {role.startDate}
+          {' — '}
+          {role.current ? 'Present' : role.endDate}
+        </time>
       </div>
 
-      {role.description && <p>{role.description}</p>}
+      <p>{role.summary}</p>
+
+      {role.responsibilities?.length > 0 && (
+        <ul class="role-list">
+          {role.responsibilities.map((item) => <li>{item}</li>)}
+        </ul>
+      )}
+
+      {role.achievements?.length > 0 && (
+        <>
+          <h3 class="role-subheading">Achievements</h3>
+          <ul class="role-list">
+            {role.achievements.map((item) => <li>{item}</li>)}
+          </ul>
+        </>
+      )}
     </article>
   ))}
 </section>

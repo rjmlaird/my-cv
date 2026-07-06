@@ -1,32 +1,37 @@
 ---
 import { getEducation } from '@/lib/api';
+import type { EducationItem } from '@/lib/schemas/education.schema';
 
-type EducationItem = {
-  title: string;
-  dates: string;
-  org: string;
-  description?: string;
-};
-
-const education = (await getEducation<EducationItem[]>()) ?? [];
+const education = await getEducation();
 ---
 
 <section id="education" aria-labelledby="education-heading">
   <p class="eyebrow">Academic background</p>
   <h2 id="education-heading">Education</h2>
 
-  {education.map((item) => (
+  {education.map((item: EducationItem) => (
     <div class="edu-item">
       <div class="role-header">
         <div>
-          <span class="role-title">{item.title}</span>
+          <span class="role-title">{item.qualification}</span>
         </div>
-        <time class="role-dates">{item.dates}</time>
+        <time class="role-dates">
+          {item.startDate} — {item.endDate ?? 'Present'}
+        </time>
       </div>
 
-      <p class="role-org">{item.org}</p>
+      <p class="role-org">
+        {item.institution}
+        {item.field ? ` · ${item.field}` : ''}
+      </p>
 
       {item.description && <p>{item.description}</p>}
+
+      {item.achievements.length > 0 && (
+        <ul class="role-list">
+          {item.achievements.map((achievement) => <li>{achievement}</li>)}
+        </ul>
+      )}
     </div>
   ))}
 </section>

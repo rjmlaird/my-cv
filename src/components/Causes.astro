@@ -1,6 +1,5 @@
 ---
-import {getCauses} from '@/lib/api';
-const causes = await getCauses();
+import { causes } from '@/data/awards';
 ---
 
 <section id="causes" aria-labelledby="causes-heading">
@@ -11,3 +10,4 @@ const causes = await getCauses();
     {causes.tags.map((tag) => <span class="tag">{tag}</span>)}
   </div>
 </section>
+

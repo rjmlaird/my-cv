@@ -1,12 +1,23 @@
 ---
-import {getAwards} from '@/lib/api';
-const awards = await getAwards();
+import { getAwards } from '@/lib/api';
+
+type AwardItem = string | { label: string };
+
+const rawAwards = await getAwards<AwardItem[] | Record<string, AwardItem>>();
+const awards = Array.isArray(rawAwards)
+  ? rawAwards
+  : rawAwards && typeof rawAwards === 'object'
+    ? Object.values(rawAwards)
+    : [];
 ---
 
 <section id="awards" aria-labelledby="awards-heading">
   <p class="eyebrow">Recognition</p>
   <h2 id="awards-heading">Awards</h2>
+
   <ul class="award-list">
-    {awards.map((award) => <li>{award}</li>)}
+    {awards.map((award) => (
+      <li>{typeof award === 'string' ? award : award.label}</li>
+    ))}
   </ul>
 </section>

@@ -1,8 +1,6 @@
 ---
-// Plain-text, high-contrast, single-column view for ATS parsers and printing.
-// Built from the same data sources as the visual site — single source of truth.
-
 import * as api from '@/lib/api';
+import { languages } from '@/data/languages';
 
 const {
   getProfile,
@@ -11,32 +9,57 @@ const {
   getSkills,
   getCertifications,
   getMemberships,
-  getLanguages,
-  getResearch,
-  getTeaching,
   getAwards,
-  getVolunteering,
 } = api;
 
 const profile = await getProfile();
-const experience = await getExperience();
-const education = await getEducation();
-const skills = await getSkills();
-const certifications = await getCertifications();
-const memberships = await getMemberships();
-const languages = await getLanguages();
-const research = await getResearch();
-const teaching = await getTeaching();
-const awardsList = await getAwards();
-const volunteering = await getVolunteering();
+const experienceData = await getExperience();
+const educationData = await getEducation();
+const skillsData = await getSkills();
+const certificationsData = await getCertifications();
+const membershipsData = await getMemberships();
+const awardsData = await getAwards();
 
-const skillsFlat = skills.map((g) => g.items.join(', ')).join(', ');
-const certsFlat = certifications
-  .map((g) => `${g.title}: ${g.items.map((i) => i.label).join(', ')}`)
+const experience = Array.isArray(experienceData)
+  ? experienceData
+  : Array.isArray(experienceData?.experience)
+    ? experienceData.experience
+    : [];
+
+const education = Array.isArray(educationData)
+  ? educationData
+  : Array.isArray(educationData?.education)
+    ? educationData.education
+    : [];
+
+const skillsGroups = Array.isArray(skillsData)
+  ? skillsData
+  : skillsData && typeof skillsData === 'object' && !Array.isArray(skillsData) && 'skills' in skillsData
+    ? Object.values(skillsData.skills)
+    : [];
+
+const certsArr = Array.isArray(certificationsData) ? certificationsData : [];
+const membershipsArr = Array.isArray(membershipsData) ? membershipsData : [];
+const awardsArr = Array.isArray(awardsData) ? awardsData : [];
+
+const skillsFlat = skillsGroups
+  .map((g) => (Array.isArray(g.items) ? g.items.join(', ') : ''))
+  .filter(Boolean)
+  .join(', ');
+
+const certsFlat = certsArr
+  .map((g) => `${g.title ?? ''}: ${Array.isArray(g.items) ? g.items.map((i) => i.label ?? String(i)).join(', ') : ''}`)
+  .filter((s) => s.trim().length > 1)
   .join('. ');
-const membershipsFlat = memberships.map((g) => g.items.join('; ')).join('; ');
+
+const membershipsFlat = membershipsArr
+  .map((g) => (Array.isArray(g.items) ? g.items.join('; ') : ''))
+  .filter(Boolean)
+  .join('; ');
+
 const languagesFlat = languages.map((l) => `${l.name} (${l.level})`).join('; ');
-const volunteeringFlat = volunteering.map((g) => g.items.join('; ')).join('; ');
+---
+
 ---
 
 <div id="ats-view">
@@ -48,23 +71,32 @@ const volunteeringFlat = volunteering.map((g) => g.items.join('; ')).join('; ');
   </p>
 
   <h2>Summary</h2>
-  {profile.summary.map((p) => <p>{p}</p>)}
+  {Array.isArray(profile.summary) ? profile.summary.map((p) => <p>{p}</p>) : null}
 
   <h2>Core Skills</h2>
-  <p>{profile.tags.join(', ')}. Technical: {skillsFlat}.</p>
+  <p>{Array.isArray(profile.tags) ? profile.tags.join(', ') : ''}. Technical: {skillsFlat}.</p>
 
   <h2>Experience</h2>
   {experience.map((role) => (
     <div class="ats-entry">
-      <strong>{role.title}</strong> — {role.org} <span class="ats-meta">({role.dates})</span>
-      <ul><li>{role.description}</li></ul>
+      <strong>{role.role}</strong> — {role.organisation ?? role.organization ?? role.org}
+      <span class="ats-meta">
+        ({role.startDate}
+        {role.endDate ? ` to ${role.endDate}` : role.current ? ' to present' : ''})
+      </span>
+      <p>{role.summary}</p>
+      {Array.isArray(role.responsibilities) && role.responsibilities.length > 0 && (
+        <ul>
+          {role.responsibilities.map((item) => <li>{item}</li>)}
+        </ul>
+      )}
     </div>
   ))}
 
   <h2>Education</h2>
   <ul>
     {education.map((item) => (
-      <li>{item.title} — {item.org}, {item.dates}</li>
+      <li>{item.title ?? item.role ?? item.name} — {item.org ?? item.organisation}, {item.dates ?? item.startDate}</li>
     ))}
   </ul>
 
@@ -77,16 +109,6 @@ const volunteeringFlat = volunteering.map((g) => g.items.join('; ')).join('; ');
   <h2>Languages</h2>
   <p>{languagesFlat}.</p>
 
-  <h2>Research</h2>
-  {research.paragraphs.map((p) => <p>{p}</p>)}
-  <p>Full record: orcid.org/0000-0002-5992-684X.</p>
-
-  <h2>Teaching</h2>
-  <p>{teaching.org}: {teaching.items.join('; ')}.</p>
-
   <h2>Awards</h2>
-  <p>{awardsList.join('; ')}.</p>
-
-  <h2>Volunteering</h2>
-  <p>{volunteeringFlat}.</p>
+  <p>{awardsArr.join('; ')}.</p>
 </div>

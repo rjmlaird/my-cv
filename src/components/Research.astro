@@ -1,11 +1,12 @@
 ---
-import {getMemberships} from '@/lib/api';
-const memberships = await getMemberships();
+import { teaching } from '@/data/awards';
 ---
 
-<section id="research" aria-labelledby="research-heading">
-  <p class="eyebrow">Publications</p>
-  <h2 id="research-heading">Research</h2>
-  {research.paragraphs.map((p) => <p>{p}</p>)}
-  <p>Full publication record: <a href={research.orcid} target="_blank" rel="noopener">orcid.org/0000-0002-5992-684X</a></p>
+<section id="teaching" aria-labelledby="teaching-heading">
+  <p class="eyebrow">Academic instruction</p>
+  <h2 id="teaching-heading">Teaching</h2>
+  <p class="teaching-org">{teaching.org}</p>
+  <ul class="teaching-list">
+    {teaching.items.map((item) => <li>{item}</li>)}
+  </ul>
 </section>

@@ -1,5 +1,3 @@
-// project.schema.ts (enhanced portfolio + graph model)
-
 export type ProjectType =
   | "featured"
   | "collaborative"
@@ -32,12 +30,6 @@ export interface ProjectLinks {
   [key: string]: string | undefined;
 }
 
-/**
- * -----------------------
- * CORE RELATED ENTITIES
- * -----------------------
- */
-
 export interface Client {
   name: string;
   slug?: string;
@@ -48,7 +40,7 @@ export interface Client {
 export interface Experience {
   organisation: string;
   role?: string;
-  period?: string; // e.g. "2024–2026"
+  period?: string;
   context?: string;
 }
 
@@ -73,51 +65,23 @@ export interface Award {
   url?: string;
 }
 
-/**
- * -----------------------
- * CORE PROJECT ENTITY
- * -----------------------
- */
-
 export interface BaseProject {
   id: number;
   slug: string;
   title: string;
   description: string;
-
   type: ProjectType;
   status: ProjectStatus;
-
-  date: string; // ISO format recommended: YYYY-MM or YYYY-MM-DD
-
-  /**
-   * Core stack + capabilities
-   */
-  tools_tech: string[];
+  date: string;
+  toolsTech: string[];
   features: string[];
   tags: string[];
-
-  /**
-   * External + internal links
-   */
   links: ProjectLinks;
-
-  /**
-   * -----------------------
-   * RICH CONTEXT LAYERS
-   * -----------------------
-   */
-
   client?: Client | Client[];
   experience?: Experience | Experience[];
-
-  case_studies?: CaseStudy[];
+  caseStudies?: CaseStudy[];
   articles?: Article[];
   awards?: Award[];
-
-  /**
-   * Optional analytics / impact layer
-   */
   impact?: {
     users?: number;
     stars?: number;
@@ -127,20 +91,10 @@ export interface BaseProject {
     notes?: string;
     [key: string]: number | string | undefined;
   };
-
-  /**
-   * Optional relational graph hints
-   */
-  related_projects?: string[]; // slugs
-  related_people?: string[]; // future expansion
-  related_orgs?: string[]; // organisation slugs
+  relatedProjects?: string[];
+  relatedPeople?: string[];
+  relatedOrgs?: string[];
 }
-
-/**
- * -----------------------
- * PROJECT TYPES
- * -----------------------
- */
 
 export interface FeaturedProject extends BaseProject {
   type: "featured";
@@ -153,31 +107,19 @@ export interface CollaborativeProject extends BaseProject {
 
 export interface CommunityProject extends BaseProject {
   type: "community";
-  community_role?: string;
+  communityRole?: string;
 }
 
 export interface OtherProject extends BaseProject {
   type: "other" | "automation";
-  automation_level?: "low" | "medium" | "high";
+  automationLevel?: "low" | "medium" | "high";
 }
-
-/**
- * -----------------------
- * UNION TYPE
- * -----------------------
- */
 
 export type Project =
   | FeaturedProject
   | CollaborativeProject
   | CommunityProject
   | OtherProject;
-
-/**
- * -----------------------
- * COLLECTION SHAPE
- * -----------------------
- */
 
 export interface ProjectsSchema {
   featured_projects: FeaturedProject[];

@@ -25,31 +25,23 @@ export const imageSchema = z.object({
   alt: z.string().default(""),
 });
 
+const defaultSeo = {
+  title: "",
+  description: "",
+  image: DEFAULT_FEATURED_IMAGE,
+};
+
 export const baseSchema = z.object({
   id: z.string(),
-
   slug: z.string(),
-
   title: z.string(),
-
   summary: z.string().default(""),
-
   description: z.string().default(""),
-
   featured: z.boolean().default(false),
-
   featuredImage: z.string().default(DEFAULT_FEATURED_IMAGE),
-
   tags: z.array(z.string()).default([]),
-
-  seo: seoSchema.default({
-    title: "",
-    description: "",
-    image: DEFAULT_FEATURED_IMAGE,
-  }),
-
+  seo: seoSchema.default(defaultSeo),
   created: z.string().optional(),
-
   updated: z.string().optional(),
 });
 

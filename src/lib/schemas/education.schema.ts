@@ -1,13 +1,13 @@
-import { z } from 'zod';
+import { z } from "zod";
 
-export const educationSchema = z.object({
+export const educationItemSchema = z.object({
   institution: z.string(),
-  qualification: z.string(),
-  field: z.string(),
-  startDate: z.string(),
+  qualification: z.string().optional().default(""),
+  field: z.string().optional().default(""),
+  startDate: z.string().optional().default(""),
   endDate: z.string().optional(),
-  description: z.string().default(''),
+  description: z.string().default(""),
   achievements: z.array(z.string()).default([]),
 });
 
-export type Education = z.infer<typeof educationSchema>;
+export type EducationItem = z.infer<typeof educationItemSchema>;

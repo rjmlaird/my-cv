@@ -1,15 +1,20 @@
-// src/lib/schemas/experience.schema.ts
-import { z } from 'astro/zod';
+import { z } from "zod";
+
+export const locationSchema = z.object({
+  city: z.string(),
+  country: z.string(),
+});
 
 export const experienceItemSchema = z.object({
   id: z.string(),
-  organisation: z.string().nullable(),
+  organisation: z.string().nullish(),
+  department: z.string().nullish(),
   role: z.string(),
   employmentType: z.string(),
   startDate: z.string(),
-  endDate: z.string().nullable(),
+  endDate: z.string().nullish(),
   current: z.boolean(),
-  location: z.string(),
+  location: locationSchema,
   workMode: z.string(),
   summary: z.string(),
   responsibilities: z.array(z.string()),
@@ -29,5 +34,6 @@ export const experienceItemSchema = z.object({
 
 export const experienceSchema = z.array(experienceItemSchema);
 
+export type Location = z.infer<typeof locationSchema>;
 export type ExperienceItem = z.infer<typeof experienceItemSchema>;
 export type Experience = z.infer<typeof experienceSchema>;

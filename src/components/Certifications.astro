@@ -1,5 +1,5 @@
 ---
-import { getCertifications } from '@/lib/api';
+import { getCertifications } from "@/lib/api";
 
 type CertItem = {
   label: string;
@@ -18,9 +18,10 @@ type CertGroup = {
 };
 
 const rawCertifications = await getCertifications<CertGroup[] | Record<string, CertGroup>>();
+
 const certifications = Array.isArray(rawCertifications)
   ? rawCertifications
-  : rawCertifications && typeof rawCertifications === 'object'
+  : rawCertifications && typeof rawCertifications === "object"
     ? Object.values(rawCertifications)
     : [];
 ---
@@ -33,41 +34,40 @@ const certifications = Array.isArray(rawCertifications)
     {certifications.map((group) => (
       <div class="cert-group">
         <h3>{group.title}</h3>
+
         <ul>
-          {Array.isArray(group.items) &&
-            group.items.map((item) => (
-              <li>
-                {item.href ? (
-                  <a href={item.href} target="_blank" rel="noopener">
-                    {item.label}
-                  </a>
-                ) : (
-                  item.label
-                )}
-              </li>
-            ))}
+          {group.items.map((item) => (
+            <li>
+              {item.href ? (
+                <a href={item.href} target="_blank" rel="noopener noreferrer">
+                  {item.label}
+                </a>
+              ) : (
+                item.label
+              )}
+            </li>
+          ))}
         </ul>
 
-        {Array.isArray(group.subgroups) &&
-          group.subgroups.map((sub) => (
-            <>
-              <p class="cert-subhead">{sub.subhead}</p>
-              <ul>
-                {Array.isArray(sub.items) &&
-                  sub.items.map((item) => (
-                    <li>
-                      {item.href ? (
-                        <a href={item.href} target="_blank" rel="noopener">
-                          {item.label}
-                        </a>
-                      ) : (
-                        item.label
-                      )}
-                    </li>
-                  ))}
-              </ul>
-            </>
-          ))}
+        {group.subgroups?.map((sub) => (
+          <div class="cert-subgroup">
+            <p class="cert-subhead">{sub.subhead}</p>
+
+            <ul>
+              {sub.items.map((item) => (
+                <li>
+                  {item.href ? (
+                    <a href={item.href} target="_blank" rel="noopener noreferrer">
+                      {item.label}
+                    </a>
+                  ) : (
+                    item.label
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
       </div>
     ))}
   </div>

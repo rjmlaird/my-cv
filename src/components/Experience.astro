@@ -8,37 +8,52 @@ const experience = await getExperience();
   <p class="eyebrow">Career history</p>
   <h2 id="experience-heading">Experience</h2>
 
-  {experience.map((role) => (
-    <article class={['role-item', role.current ? '' : 'dim'].filter(Boolean).join(' ')}>
-      <div class="role-header">
-        <div>
-          <span class="role-title">{role.role}</span>
-          {' · '}
-          <span class="role-org">{role.organisation ?? 'Self-employed'}</span>
+  {experience.map((role) => {
+    const organisation = role.organisationName ?? role.organisation ?? 'Self-employed';
+    const location =
+      role.location?.city && role.location?.country
+        ? `${role.location.city}, ${role.location.country}`
+        : role.location?.city ?? role.location?.country ?? '';
+
+    return (
+      <article class={['role-item', role.current ? '' : 'dim'].filter(Boolean).join(' ')}>
+        <div class="role-header">
+          <div>
+            <span class="role-title">{role.role}</span>
+            {' · '}
+            <span class="role-org">{organisation}</span>
+            {location ? (
+              <>
+                {' · '}
+                <span class="role-location">{location}</span>
+              </>
+            ) : null}
+          </div>
+
+          <time class="role-dates">
+            {role.startDate}
+            {' — '}
+            {role.current ? 'Present' : role.endDate}
+          </time>
         </div>
-        <time class="role-dates">
-          {role.startDate}
-          {' — '}
-          {role.current ? 'Present' : role.endDate}
-        </time>
-      </div>
 
-      <p>{role.summary}</p>
+        <p>{role.summary}</p>
 
-      {role.responsibilities?.length > 0 && (
-        <ul class="role-list">
-          {role.responsibilities.map((item) => <li>{item}</li>)}
-        </ul>
-      )}
-
-      {role.achievements?.length > 0 && (
-        <>
-          <h3 class="role-subheading">Achievements</h3>
+        {role.responsibilities?.length ? (
           <ul class="role-list">
-            {role.achievements.map((item) => <li>{item}</li>)}
+            {role.responsibilities.map((item) => <li>{item}</li>)}
           </ul>
-        </>
-      )}
-    </article>
-  ))}
+        ) : null}
+
+        {role.achievements?.length ? (
+          <>
+            <h3 class="role-subheading">Achievements</h3>
+            <ul class="role-list">
+              {role.achievements.map((item) => <li>{item}</li>)}
+            </ul>
+          </>
+        ) : null}
+      </article>
+    );
+  })}
 </section>

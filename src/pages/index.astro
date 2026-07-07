@@ -1,21 +1,43 @@
 ---
-import Layout from '@/layouts/Layout.astro';
-import Nav from '@/components/Nav.astro';
-import Hero from '@/components/Hero.astro';
-import Experience from '@/components/Experience.astro';
-import Education from '@/components/Education.astro';
-import Skills from '@/components/Skills.astro';
-import Certifications from '@/components/Certifications.astro';
-import Memberships from '@/components/Memberships.astro';
-import Languages from '@/components/Languages.astro';
-import Research from '@/components/Research.astro';
-import Teaching from '@/components/Teaching.astro';
-import Awards from '@/components/Awards.astro';
-import Causes from '@/components/Causes.astro';
-import Volunteering from '@/components/Volunteering.astro';
-import Contact from '@/components/Contact.astro';
-import Footer from '@/components/Footer.astro';
-import AtsView from '@/components/AtsView.astro';
+import Layout from "@/layouts/Layout.astro";
+import Nav from "@/components/Nav.astro";
+import Hero from "@/components/Hero.astro";
+import Experience from "@/components/Experience.astro";
+import Education from "@/components/Education.astro";
+import Skills from "@/components/Skills.astro";
+import Certifications from "@/components/Certifications.astro";
+import Memberships from "@/components/Memberships.astro";
+import Languages from "@/components/Languages.astro";
+import Research from "@/components/Research.astro";
+import Teaching from "@/components/Teaching.astro";
+import Awards from "@/components/Awards.astro";
+import Causes from "@/components/Causes.astro";
+import Volunteering from "@/components/Volunteering.astro";
+import Contact from "@/components/Contact.astro";
+import Footer from "@/components/Footer.astro";
+import AtsView from "@/components/AtsView.astro";
+
+import { getSkills } from "@/lib/api";
+
+type SkillGroup = {
+  id?: string;
+  label: string;
+  kind: "hard" | "soft" | "mixed";
+  keywords: string[];
+};
+
+const rawSkills = await getSkills();
+
+const skills: SkillGroup[] = Array.isArray(rawSkills)
+  ? rawSkills
+  : rawSkills && typeof rawSkills === "object"
+    ? Object.entries(rawSkills).map(([id, group]) => ({
+        id,
+        label: group.label,
+        kind: group.kind,
+        keywords: group.keywords,
+      }))
+    : [];
 ---
 
 <Layout>
@@ -25,7 +47,7 @@ import AtsView from '@/components/AtsView.astro';
   <main id="about">
     <Experience />
     <Education />
-    <Skills />
+    <Skills skills={skills} />
     <Certifications />
     <Memberships />
     <Languages />
@@ -38,6 +60,5 @@ import AtsView from '@/components/AtsView.astro';
   </main>
 
   <Footer />
-
   <AtsView />
 </Layout>

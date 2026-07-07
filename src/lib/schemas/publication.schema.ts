@@ -3,7 +3,6 @@ import { baseSchema } from "./base.schema";
 
 export const publicationSchema = baseSchema.extend({
   outlet: z.string(),
-
   type: z.enum([
     "Article",
     "Podcast",
@@ -11,11 +10,8 @@ export const publicationSchema = baseSchema.extend({
     "Paper",
     "Press Release",
   ]),
-
   author: z.string(),
-
   published: z.string(),
-
   url: z.string().url(),
 });
 

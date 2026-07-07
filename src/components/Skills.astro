@@ -1,7 +1,8 @@
 ---
 import { getSkills } from "@/lib/api";
 
-const skills = await getSkills();
+const skillsObject = await getSkills();
+const skills = Object.values(skillsObject);
 ---
 
 <section id="skills" aria-labelledby="skills-heading">

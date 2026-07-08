@@ -33,13 +33,16 @@ const skills: SkillGroup[] = Array.isArray(rawSkills)
   : rawSkills && typeof rawSkills === "object"
     ? Object.entries(rawSkills).map(([id, group]) => ({
         id,
-        label: group?.label ?? id,
-        kind: group?.kind ?? "mixed",
+        label: typeof group?.label === "string" ? group.label : id,
+        kind:
+          group?.kind === "hard" || group?.kind === "soft" || group?.kind === "mixed"
+            ? group.kind
+            : "mixed",
         keywords: Array.isArray(group?.keywords) ? group.keywords : [],
       }))
     : [];
 
-const skillsCount = skills.length;
+const skillsCount = Array.isArray(skills) ? skills.length : 0;
 ---
 
 <Layout>
@@ -51,7 +54,7 @@ const skillsCount = skills.length;
     <Education />
     <Research />
     <Teaching />
-    <Skills skills={skills} />
+    {skillsCount > 0 ? <Skills skills={skills} /> : null}
     <Certifications />
     <Memberships />
     <Languages />

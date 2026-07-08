@@ -1,17 +1,17 @@
 import { z } from "zod";
 
-export const languageSchema = z.object({
+export const languageItemSchema = z.object({
   name: z.string(),
   level: z.string(),
   proficiency: z.number().int().min(0).max(100),
 });
 
-export const languagesSchema = z.array(languageSchema);
+export const languagesSchema = z.array(languageItemSchema);
 
-export type Language = z.infer<typeof languageSchema>;
+export type LanguageItem = z.infer<typeof languageItemSchema>;
 export type Languages = z.infer<typeof languagesSchema>;
 
-export const languages: readonly Language[] = [
+export const languages: readonly LanguageItem[] = [
   { name: "English", level: "C2 — Native", proficiency: 100 },
   { name: "French", level: "B1 — Intermediate", proficiency: 55 },
   { name: "Spanish", level: "B1 — Intermediate", proficiency: 55 },

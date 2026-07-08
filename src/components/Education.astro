@@ -3,6 +3,16 @@ import { getEducation } from "@/lib/api";
 import type { EducationItem } from "@/lib/schemas/education.schema";
 
 const education = (await getEducation()) ?? [];
+
+const formatDate = (value?: string | null) => {
+  if (!value) return "";
+  const [year, month] = value.split("-");
+  if (!year) return value;
+  if (!month) return year;
+  return new Intl.DateTimeFormat("en-GB", { month: "long", year: "numeric" }).format(
+    new Date(Number(year), Number(month) - 1, 1),
+  );
+};
 ---
 
 <section id="education" aria-labelledby="education-heading">
@@ -16,6 +26,9 @@ const education = (await getEducation()) ?? [];
       const skills = Array.isArray(item.skills) ? item.skills : [];
       const responsibilities = Array.isArray(item.responsibilities) ? item.responsibilities : [];
 
+      const start = formatDate(item.startDate);
+      const end = item.current ? "Present" : formatDate(item.endDate);
+
       return (
         <div class="edu-item">
           <div class="role-header">
@@ -23,7 +36,8 @@ const education = (await getEducation()) ?? [];
               <span class="role-title">{item.qualification}</span>
             </div>
             <time class="role-dates">
-              {item.startDate} — {item.endDate || "Present"}
+              {start}
+              {end ? ` — ${end}` : ""}
             </time>
           </div>
 

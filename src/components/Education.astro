@@ -22,30 +22,36 @@ const formatDate = (value?: string | null) => {
 
   {education.length > 0 ? (
     education.map((item: EducationItem) => {
-      const achievements = Array.isArray(item.achievements) ? item.achievements : [];
-      const projects = Array.isArray(item.projects) ? item.projects : [];
-      const skills = Array.isArray(item.skills) ? item.skills : [];
       const responsibilities = Array.isArray(item.responsibilities) ? item.responsibilities : [];
+      const skills = Array.isArray(item.skills) ? item.skills : [];
+      const projects = Array.isArray(item.projects) ? item.projects : [];
+      const achievements = Array.isArray(item.achievements) ? item.achievements : [];
 
       const start = formatDate(item.startDate);
       const end = item.current ? "Present" : formatDate(item.endDate);
 
       return (
-        <div class="edu-item">
+        <article class={["edu-item", item.current ? "" : "dim"].filter(Boolean).join(" ")}>
           <div class="role-header">
             <div>
               <span class="role-title">{item.qualification}</span>
+              {" · "}
+              <span class="role-org">{item.institution}</span>
+              {item.city || item.country ? (
+                <>
+                  {" · "}
+                  <span class="role-location">
+                    {[item.city, item.country].filter(Boolean).join(", ")}
+                  </span>
+                </>
+              ) : null}
             </div>
+
             <time class="role-dates">
               {start}
               {end ? ` — ${end}` : ""}
             </time>
           </div>
-
-          <p class="role-org">
-            {item.institution}
-            {item.field ? ` · ${item.field}` : ""}
-          </p>
 
           {item.summary ? <p>{item.summary}</p> : null}
 
@@ -84,7 +90,7 @@ const formatDate = (value?: string | null) => {
               </ul>
             </>
           ) : null}
-        </div>
+        </article>
       );
     })
   ) : null}

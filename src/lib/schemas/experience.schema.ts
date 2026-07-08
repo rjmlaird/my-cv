@@ -58,13 +58,24 @@ export const experienceMediaSchema = z.object({
   caption: z.string().optional(),
 });
 
+export const locationSchema = z.preprocess((value) => {
+  if (value && typeof value === "object") {
+    const v = value as { city?: unknown; country?: unknown };
+    const city = typeof v.city === "string" ? v.city : "";
+    const country = typeof v.country === "string" ? v.country : "";
+    return [city, country].filter(Boolean).join(", ");
+  }
+
+  return value;
+}, z.string().default(""));
+
 export const experienceItemSchema = z.object({
   id: z.string(),
   organisation: z.union([organisationSchema, z.string()]).default(""),
   role: z.string(),
   employmentType: employmentTypeSchema.catch("employee"),
   organisationType: experienceModeSchema.optional(),
-  location: z.string().default(""),
+  location: locationSchema,
   workMode: workModeSchema.catch("remote"),
   summary: z.string().default(""),
   responsibilities: z.array(z.string()).default([]),

@@ -10,7 +10,7 @@ const formatDate = (value?: string | null) => {
   if (!year) return value;
   if (!month) return year;
   return new Intl.DateTimeFormat("en-GB", {
-    month: "long",
+    month: "short",
     year: "numeric",
   }).format(new Date(Number(year), Number(month) - 1, 1));
 };
@@ -21,21 +21,16 @@ const formatDate = (value?: string | null) => {
   <h2 id="education-heading">Education</h2>
 
   {education.map((item: EducationItem) => {
-    const title = item.qualification || item.role || "";
+    const title = item.qualification || item.role || "Education";
+    const startDate = formatDate(item.startDate);
+    const endDate = item.current ? "Present" : formatDate(item.endDate);
     const location = [item.city, item.country].filter(Boolean).join(", ");
-    const start = formatDate(item.startDate);
-    const end = item.current ? "Present" : formatDate(item.endDate);
-
-    const responsibilities = Array.isArray(item.responsibilities) ? item.responsibilities : [];
-    const achievements = Array.isArray(item.achievements) ? item.achievements : [];
-    const projects = Array.isArray(item.projects) ? item.projects : [];
-    const skills = Array.isArray(item.skills) ? item.skills : [];
 
     return (
       <article class="role-item edu-item">
         <div class="role-header">
           <div>
-            {title ? <span class="role-title">{title}</span> : null}
+            <span class="role-title">{title}</span>
             {item.institution ? (
               <>
                 {" · "}
@@ -56,48 +51,34 @@ const formatDate = (value?: string | null) => {
             ) : null}
           </div>
 
-          {start ? (
+          {(startDate || endDate) ? (
             <time class="role-dates">
-              {start}
-              {end ? ` — ${end}` : ""}
+              {startDate}
+              {startDate && endDate ? " — " : ""}
+              {endDate}
             </time>
           ) : null}
         </div>
 
         {item.summary ? <p>{item.summary}</p> : null}
 
-        {responsibilities.length > 0 ? (
-          <>
-            <h3 class="role-subheading">Responsibilities</h3>
-            <ul class="role-list">
-              {responsibilities.map((x) => <li>{x}</li>)}
-            </ul>
-          </>
-        ) : null}
-
-        {projects.length > 0 ? (
+        {Array.isArray(item.projects) && item.projects.length > 0 ? (
           <>
             <h3 class="role-subheading">Projects</h3>
-            <ul class="role-list">
-              {projects.map((x) => <li>{x}</li>)}
+            <ul class="pill-list" aria-label="Projects">
+              {item.projects.map((project) => (
+                <li class="pill">{project}</li>
+              ))}
             </ul>
           </>
         ) : null}
 
-        {achievements.length > 0 ? (
+        {Array.isArray(item.skills) && item.skills.length > 0 ? (
           <>
-            <h3 class="role-subheading">Achievements</h3>
-            <ul class="role-list">
-              {achievements.map((x) => <li>{x}</li>)}
-            </ul>
-          </>
-        ) : null}
-
-        {skills.length > 0 ? (
-          <>
-            <h3 class="role-subheading">Skills</h3>
-            <ul class="role-list">
-              {skills.map((x) => <li>{x}</li>)}
+            <ul class="pill-list" aria-label="Skills">
+              {item.skills.map((skill) => (
+                <li class="pill">{skill}</li>
+              ))}
             </ul>
           </>
         ) : null}
@@ -105,3 +86,26 @@ const formatDate = (value?: string | null) => {
     );
   })}
 </section>
+
+<style>
+  .pill-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.35rem 0.75rem;
+    border-radius: 9999px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.06);
+    font-size: 0.875rem;
+    line-height: 1;
+    white-space: nowrap;
+  }
+</style>

@@ -1,34 +1,35 @@
-import { z } from "zod";
-
-import { experienceItemSchema, type ExperienceItem } from "@/lib/schemas/experience.schema";
-import { educationItemSchema, type EducationItem } from "@/lib/schemas/education.schema";
+import { z } from "astro/zod";
 import { awardItemSchema, type AwardItem } from "@/lib/schemas/award.schema";
+import { certificationItemSchema, type AwardItem } from "@/lib/schemas/award.schema";
+import { educationItemSchema, type EducationItem } from "@/lib/schemas/education.schema";
+import { experienceItemSchema, type ExperienceItem } from "@/lib/schemas/experience.schema";
 import { languageItemSchema, type LanguageItem } from "@/lib/schemas/languages.schema";
+import { membershipItemSchema, type MembershipItem } from "@/lib/schemas/education.schema";
+import { organisationItemSchema, type OrganisationItem } from "@/lib/schemas/education.schema";
+import { profileItemSchema, type ProfileItem } from "@/lib/schemas/profile.schema";
+import { skillItemSchema, type SkillItem } from "@/lib/schemas/skill.schema";
+import { toolItemSchema, type ToolItem } from "@/lib/schemas/tool.schema";
+import { volunteeringItemSchema, type EducationItem } from "@/lib/schemas/volunteering.schema";
 
 const API_BASE = "https://api.rjmlaird.co.uk/api";
 
 type ApiCollectionName =
   | "awards"
-  | "education"
-  | "memberships"
   | "certifications"
+  | "education"
   | "experience"
   | "languages"
-  | "skills"
-  | "profile"
+  | "memberships"
   | "organisations";
+  | "profile";
+  | "skills";
+  | "tools";
+  | "volunteering"
+
 
 type OrganisationRecord = {
   organisation: string;
   slug: string;
-};
-
-type ExperienceRaw = {
-  role?: unknown;
-  organisation?: unknown;
-  organisationSlug?: unknown;
-  location?: unknown;
-  [key: string]: unknown;
 };
 
 async function fetchJson<T>(path: string): Promise<T> {
@@ -145,52 +146,8 @@ function normalizeCertificationGroup(group: unknown): CertificationGroup | null 
   return subgroups.length ? { title, items, subgroups } : { title, items };
 }
 
-function normalizeLocation(value: unknown): { city: string; country: string } {
-  if (value && typeof value === "object") {
-    const v = value as { city?: unknown; country?: unknown };
-    if (typeof v.city === "string" && typeof v.country === "string") {
-      return { city: v.city, country: v.country };
-    }
-  }
-
-  if (typeof value === "string") {
-    const parts = value.split(",").map((part) => part.trim()).filter(Boolean);
-    return { city: parts[0] ?? "", country: parts.slice(1).join(", ") };
-  }
-
-  return { city: "", country: "" };
-}
-
-function getDisplayOrganisationName(value: unknown, orgMap: Map<string, string>): string | undefined {
-  if (typeof value === "string" && orgMap.has(value)) return orgMap.get(value);
-  if (typeof value === "string") return value;
-  return undefined;
-}
-
-async function getOrganisationMap() {
-  const data = await fetchJson<unknown>("organisations");
-  const list = asArray<OrganisationRecord>(data);
-  return new Map(list.map((org) => [org.slug, org.organisation] as const));
-}
-
 export async function getExperience(): Promise<ExperienceItem[]> {
-  const [data, orgMap] = await Promise.all([fetchJson<unknown>("experience"), getOrganisationMap()]);
-
-  const normalized = Array.isArray(data)
-    ? data.map((item) => {
-        if (!item || typeof item !== "object") return item;
-
-        const v = item as ExperienceRaw;
-
-        return {
-          ...v,
-          organisation: getDisplayOrganisationName(v.organisation ?? v.organisationSlug, orgMap),
-          location: normalizeLocation(v.location),
-        };
-      })
-    : [];
-
-  return experienceResponseSchema.parse(normalized);
+  return experienceResponseSchema.parse(await fetchJson<unknown>("experience"));
 }
 
 export async function getEducation(): Promise<EducationItem[]> {

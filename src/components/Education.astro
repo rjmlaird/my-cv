@@ -1,37 +1,43 @@
 ---
-import { getEducation } from '@/lib/api';
-import type { EducationItem } from '@/lib/schemas/education.schema';
+import { getEducation } from "@/lib/api";
+import type { EducationItem } from "@/lib/schemas/education.schema";
 
-const education = await getEducation();
+const education = (await getEducation()) ?? [];
 ---
 
 <section id="education" aria-labelledby="education-heading">
   <p class="eyebrow">Academic background</p>
   <h2 id="education-heading">Education</h2>
 
-  {education.map((item: EducationItem) => (
-    <div class="edu-item">
-      <div class="role-header">
-        <div>
-          <span class="role-title">{item.qualification}</span>
-        </div>
-        <time class="role-dates">
-          {item.startDate} — {item.endDate ?? 'Present'}
-        </time>
-      </div>
+  {education.length > 0
+    ? education.map((item: EducationItem) => {
+        const achievements = Array.isArray(item.achievements) ? item.achievements : [];
 
-      <p class="role-org">
-        {item.institution}
-        {item.field ? ` · ${item.field}` : ''}
-      </p>
+        return (
+          <div class="edu-item">
+            <div class="role-header">
+              <div>
+                <span class="role-title">{item.qualification}</span>
+              </div>
+              <time class="role-dates">
+                {item.startDate} — {item.endDate || "Present"}
+              </time>
+            </div>
 
-      {item.description && <p>{item.description}</p>}
+            <p class="role-org">
+              {item.institution}
+              {item.field ? ` · ${item.field}` : ""}
+            </p>
 
-      {item.achievements.length > 0 && (
-        <ul class="role-list">
-          {item.achievements.map((achievement) => <li>{achievement}</li>)}
-        </ul>
-      )}
-    </div>
-  ))}
+            {item.description ? <p>{item.description}</p> : null}
+
+            {achievements.length > 0 ? (
+              <ul class="role-list">
+                {achievements.map((achievement) => <li>{achievement}</li>)}
+              </ul>
+            ) : null}
+          </div>
+        );
+      })
+    : null}
 </section>

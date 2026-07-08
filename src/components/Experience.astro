@@ -1,59 +1,70 @@
 ---
-import { getExperience } from '@/lib/api';
+import { getExperience } from "@/lib/api";
 
-const experience = await getExperience();
+const experience = (await getExperience()) ?? [];
 ---
 
 <section id="experience" aria-labelledby="experience-heading">
   <p class="eyebrow">Career history</p>
   <h2 id="experience-heading">Experience</h2>
 
-  {experience.map((role) => {
-    const organisation = role.organisationName ?? role.organisation ?? 'Self-employed';
-    const location =
-      role.location?.city && role.location?.country
-        ? `${role.location.city}, ${role.location.country}`
-        : role.location?.city ?? role.location?.country ?? '';
+  {experience.length > 0 ? (
+    experience.map((role) => {
+      const organisation =
+        role.organisationName ??
+        (typeof role.organisation === "string" ? role.organisation : role.organisation?.name) ??
+        "Self-employed";
 
-    return (
-      <article class={['role-item', role.current ? '' : 'dim'].filter(Boolean).join(' ')}>
-        <div class="role-header">
-          <div>
-            <span class="role-title">{role.role}</span>
-            {' · '}
-            <span class="role-org">{organisation}</span>
-            {location ? (
-              <>
-                {' · '}
-                <span class="role-location">{location}</span>
-              </>
-            ) : null}
+      const location =
+        typeof role.location === "string"
+          ? role.location
+          : role.location?.city && role.location?.country
+            ? `${role.location.city}, ${role.location.country}`
+            : role.location?.city ?? role.location?.country ?? "";
+
+      const responsibilities = Array.isArray(role.responsibilities) ? role.responsibilities : [];
+      const achievements = Array.isArray(role.achievements) ? role.achievements : [];
+
+      return (
+        <article class={["role-item", role.current ? "" : "dim"].filter(Boolean).join(" ")}>
+          <div class="role-header">
+            <div>
+              <span class="role-title">{role.role}</span>
+              {" · "}
+              <span class="role-org">{organisation}</span>
+              {location ? (
+                <>
+                  {" · "}
+                  <span class="role-location">{location}</span>
+                </>
+              ) : null}
+            </div>
+
+            <time class="role-dates">
+              {role.startDate}
+              {" — "}
+              {role.current ? "Present" : role.endDate}
+            </time>
           </div>
 
-          <time class="role-dates">
-            {role.startDate}
-            {' — '}
-            {role.current ? 'Present' : role.endDate}
-          </time>
-        </div>
+          <p>{role.summary ?? ""}</p>
 
-        <p>{role.summary}</p>
-
-        {role.responsibilities?.length ? (
-          <ul class="role-list">
-            {role.responsibilities.map((item) => <li>{item}</li>)}
-          </ul>
-        ) : null}
-
-        {role.achievements?.length ? (
-          <>
-            <h3 class="role-subheading">Achievements</h3>
+          {responsibilities.length > 0 ? (
             <ul class="role-list">
-              {role.achievements.map((item) => <li>{item}</li>)}
+              {responsibilities.map((item) => <li>{item}</li>)}
             </ul>
-          </>
-        ) : null}
-      </article>
-    );
-  })}
+          ) : null}
+
+          {achievements.length > 0 ? (
+            <>
+              <h3 class="role-subheading">Achievements</h3>
+              <ul class="role-list">
+                {achievements.map((item) => <li>{item}</li>)}
+              </ul>
+            </>
+          ) : null}
+        </article>
+      );
+    })
+  ) : null}
 </section>

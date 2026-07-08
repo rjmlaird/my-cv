@@ -59,7 +59,7 @@ export const skillGroupSchema = z.object({
 });
 
 export const skillsResponseSchema = z.object({
-  skills: z.record(skillGroupSchema),
+  skills: z.record(skillGroupSchema).default({}),
 });
 
 export type SkillGroup = z.infer<typeof skillGroupSchema>;
@@ -161,10 +161,7 @@ function normalizeLocation(value: unknown): { city: string; country: string } {
   return { city: "", country: "" };
 }
 
-function getDisplayOrganisationName(
-  value: unknown,
-  orgMap: Map<string, string>,
-): string | undefined {
+function getDisplayOrganisationName(value: unknown, orgMap: Map<string, string>): string | undefined {
   if (typeof value === "string" && orgMap.has(value)) return orgMap.get(value);
   if (typeof value === "string") return value;
   return undefined;
@@ -177,10 +174,7 @@ async function getOrganisationMap() {
 }
 
 export async function getExperience(): Promise<ExperienceItem[]> {
-  const [data, orgMap] = await Promise.all([
-    fetchJson<unknown>("experience"),
-    getOrganisationMap(),
-  ]);
+  const [data, orgMap] = await Promise.all([fetchJson<unknown>("experience"), getOrganisationMap()]);
 
   const normalized = Array.isArray(data)
     ? data.map((item) => {
@@ -240,8 +234,11 @@ export async function getLanguages(): Promise<LanguageItem[]> {
 }
 
 export async function getSkills(): Promise<SkillGroups> {
-  const data = skillsResponseSchema.parse(await fetchJson<unknown>("skills"));
-  return data.skills;
+  const data = await fetchJson<unknown>("skills");
+  const parsed = skillsResponseSchema.parse(
+    data && typeof data === "object" ? data : { skills: {} },
+  );
+  return parsed.skills;
 }
 
 export async function getProfile(): Promise<Profile> {

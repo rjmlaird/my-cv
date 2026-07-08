@@ -14,6 +14,7 @@ const education = (await getEducation()) ?? [];
       const achievements = Array.isArray(item.achievements) ? item.achievements : [];
       const projects = Array.isArray(item.projects) ? item.projects : [];
       const skills = Array.isArray(item.skills) ? item.skills : [];
+      const responsibilities = Array.isArray(item.responsibilities) ? item.responsibilities : [];
 
       return (
         <div class="edu-item">
@@ -31,7 +32,16 @@ const education = (await getEducation()) ?? [];
             {item.field ? ` · ${item.field}` : ""}
           </p>
 
-          {item.description ? <p>{item.description}</p> : null}
+          {item.summary ? <p>{item.summary}</p> : null}
+
+          {responsibilities.length > 0 ? (
+            <>
+              <h3 class="role-subheading">Responsibilities</h3>
+              <ul class="role-list">
+                {responsibilities.map((responsibility) => <li>{responsibility}</li>)}
+              </ul>
+            </>
+          ) : null}
 
           {projects.length > 0 ? (
             <>

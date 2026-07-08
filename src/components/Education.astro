@@ -29,20 +29,17 @@ const formatDate = (value?: string | null) => {
 
       const start = formatDate(item.startDate);
       const end = item.current ? "Present" : formatDate(item.endDate);
+      const title = item.qualification || item.role || "";
+      const location = [item.city, item.country].filter(Boolean).join(", ");
 
       return (
         <article class={["edu-item", item.current ? "" : "dim"].filter(Boolean).join(" ")}>
           <div class="role-header">
             <div>
-              <span class="role-title">{item.qualification}</span>
-              {" · "}
-              <span class="role-org">{item.institution}</span>
-              {item.city || item.country ? (
-                <>
-                  {" · "}
-                  <span class="role-location">{[item.city, item.country].filter(Boolean).join(", ")}</span>
-                </>
-              ) : null}
+              {title ? <div class="role-title">{title}</div> : null}
+              <div class="role-org">{item.institution}</div>
+              {item.field ? <div class="role-location">{item.field}</div> : null}
+              {location ? <div class="role-location">{location}</div> : null}
             </div>
 
             {start ? (

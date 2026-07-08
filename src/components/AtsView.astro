@@ -1,9 +1,10 @@
 ---
 import * as api from '@/lib/api';
 import { languages } from '@/data/languages';
+import { profile } from '@/data/profile';
+import { research, teaching, awards as localAwards } from '@/data/awards';
 
 const {
-  getProfile,
   getExperience,
   getEducation,
   getSkills,
@@ -12,7 +13,6 @@ const {
   getAwards,
 } = api;
 
-const profile = await getProfile();
 const experienceData = await getExperience();
 const educationData = await getEducation();
 const skillsData = await getSkills();
@@ -20,30 +20,18 @@ const certificationsData = await getCertifications();
 const membershipsData = await getMemberships();
 const awardsData = await getAwards();
 
-const experience = Array.isArray(experienceData)
-  ? experienceData
-  : Array.isArray(experienceData?.experience)
-    ? experienceData.experience
-    : [];
+const experience = Array.isArray(experienceData) ? experienceData : [];
+const education = Array.isArray(educationData) ? educationData : [];
 
-const education = Array.isArray(educationData)
-  ? educationData
-  : Array.isArray(educationData?.education)
-    ? educationData.education
-    : [];
-
-const skillsGroups = Array.isArray(skillsData)
-  ? skillsData
-  : skillsData && typeof skillsData === 'object' && !Array.isArray(skillsData) && 'skills' in skillsData
-    ? Object.values(skillsData.skills)
-    : [];
+// getSkills() already returns Record<string, SkillGroup> — unwrap directly.
+const skillsGroups = skillsData && typeof skillsData === 'object' ? Object.values(skillsData) : [];
 
 const certsArr = Array.isArray(certificationsData) ? certificationsData : [];
-const membershipsArr = Array.isArray(membershipsData) ? membershipsData : [];
-const awardsArr = Array.isArray(awardsData) ? awardsData : [];
+const membershipsArr = Array.isArray(membershipsData) ? (membershipsData as any[]) : [];
+const awardsArr = Array.isArray(awardsData) && awardsData.length > 0 ? awardsData : localAwards;
 
 const skillsFlat = skillsGroups
-  .map((g) => (Array.isArray(g.items) ? g.items.join(', ') : ''))
+  .map((g: any) => (Array.isArray(g.keywords) ? g.keywords.join(', ') : ''))
   .filter(Boolean)
   .join(', ');
 
@@ -53,33 +41,38 @@ const certsFlat = certsArr
   .join('. ');
 
 const membershipsFlat = membershipsArr
-  .map((g) => (Array.isArray(g.items) ? g.items.join('; ') : ''))
+  .map((m) => (typeof m === 'string' ? m : [m.organisation, m.role].filter(Boolean).join(' — ')))
   .filter(Boolean)
   .join('; ');
 
 const languagesFlat = languages.map((l) => `${l.name} (${l.level})`).join('; ');
----
 
+function formatAward(award: (typeof awardsArr)[number]): string {
+  if (typeof award === 'string') return award;
+  return [award.title, award.issuer ? `— ${award.issuer}` : '', award.date ? `(${award.date})` : '']
+    .filter(Boolean)
+    .join(' ');
+}
 ---
 
 <div id="ats-view">
   <h1>{profile.name}</h1>
   <p class="ats-meta">
-    Director of Green Orbit Digital · Chartered Marketer (CMktr) · {profile.credentials}<br />
+    Director of Green Orbit Digital · {profile.credentials}<br />
     Email: rjmlaird@gmail.com &nbsp;|&nbsp; LinkedIn: linkedin.com/in/rjmlaird87 &nbsp;|&nbsp;
     GitHub: github.com/rjmlaird &nbsp;|&nbsp; ORCID: 0000-0002-5992-684X
   </p>
 
   <h2>Summary</h2>
-  {Array.isArray(profile.summary) ? profile.summary.map((p) => <p>{p}</p>) : null}
+  {profile.summary.map((p) => <p>{p}</p>)}
 
   <h2>Core Skills</h2>
-  <p>{Array.isArray(profile.tags) ? profile.tags.join(', ') : ''}. Technical: {skillsFlat}.</p>
+  <p>{profile.tags.join(', ')}. Technical: {skillsFlat}.</p>
 
   <h2>Experience</h2>
   {experience.map((role) => (
     <div class="ats-entry">
-      <strong>{role.role}</strong> — {role.organisation ?? role.organization ?? role.org}
+      <strong>{role.role}</strong> — {role.organisation ?? 'Self-employed'}
       <span class="ats-meta">
         ({role.startDate}
         {role.endDate ? ` to ${role.endDate}` : role.current ? ' to present' : ''})
@@ -96,8 +89,21 @@ const languagesFlat = languages.map((l) => `${l.name} (${l.level})`).join('; ');
   <h2>Education</h2>
   <ul>
     {education.map((item) => (
-      <li>{item.title ?? item.role ?? item.name} — {item.org ?? item.organisation}, {item.dates ?? item.startDate}</li>
+      <li>
+        {item.qualification} — {item.institution}
+        {item.field ? `, ${item.field}` : ''}
+        {item.startDate ? ` (${item.startDate}${item.endDate ? ` – ${item.endDate}` : ''})` : ''}
+      </li>
     ))}
+  </ul>
+
+  <h2>Research</h2>
+  {research.paragraphs.map((p) => <p>{p}</p>)}
+
+  <h2>Teaching</h2>
+  <p class="ats-meta">{teaching.org}</p>
+  <ul>
+    {teaching.items.map((item) => <li>{item}</li>)}
   </ul>
 
   <h2>Certifications</h2>
@@ -110,5 +116,5 @@ const languagesFlat = languages.map((l) => `${l.name} (${l.level})`).join('; ');
   <p>{languagesFlat}.</p>
 
   <h2>Awards</h2>
-  <p>{awardsArr.join('; ')}.</p>
+  <p>{awardsArr.map(formatAward).join('; ')}.</p>
 </div>

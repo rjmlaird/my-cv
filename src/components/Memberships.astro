@@ -1,19 +1,45 @@
 ---
 import { getMemberships } from '@/lib/api';
 
-type MembershipItem = string | { label: string; href?: string };
-
-type MembershipGroup = {
-  title: string;
-  items: MembershipItem[];
+const TYPE_LABELS: Record<string, string> = {
+  chartered_body: 'Chartered Bodies',
+  professional_body: 'Professional Bodies',
+  scientific_body: 'Scientific Bodies',
+  security_body: 'Security Bodies',
+  industry_association: 'Industry Associations',
+  climate_network: 'Climate Networks',
+  research_network: 'Research Networks',
+  media_network: 'Media Networks',
+  creative_network: 'Creative Networks',
+  space_network: 'Space Networks',
+  urban_network: 'Urban Networks',
+  sustainability_network: 'Sustainability Networks',
+  business_association: 'Business Associations',
+  startup_network: 'Startup Networks',
+  community_network: 'Community Networks',
+  ethics_framework: 'Ethics Frameworks',
+  education_network: 'Education Networks',
+  framework_network: 'Framework Networks',
+  economic_network: 'Economic Networks',
+  advocacy_network: 'Advocacy Networks',
+  climate_lab: 'Climate Labs',
+  industry_initiative: 'Industry Initiatives',
+  nonprofit_network: 'Nonprofit Networks',
+  ethics_network: 'Ethics Networks',
+  business_climate_network: 'Business Climate Networks',
+  urban_innovation_network: 'Urban Innovation Networks',
 };
 
-const rawMemberships = await getMemberships<MembershipGroup[] | Record<string, MembershipGroup>>();
-const memberships = Array.isArray(rawMemberships)
-  ? rawMemberships
-  : rawMemberships && typeof rawMemberships === 'object'
-    ? Object.values(rawMemberships)
-    : [];
+const rawMemberships = await getMemberships();
+const memberships = Array.isArray(rawMemberships) ? rawMemberships : [];
+
+const groups = new Map<string, typeof memberships>();
+for (const item of memberships) {
+  if (!item || typeof item !== 'object') continue;
+  const type = (item as { type?: string }).type ?? 'other';
+  if (!groups.has(type)) groups.set(type, []);
+  groups.get(type)!.push(item);
+}
 ---
 
 <section id="memberships" aria-labelledby="memberships-heading">
@@ -21,24 +47,22 @@ const memberships = Array.isArray(rawMemberships)
   <h2 id="memberships-heading">Professional Memberships &amp; Affiliations</h2>
 
   <div class="cert-grid">
-    {memberships.map((group) => (
+    {[...groups.entries()].map(([type, items]) => (
       <div class="cert-group">
-        <h3>{group.title}</h3>
+        <h3>{TYPE_LABELS[type] ?? type}</h3>
         <ul>
-          {Array.isArray(group.items) &&
-            group.items.map((item) => (
-              <li>
-                {typeof item === 'string' ? (
-                  item
-                ) : item.href ? (
-                  <a href={item.href} target="_blank" rel="noopener">
-                    {item.label}
-                  </a>
-                ) : (
-                  item.label
-                )}
-              </li>
-            ))}
+          {items.map((item: any) => (
+            <li>
+              {item.links?.website || item.links?.profile ? (
+                <a href={item.links.website ?? item.links.profile} target="_blank" rel="noopener">
+                  {item.organisation}
+                </a>
+              ) : (
+                item.organisation
+              )}
+              {item.role ? <span> — {item.role}</span> : null}
+            </li>
+          ))}
         </ul>
       </div>
     ))}

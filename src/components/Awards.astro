@@ -1,14 +1,14 @@
 ---
 import { getAwards } from '@/lib/api';
 
-type AwardItem = string | { label: string };
+const rawAwards = await getAwards();
+const awards = Array.isArray(rawAwards) ? rawAwards : [];
 
-const rawAwards = await getAwards<AwardItem[] | Record<string, AwardItem>>();
-const awards = Array.isArray(rawAwards)
-  ? rawAwards
-  : rawAwards && typeof rawAwards === 'object'
-    ? Object.values(rawAwards)
-    : [];
+function formatAward(award: (typeof awards)[number]): string {
+  if (typeof award === 'string') return award;
+  const parts = [award.title, award.issuer ? `— ${award.issuer}` : '', award.date ? `(${award.date})` : ''];
+  return parts.filter(Boolean).join(' ');
+}
 ---
 
 <section id="awards" aria-labelledby="awards-heading">
@@ -17,7 +17,10 @@ const awards = Array.isArray(rawAwards)
 
   <ul class="award-list">
     {awards.map((award) => (
-      <li>{typeof award === 'string' ? award : award.label}</li>
+      <li>
+        {formatAward(award)}
+        {typeof award !== 'string' && award.description ? <span class="award-desc"> — {award.description}</span> : null}
+      </li>
     ))}
   </ul>
 </section>

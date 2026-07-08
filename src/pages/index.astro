@@ -33,9 +33,9 @@ const skills: SkillGroup[] = Array.isArray(rawSkills)
   : rawSkills && typeof rawSkills === "object"
     ? Object.entries(rawSkills).map(([id, group]) => ({
         id,
-        label: group.label,
-        kind: group.kind,
-        keywords: group.keywords,
+        label: group?.label ?? id,
+        kind: group?.kind ?? "mixed",
+        keywords: Array.isArray(group?.keywords) ? group.keywords : [],
       }))
     : [];
 ---

@@ -7,7 +7,7 @@ export const educationSourceSchema = z.object({
   qualification: z.string().optional(),
   field: z.string().optional(),
   institutionType: z.string().optional(),
-  startDate: z.string().optional(),
+  startDate: z.string().nullable().optional(),
   endDate: z.string().nullable().optional(),
   current: z.boolean().default(false),
   city: z.string().default(""),

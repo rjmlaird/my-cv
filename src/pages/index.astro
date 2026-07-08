@@ -38,6 +38,8 @@ const skills: SkillGroup[] = Array.isArray(rawSkills)
         keywords: Array.isArray(group?.keywords) ? group.keywords : [],
       }))
     : [];
+
+const skillsCount = skills.length;
 ---
 
 <Layout>

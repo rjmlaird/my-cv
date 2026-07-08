@@ -1,14 +1,14 @@
 import { z } from "astro/zod";
 
-export const educationItemSchema = z.object({
-  id: z.string(),
+export const educationSourceSchema = z.object({
+  id: z.union([z.string(), z.number()]),
   institution: z.string(),
-  role: z.string(),
-  qualification: z.string(),
+  role: z.string().optional(),
+  qualification: z.string().optional(),
   field: z.string().optional(),
   institutionType: z.string().optional(),
-  startDate: z.string(),
-  endDate: z.string().nullable().default(null),
+  startDate: z.string().optional(),
+  endDate: z.string().nullable().optional(),
   current: z.boolean().default(false),
   city: z.string().default(""),
   country: z.string().default(""),
@@ -27,6 +27,34 @@ export const educationItemSchema = z.object({
   featured: z.boolean().default(false),
   order: z.number().int().default(0),
 });
+
+export const educationItemSchema = educationSourceSchema.transform((item) => ({
+  id: String(item.id),
+  institution: item.institution,
+  role: item.role ?? item.qualification ?? "",
+  qualification: item.qualification ?? item.role ?? "",
+  field: item.field,
+  institutionType: item.institutionType,
+  startDate: item.startDate ?? "",
+  endDate: item.endDate ?? null,
+  current: item.current ?? false,
+  city: item.city,
+  country: item.country,
+  summary: item.summary,
+  responsibilities: item.responsibilities,
+  achievements: item.achievements,
+  skills: item.skills,
+  projects: item.projects,
+  clients: item.clients,
+  articles: item.articles,
+  talks: item.talks,
+  awards: item.awards,
+  certifications: item.certifications,
+  technologies: item.technologies,
+  media: item.media,
+  featured: item.featured,
+  order: item.order,
+}));
 
 export const educationSchema = z.array(educationItemSchema).default([]);
 

@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "astro/zod";
 
 export const awardItemSchema = z.object({
   id: z.string(),

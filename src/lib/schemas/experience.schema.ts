@@ -1,37 +1,37 @@
-import { z } from 'astro/zod';
+import { z } from "astro/zod";
 
 export const experienceModeSchema = z.enum([
-  'agency',
-  'company',
-  'freelance',
-  'programme',
-  'non_profit',
-  'network',
-  'research',
-  'university',
-  'education',
-  'government',
-  'local_authority',
-  'media',
-  'consortium',
-  'school',
-  'internship',
-  'outreach',
-  'independent',
+  "agency",
+  "company",
+  "freelance",
+  "programme",
+  "non_profit",
+  "network",
+  "research",
+  "university",
+  "education",
+  "government",
+  "local_authority",
+  "media",
+  "consortium",
+  "school",
+  "internship",
+  "outreach",
+  "independent",
 ]);
 
 export const employmentTypeSchema = z.enum([
-  'founder',
-  'employee',
-  'contract',
-  'freelance',
-  'internship',
-  'research',
-  'academic',
-  'career_break',
+  "founder",
+  "employee",
+  "contract",
+  "freelance",
+  "internship",
+  "research",
+  "academic",
+  "career_break",
 ]);
 
-export const workModeSchema = z.enum(['remote', 'hybrid', 'onsite']);
+export const workModeSchema = z.enum(["remote", "hybrid", "onsite"]);
 
 export const experienceLinkSchema = z.object({
   label: z.string(),
@@ -53,7 +53,7 @@ export const experienceImpactSchema = z.object({
 });
 
 export const experienceMediaSchema = z.object({
-  type: z.enum(['image', 'video', 'article']),
+  type: z.enum(["image", "video", "article"]),
   url: z.string().url(),
   caption: z.string().optional(),
 });
@@ -67,22 +67,22 @@ export const experienceItemSchema = z.object({
   location: z.string(),
   workMode: workModeSchema,
   summary: z.string(),
-  responsibilities: z.array(z.string()),
-  skills: z.array(z.string()),
-  links: z.array(experienceLinkSchema).optional(),
+  responsibilities: z.array(z.string()).default([]),
+  skills: z.array(z.string()).default([]),
+  links: z.array(experienceLinkSchema).default([]),
   organisationSlug: z.string().optional(),
   hubspotId: z.string().optional(),
-  keywords: z.array(z.string()).optional(),
+  keywords: z.array(z.string()).default([]),
   startDate: z.string(),
   endDate: z.string().nullable().optional(),
-  isCurrent: z.boolean().optional(),
-  impact: z.array(experienceImpactSchema).optional(),
-  media: z.array(experienceMediaSchema).optional(),
+  isCurrent: z.boolean().default(false),
+  impact: z.array(experienceImpactSchema).default([]),
+  media: z.array(experienceMediaSchema).default([]),
   order: z.number().int().optional(),
 });
 
 export const experienceResponseSchema = z.object({
-  data: z.array(experienceItemSchema),
+  data: z.array(experienceItemSchema).default([]),
   meta: z
     .object({
       total: z.number().int(),

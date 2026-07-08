@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "astro/zod";
 
 export const skillItemSchema = z.object({
   name: z.string(),
@@ -17,33 +17,3 @@ export const skillsSchema = z.record(skillItemSchema).default({});
 
 export type SkillItem = z.infer<typeof skillItemSchema>;
 export type Skills = z.infer<typeof skillsSchema>;
-
-export const skills: Skills = {
-  typescript: {
-    name: "TypeScript",
-    category: "Development",
-    proficiency: "Expert",
-    years: 6,
-    featured: true,
-  },
-  astro: {
-    name: "Astro",
-    category: "Development",
-    proficiency: "Advanced",
-    years: 3,
-    featured: true,
-  },
-  react: {
-    name: "React",
-    category: "Development",
-    proficiency: "Advanced",
-    years: 5,
-    featured: true,
-  },
-  python: {
-    name: "Python",
-    category: "Development",
-    proficiency: "Advanced",
-    years: 6,
-  },
-};

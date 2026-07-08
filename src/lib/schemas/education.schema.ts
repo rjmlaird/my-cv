@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "astro/zod";
 
 export const educationItemSchema = z.object({
   id: z.number(),
@@ -31,17 +31,9 @@ export const educationSchema = z.object({
 export type EducationItem = z.infer<typeof educationItemSchema>;
 export type Education = z.infer<typeof educationSchema>;
 
-function splitDateRange(date: string) {
-  const [startDate, endDate] = date.split(" - ").map((part) => part.trim());
-  return {
-    startDate: startDate || undefined,
-    endDate: endDate || undefined,
-  };
-}
-
 export function parseEducation(raw: unknown): Education {
   const item = educationItemSchema.parse(raw);
-  const { startDate, endDate } = splitDateRange(item.date);
+  const [startDate, endDate] = item.date.split(" - ").map((part) => part.trim());
 
   return educationSchema.parse({
     id: item.id,
@@ -50,8 +42,8 @@ export function parseEducation(raw: unknown): Education {
     institutionType: item.institutionType,
     field: item.department,
     location: item.location,
-    startDate,
-    endDate,
+    startDate: startDate || undefined,
+    endDate: endDate || undefined,
     displayText: item.display_text,
     description: item.description,
     achievements: [],

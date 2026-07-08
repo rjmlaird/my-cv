@@ -18,7 +18,6 @@ export const skillsSchema = z.record(skillItemSchema).default({});
 export type SkillItem = z.infer<typeof skillItemSchema>;
 export type Skills = z.infer<typeof skillsSchema>;
 
-/* Optional sample data */
 export const skills: Skills = {
   typescript: {
     name: "TypeScript",
@@ -39,5 +38,12 @@ export const skills: Skills = {
     category: "Development",
     proficiency: "Advanced",
     years: 5,
+    featured: true,
+  },
+  python: {
+    name: "Python",
+    category: "Development",
+    proficiency: "Advanced",
+    years: 6,
   },
 };

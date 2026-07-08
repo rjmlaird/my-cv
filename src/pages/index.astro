@@ -2,6 +2,9 @@
 import Layout from "@/layouts/Layout.astro";
 import Nav from "@/components/Nav.astro";
 import Hero from "@/components/Hero.astro";
+import Experience from "@/components/Experience.astro";
+import Education from "@/components/Education.astro";
+import Contact from "@/components/Contact.astro";
 import Footer from "@/components/Footer.astro";
 import AtsView from "@/components/AtsView.astro";
 ---
@@ -9,7 +12,12 @@ import AtsView from "@/components/AtsView.astro";
 <Layout>
   <Nav />
   <Hero />
-  <main id="about"></main>
+
+  <main id="about">
+    <Experience />
+    <Education />
+  </main>
+
   <Footer />
   <AtsView />
 </Layout>

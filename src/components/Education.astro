@@ -22,26 +22,52 @@ const formatDate = (value?: string | null) => {
 
   {education.map((item: EducationItem) => {
     const title = item.qualification || item.role || "";
-    const start = formatDate(item.startDate);
-    const end = formatDate(item.endDate);
     const location = [item.city, item.country].filter(Boolean).join(", ");
+    const start = formatDate(item.startDate);
+    const end = item.current ? "Present" : formatDate(item.endDate);
     const responsibilities = Array.isArray(item.responsibilities) ? item.responsibilities : [];
     const achievements = Array.isArray(item.achievements) ? item.achievements : [];
     const projects = Array.isArray(item.projects) ? item.projects : [];
     const skills = Array.isArray(item.skills) ? item.skills : [];
 
     return (
-      <article class="edu-item">
-        {title ? <h3 class="role-title">{title}</h3> : null}
-        <p class="role-org">{item.institution}</p>
-        {item.field ? <p class="role-field">{item.field}</p> : null}
-        {location ? <p class="role-location">{location}</p> : null}
-        {start || end ? <p class="role-dates">{start}{start && end ? " — " : ""}{end}</p> : null}
+      <article class="role-item edu-item">
+        <div class="role-header">
+          <div>
+            {title ? <span class="role-title">{title}</span> : null}
+            {item.institution ? (
+              <>
+                {" · "}
+                <span class="role-org">{item.institution}</span>
+              </>
+            ) : null}
+            {item.field ? (
+              <>
+                {" · "}
+                <span class="role-location">{item.field}</span>
+              </>
+            ) : null}
+            {location ? (
+              <>
+                {" · "}
+                <span class="role-location">{location}</span>
+              </>
+            ) : null}
+          </div>
+
+          {start ? (
+            <time class="role-dates">
+              {start}
+              {end ? ` — ${end}` : ""}
+            </time>
+          ) : null}
+        </div>
+
         {item.summary ? <p>{item.summary}</p> : null}
 
         {responsibilities.length > 0 ? (
           <>
-            <h4 class="role-subheading">Responsibilities</h4>
+            <h3 class="role-subheading">Responsibilities</h3>
             <ul class="role-list">
               {responsibilities.map((x) => <li>{x}</li>)}
             </ul>
@@ -50,7 +76,7 @@ const formatDate = (value?: string | null) => {
 
         {projects.length > 0 ? (
           <>
-            <h4 class="role-subheading">Projects</h4>
+            <h3 class="role-subheading">Projects</h3>
             <ul class="role-list">
               {projects.map((x) => <li>{x}</li>)}
             </ul>
@@ -59,7 +85,7 @@ const formatDate = (value?: string | null) => {
 
         {achievements.length > 0 ? (
           <>
-            <h4 class="role-subheading">Achievements</h4>
+            <h3 class="role-subheading">Achievements</h3>
             <ul class="role-list">
               {achievements.map((x) => <li>{x}</li>)}
             </ul>
@@ -68,7 +94,7 @@ const formatDate = (value?: string | null) => {
 
         {skills.length > 0 ? (
           <>
-            <h4 class="role-subheading">Skills</h4>
+            <h3 class="role-subheading">Skills</h3>
             <ul class="role-list">
               {skills.map((x) => <li>{x}</li>)}
             </ul>

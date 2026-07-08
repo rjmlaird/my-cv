@@ -23,9 +23,9 @@ const formatDate = (value?: string | null) => {
   {education.length > 0 ? (
     education.map((item: EducationItem) => {
       const responsibilities = Array.isArray(item.responsibilities) ? item.responsibilities : [];
-      const skills = Array.isArray(item.skills) ? item.skills : [];
-      const projects = Array.isArray(item.projects) ? item.projects : [];
       const achievements = Array.isArray(item.achievements) ? item.achievements : [];
+      const projects = Array.isArray(item.projects) ? item.projects : [];
+      const skills = Array.isArray(item.skills) ? item.skills : [];
 
       const start = formatDate(item.startDate);
       const end = item.current ? "Present" : formatDate(item.endDate);
@@ -40,17 +40,17 @@ const formatDate = (value?: string | null) => {
               {item.city || item.country ? (
                 <>
                   {" · "}
-                  <span class="role-location">
-                    {[item.city, item.country].filter(Boolean).join(", ")}
-                  </span>
+                  <span class="role-location">{[item.city, item.country].filter(Boolean).join(", ")}</span>
                 </>
               ) : null}
             </div>
 
-            <time class="role-dates">
-              {start}
-              {end ? ` — ${end}` : ""}
-            </time>
+            {start ? (
+              <time class="role-dates" datetime={item.startDate}>
+                {start}
+                {end ? ` — ${end}` : ""}
+              </time>
+            ) : null}
           </div>
 
           {item.summary ? <p>{item.summary}</p> : null}

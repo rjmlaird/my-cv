@@ -9,35 +9,58 @@ const education = (await getEducation()) ?? [];
   <p class="eyebrow">Academic background</p>
   <h2 id="education-heading">Education</h2>
 
-  {education.length > 0
-    ? education.map((item: EducationItem) => {
-        const achievements = Array.isArray(item.achievements) ? item.achievements : [];
+  {education.length > 0 ? (
+    education.map((item: EducationItem) => {
+      const achievements = Array.isArray(item.achievements) ? item.achievements : [];
+      const projects = Array.isArray(item.projects) ? item.projects : [];
+      const skills = Array.isArray(item.skills) ? item.skills : [];
 
-        return (
-          <div class="edu-item">
-            <div class="role-header">
-              <div>
-                <span class="role-title">{item.qualification}</span>
-              </div>
-              <time class="role-dates">
-                {item.startDate} — {item.endDate || "Present"}
-              </time>
+      return (
+        <div class="edu-item">
+          <div class="role-header">
+            <div>
+              <span class="role-title">{item.qualification}</span>
             </div>
+            <time class="role-dates">
+              {item.startDate} — {item.endDate || "Present"}
+            </time>
+          </div>
 
-            <p class="role-org">
-              {item.institution}
-              {item.field ? ` · ${item.field}` : ""}
-            </p>
+          <p class="role-org">
+            {item.institution}
+            {item.field ? ` · ${item.field}` : ""}
+          </p>
 
-            {item.description ? <p>{item.description}</p> : null}
+          {item.description ? <p>{item.description}</p> : null}
 
-            {achievements.length > 0 ? (
+          {projects.length > 0 ? (
+            <>
+              <h3 class="role-subheading">Projects</h3>
+              <ul class="role-list">
+                {projects.map((project) => <li>{project}</li>)}
+              </ul>
+            </>
+          ) : null}
+
+          {achievements.length > 0 ? (
+            <>
+              <h3 class="role-subheading">Achievements</h3>
               <ul class="role-list">
                 {achievements.map((achievement) => <li>{achievement}</li>)}
               </ul>
-            ) : null}
-          </div>
-        );
-      })
-    : null}
+            </>
+          ) : null}
+
+          {skills.length > 0 ? (
+            <>
+              <h3 class="role-subheading">Skills</h3>
+              <ul class="role-list">
+                {skills.map((skill) => <li>{skill}</li>)}
+              </ul>
+            </>
+          ) : null}
+        </div>
+      );
+    })
+  ) : null}
 </section>

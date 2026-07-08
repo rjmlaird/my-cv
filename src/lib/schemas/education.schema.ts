@@ -1,9 +1,8 @@
 import { z } from "zod";
 
-/* Raw input schema matching your JSON */
-export const rawEducationSchema = z.object({
+export const educationItemSchema = z.object({
   id: z.number(),
-  date: z.string(), // e.g. "April 2023 - June 2023"
+  date: z.string(),
   title: z.string(),
   institution: z.string(),
   institutionType: z.string().optional(),
@@ -14,7 +13,6 @@ export const rawEducationSchema = z.object({
   skills: z.array(z.string()).default([]),
 });
 
-/* Cleaner internal schema you can use in the UI */
 export const educationSchema = z.object({
   id: z.number(),
   qualification: z.string(),
@@ -30,33 +28,33 @@ export const educationSchema = z.object({
   skills: z.array(z.string()).default([]),
 });
 
-/* Type exports */
-export type RawEducation = z.infer<typeof rawEducationSchema>;
+export type EducationItem = z.infer<typeof educationItemSchema>;
 export type Education = z.infer<typeof educationSchema>;
 
-/* Helper: parse raw JSON, validate, and map into Education */
+function splitDateRange(date: string) {
+  const [startDate, endDate] = date.split(" - ").map((part) => part.trim());
+  return {
+    startDate: startDate || undefined,
+    endDate: endDate || undefined,
+  };
+}
+
 export function parseEducation(raw: unknown): Education {
-  const parsed = rawEducationSchema.parse(raw);
+  const item = educationItemSchema.parse(raw);
+  const { startDate, endDate } = splitDateRange(item.date);
 
-  // Try to split date into start/end when possible
-  const dateParts = parsed.date.split(" - ").map((s) => s.trim());
-  const startDate = dateParts[0] ?? undefined;
-  const endDate = dateParts[1] ?? undefined;
-
-  const mapped: Education = {
-    id: parsed.id,
-    qualification: parsed.title,
-    institution: parsed.institution,
-    institutionType: parsed.institutionType,
-    field: parsed.department, // department → field
-    location: parsed.location,
+  return educationSchema.parse({
+    id: item.id,
+    qualification: item.title,
+    institution: item.institution,
+    institutionType: item.institutionType,
+    field: item.department,
+    location: item.location,
     startDate,
     endDate,
-    displayText: parsed.display_text ?? undefined,
-    description: parsed.description ?? "",
-    achievements: [], // keep empty by default; map skills later if desired
-    skills: parsed.skills ?? [],
-  };
-
-  return educationSchema.parse(mapped);
+    displayText: item.display_text,
+    description: item.description,
+    achievements: [],
+    skills: item.skills,
+  });
 }

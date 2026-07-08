@@ -20,8 +20,8 @@ export const educationSchema = z.object({
   institutionType: z.string().optional(),
   field: z.string().optional(),
   location: z.string().optional(),
-  startDate: z.string().optional(),
-  endDate: z.string().optional(),
+  startDate: z.string().default(""),
+  endDate: z.string().default(""),
   displayText: z.string().optional(),
   description: z.string().default(""),
   achievements: z.array(z.string()).default([]),
@@ -33,7 +33,7 @@ export type Education = z.infer<typeof educationSchema>;
 
 export function parseEducation(raw: unknown): Education {
   const item = educationItemSchema.parse(raw);
-  const [startDate, endDate] = item.date.split(" - ").map((part) => part.trim());
+  const [startDate = "", endDate = ""] = item.date.split(" - ").map((part) => part.trim());
 
   return educationSchema.parse({
     id: item.id,
@@ -42,11 +42,11 @@ export function parseEducation(raw: unknown): Education {
     institutionType: item.institutionType,
     field: item.department,
     location: item.location,
-    startDate: startDate || undefined,
-    endDate: endDate || undefined,
+    startDate,
+    endDate,
     displayText: item.display_text,
     description: item.description,
     achievements: [],
-    skills: item.skills,
+    skills: item.skills ?? [],
   });
 }

@@ -66,17 +66,40 @@ export const locationSchema = z.preprocess((value) => {
     return [city, country].filter(Boolean).join(", ");
   }
 
-  return value;
+  if (typeof value === "string") return value;
+
+  return "";
 }, z.string().default(""));
 
 export const experienceItemSchema = z.object({
   id: z.string(),
   organisation: z.union([organisationSchema, z.string()]).default(""),
   role: z.string(),
-  employmentType: employmentTypeSchema.catch("employee"),
+  employmentType: z
+    .union([employmentTypeSchema, z.string()])
+    .transform((value) => {
+      const allowed = [
+        "founder",
+        "employee",
+        "contract",
+        "freelance",
+        "internship",
+        "research",
+        "academic",
+        "career_break",
+      ] as const;
+      return allowed.includes(value as (typeof allowed)[number]) ? value : "employee";
+    })
+    .pipe(employmentTypeSchema),
   organisationType: experienceModeSchema.optional(),
   location: locationSchema,
-  workMode: workModeSchema.catch("remote"),
+  workMode: z
+    .union([workModeSchema, z.string()])
+    .transform((value) => {
+      const allowed = ["remote", "hybrid", "onsite"] as const;
+      return allowed.includes(value as (typeof allowed)[number]) ? value : "remote";
+    })
+    .pipe(workModeSchema),
   summary: z.string().default(""),
   responsibilities: z.array(z.string()).default([]),
   skills: z.array(z.string()).default([]),

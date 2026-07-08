@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const awardSchema = z.object({
+export const awardItemSchema = z.object({
   id: z.string(),
   title: z.string(),
   issuer: z.string(),
@@ -31,4 +31,4 @@ export const awardSchema = z.object({
   featured: z.boolean().default(false),
 });
 
-export type Award = z.infer<typeof awardSchema>;
+export type AwardItem = z.infer<typeof awardItemSchema>;

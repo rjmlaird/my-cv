@@ -1,9 +1,19 @@
 import { z } from "zod";
 
-export const skillGroupSchema = z.object({
-  label: z.string(),
-  kind: z.enum(["hard", "soft", "mixed"]),
-  keywords: z.array(z.string()),
+export const skillSchema = z.object({
+  name: z.string(),
+  category: z.string(),
+  proficiency: z.enum([
+    "Beginner",
+    "Intermediate",
+    "Advanced",
+    "Expert",
+  ]),
+  years: z.number().optional(),
+  featured: z.boolean().default(false),
 });
 
-export type SkillGroup = z.infer<typeof skillGroupSchema>;
+export const skillItemSchema = skillSchema;
+
+export type Skill = z.infer<typeof skillSchema>;
+export type SkillItem = Skill;

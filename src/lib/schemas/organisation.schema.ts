@@ -1,3 +1,4 @@
+// lib/schemas/organisation.schema.ts
 import type { Slug } from "./base.schema";
 
 export type OrganisationType =
@@ -18,7 +19,7 @@ export type OrganisationIndustry =
   | "research"
   | "other";
 
-export interface Organisation {
+export type Organisation = {
   organisation: string;
   slug: Slug;
   description?: string;
@@ -29,4 +30,4 @@ export interface Organisation {
   type?: OrganisationType;
   logo?: string;
   featured?: boolean;
-}
+};

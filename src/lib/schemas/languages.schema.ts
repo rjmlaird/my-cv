@@ -1,9 +1,6 @@
-import { z } from "zod";
-
-export const languageItemSchema = z.object({
-  name: z.string(),
-  level: z.string(),
-  proficiency: z.number(),
-});
-
-export type LanguageItem = z.infer<typeof languageItemSchema>;
+// src/data/languages.schema.ts
+export type Language = {
+  name: string;
+  level: string;
+  proficiency: number;
+};

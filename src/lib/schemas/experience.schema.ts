@@ -60,20 +60,20 @@ export const experienceMediaSchema = z.object({
 
 export const experienceItemSchema = z.object({
   id: z.string(),
-  organisation: z.union([organisationSchema, z.string()]),
+  organisation: z.union([organisationSchema, z.string()]).default(""),
   role: z.string(),
-  employmentType: employmentTypeSchema,
+  employmentType: employmentTypeSchema.catch("employee"),
   organisationType: experienceModeSchema.optional(),
-  location: z.string(),
-  workMode: workModeSchema,
-  summary: z.string(),
+  location: z.string().default(""),
+  workMode: workModeSchema.catch("remote"),
+  summary: z.string().default(""),
   responsibilities: z.array(z.string()).default([]),
   skills: z.array(z.string()).default([]),
   links: z.array(experienceLinkSchema).default([]),
   organisationSlug: z.string().optional(),
   hubspotId: z.string().optional(),
   keywords: z.array(z.string()).default([]),
-  startDate: z.string(),
+  startDate: z.string().default(""),
   endDate: z.string().nullable().optional(),
   isCurrent: z.boolean().default(false),
   impact: z.array(experienceImpactSchema).default([]),
@@ -81,16 +81,7 @@ export const experienceItemSchema = z.object({
   order: z.number().int().optional(),
 });
 
-export const experienceResponseSchema = z.object({
-  data: z.array(experienceItemSchema).default([]),
-  meta: z
-    .object({
-      total: z.number().int(),
-      generatedAt: z.string(),
-      version: z.string(),
-    })
-    .optional(),
-});
+export const experienceResponseSchema = z.array(experienceItemSchema).default([]);
 
 export type ExperienceMode = z.infer<typeof experienceModeSchema>;
 export type EmploymentType = z.infer<typeof employmentTypeSchema>;

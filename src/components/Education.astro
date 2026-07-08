@@ -20,75 +20,69 @@ const formatDate = (value?: string | null) => {
   <p class="eyebrow">Academic background</p>
   <h2 id="education-heading">Education</h2>
 
-  {education.length > 0 ? (
-    education.map((item: EducationItem) => {
-      const responsibilities = Array.isArray(item.responsibilities) ? item.responsibilities : [];
-      const achievements = Array.isArray(item.achievements) ? item.achievements : [];
-      const projects = Array.isArray(item.projects) ? item.projects : [];
-      const skills = Array.isArray(item.skills) ? item.skills : [];
+  {education.map((item: EducationItem) => {
+    const responsibilities = Array.isArray(item.responsibilities) ? item.responsibilities : [];
+    const achievements = Array.isArray(item.achievements) ? item.achievements : [];
+    const projects = Array.isArray(item.projects) ? item.projects : [];
+    const skills = Array.isArray(item.skills) ? item.skills : [];
 
-      const start = formatDate(item.startDate);
-      const end = item.current ? "Present" : formatDate(item.endDate);
-      const title = item.qualification || item.role || "";
-      const location = [item.city, item.country].filter(Boolean).join(", ");
+    const title = item.qualification || item.role || "";
+    const start = formatDate(item.startDate);
+    const end = formatDate(item.endDate);
+    const location = [item.city, item.country].filter(Boolean).join(", ");
 
-      return (
-        <article class={["edu-item", item.current ? "" : "dim"].filter(Boolean).join(" ")}>
-          <div class="role-header">
-            <div>
-              {title ? <div class="role-title">{title}</div> : null}
-              <div class="role-org">{item.institution}</div>
-              {item.field ? <div class="role-location">{item.field}</div> : null}
-              {location ? <div class="role-location">{location}</div> : null}
-            </div>
+    return (
+      <article class="edu-item">
+        {title ? <h3 class="role-title">{title}</h3> : null}
+        <p class="role-org">{item.institution}</p>
+        {item.field ? <p class="role-field">{item.field}</p> : null}
+        {location ? <p class="role-location">{location}</p> : null}
+        {start || end ? (
+          <p class="role-dates">
+            {start}
+            {start && end ? " — " : ""}
+            {end}
+          </p>
+        ) : null}
 
-            {start ? (
-              <time class="role-dates" datetime={item.startDate}>
-                {start}
-                {end ? ` — ${end}` : ""}
-              </time>
-            ) : null}
-          </div>
+        {item.summary ? <p>{item.summary}</p> : null}
 
-          {item.summary ? <p>{item.summary}</p> : null}
+        {responsibilities.length > 0 ? (
+          <>
+            <h4 class="role-subheading">Responsibilities</h4>
+            <ul class="role-list">
+              {responsibilities.map((responsibility) => <li>{responsibility}</li>)}
+            </ul>
+          </>
+        ) : null}
 
-          {responsibilities.length > 0 ? (
-            <>
-              <h3 class="role-subheading">Responsibilities</h3>
-              <ul class="role-list">
-                {responsibilities.map((responsibility) => <li>{responsibility}</li>)}
-              </ul>
-            </>
-          ) : null}
+        {projects.length > 0 ? (
+          <>
+            <h4 class="role-subheading">Projects</h4>
+            <ul class="role-list">
+              {projects.map((project) => <li>{project}</li>)}
+            </ul>
+          </>
+        ) : null}
 
-          {projects.length > 0 ? (
-            <>
-              <h3 class="role-subheading">Projects</h3>
-              <ul class="role-list">
-                {projects.map((project) => <li>{project}</li>)}
-              </ul>
-            </>
-          ) : null}
+        {achievements.length > 0 ? (
+          <>
+            <h4 class="role-subheading">Achievements</h4>
+            <ul class="role-list">
+              {achievements.map((achievement) => <li>{achievement}</li>)}
+            </ul>
+          </>
+        ) : null}
 
-          {achievements.length > 0 ? (
-            <>
-              <h3 class="role-subheading">Achievements</h3>
-              <ul class="role-list">
-                {achievements.map((achievement) => <li>{achievement}</li>)}
-              </ul>
-            </>
-          ) : null}
-
-          {skills.length > 0 ? (
-            <>
-              <h3 class="role-subheading">Skills</h3>
-              <ul class="role-list">
-                {skills.map((skill) => <li>{skill}</li>)}
-              </ul>
-            </>
-          ) : null}
-        </article>
-      );
-    })
-  ) : null}
+        {skills.length > 0 ? (
+          <>
+            <h4 class="role-subheading">Skills</h4>
+            <ul class="role-list">
+              {skills.map((skill) => <li>{skill}</li>)}
+            </ul>
+          </>
+        ) : null}
+      </article>
+    );
+  })}
 </section>

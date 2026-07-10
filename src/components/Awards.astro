@@ -6,7 +6,7 @@ const awards = Array.isArray(rawAwards) ? rawAwards : [];
 
 function formatAward(award: (typeof awards)[number]): string {
   if (typeof award === 'string') return award;
-  const parts = [award.title, award.issuer ? `— ${award.issuer}` : '', award.date ? `(${award.date})` : ''];
+  const parts = [award.title, award.issuer ? `— ${award.issuer}` : '', award.year ? `(${award.year})` : ''];
   return parts.filter(Boolean).join(' ');
 }
 ---

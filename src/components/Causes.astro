@@ -8,7 +8,7 @@ const causes = (await getCauses()) ?? [];
   <h2 id="causes-heading">Causes</h2>
   <p>{causes.description}</p>
   <div class="cause-row">
-    {causes.tags.map((tag) => <span class="tag">{tag}</span>)}
+    {causes.tags.map((tag: string) => <span class="tag">{tag}</span>)}
   </div>
 </section>
 

@@ -59,7 +59,7 @@ export const skillGroupSchema = z.object({
 });
 
 export const skillsGroupsResponseSchema = z.object({
-  skills: z.record(skillGroupSchema).default({}),
+  skills: z.record(z.string(), skillGroupSchema).default({}),
 });
 
 export type SkillGroup = z.infer<typeof skillGroupSchema>;
@@ -141,6 +141,13 @@ export type ResearchResponse = {
   orcid: string;
   paragraphs: string[];
 };
+
+export const causesSchema = z.object({
+  description: z.string().default(""),
+  tags: z.array(z.string()).default([]),
+});
+
+export type Causes = z.infer<typeof causesSchema>;
 
 function asArray<T>(value: unknown): T[] {
   if (Array.isArray(value)) return value as T[];
@@ -276,6 +283,10 @@ export async function getVolunteering(): Promise<VolunteeringItem[]> {
   return volunteeringResponseSchema.parse(await fetchJson<unknown>("volunteering"));
 }
 
+export async function getCauses(): Promise<Causes> {
+  return causesSchema.parse(await fetchJson<unknown>("causes"));
+}
+
 export const api = {
   getCollection,
   getExperience,
@@ -290,6 +301,7 @@ export const api = {
   getOrganisations,
   getTools,
   getVolunteering,
+  getCauses,
 };
 
 export default api;

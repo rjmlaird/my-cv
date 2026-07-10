@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+export type Slug = string;
+
 export const DEFAULT_FEATURED_IMAGE = "/images/default-featured.jpg";
 
 export const seoSchema = z.object({

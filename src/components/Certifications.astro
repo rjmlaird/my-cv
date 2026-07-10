@@ -17,13 +17,7 @@ type CertGroup = {
   subgroups?: CertSubgroup[];
 };
 
-const rawCertifications = await getCertifications<CertGroup[] | Record<string, CertGroup>>();
-
-const certifications = Array.isArray(rawCertifications)
-  ? rawCertifications
-  : rawCertifications && typeof rawCertifications === "object"
-    ? Object.values(rawCertifications)
-    : [];
+const certifications: CertGroup[] = await getCertifications();
 
 const orderedCertifications = [...certifications].sort((a, b) =>
   a.title.localeCompare(b.title),

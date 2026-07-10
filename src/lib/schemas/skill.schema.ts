@@ -8,7 +8,7 @@ export const skillItemSchema = z.object({
   featured: z.boolean().default(false),
 });
 
-export const skillsSchema = z.record(skillItemSchema).default({});
+export const skillsSchema = z.record(z.string(), skillItemSchema).default({});
 
 export type SkillItem = z.infer<typeof skillItemSchema>;
 export type Skills = z.infer<typeof skillsSchema>;

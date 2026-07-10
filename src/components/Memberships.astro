@@ -1,6 +1,6 @@
 ---
 import { getMemberships } from "@/lib/api";
-import type { MembershipGroup } from "@/lib/schemas/organization.schema";
+import type { MembershipGroup } from "@/lib/schemas/membership.schema";
 
 const memberships = (await getMemberships()) ?? [];
 

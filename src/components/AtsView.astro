@@ -38,7 +38,7 @@ const skillsGroups = skillsData && typeof skillsData === "object" ? Object.value
 
 const certsArr = Array.isArray(certificationsData) ? certificationsData : [];
 const membershipsArr = Array.isArray(membershipsData) ? membershipsData : [];
-const awardsArr = Array.isArray(awardsData) && awardsData.length > 0 ? awardsData : localAwards;
+const awardsArr = Array.isArray(awardsData) ? awardsData : [];
 const languagesArr = Array.isArray(languagesData) ? languagesData : [];
 
 const skillsFlat = skillsGroups
@@ -82,7 +82,7 @@ const volunteeringFlat = volunteering
 
 function formatAward(award: (typeof awardsArr)[number]): string {
   if (typeof award === "string") return award;
-  return [award.title, award.issuer ? `— ${award.issuer}` : "", award.date ? `(${award.date})` : ""]
+  return [award.title, award.issuer ? `— ${award.issuer}` : "", award.year ? `(${award.year})` : ""]
     .filter(Boolean)
     .join(" ");
 }

@@ -11,7 +11,6 @@ const experience = (await getExperience()) ?? [];
   {experience.length > 0 ? (
     experience.map((role) => {
       const organisation =
-        role.organisationName ??
         (typeof role.organisation === "string" ? role.organisation : role.organisation?.name) ??
         "Self-employed";
 

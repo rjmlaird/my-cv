@@ -24,51 +24,119 @@ const certifications = Array.isArray(rawCertifications)
   : rawCertifications && typeof rawCertifications === "object"
     ? Object.values(rawCertifications)
     : [];
+
+const orderedCertifications = [...certifications].sort((a, b) =>
+  a.title.localeCompare(b.title),
+);
+
+const chunk = <T,>(array: T[], size: number) =>
+  Array.from({ length: Math.ceil(array.length / size) }, (_, i) =>
+    array.slice(i * size, i * size + size),
+  );
+
+const certColumns = chunk(
+  orderedCertifications,
+  Math.ceil(orderedCertifications.length / 3),
+);
+
+const cleanLabel = (value: string) =>
+  value
+    .replace(/\s*[\r\n]+\s*/g, " ")
+    .replace(/\s*–\s*/g, " – ")
+    .replace(/\s+/g, " ")
+    .trim();
 ---
 
 <section id="certifications" aria-labelledby="cert-heading">
   <p class="eyebrow">Credentials</p>
   <h2 id="cert-heading">Certifications</h2>
 
-  <div class="cert-grid">
-    {certifications.map((group) => (
-      <div class="cert-group">
-        <h3>{group.title}</h3>
+  <div class="cert-columns">
+    {certColumns.map((column) => (
+      <div class="cert-column">
+        {column.map((group) => (
+          <article class="cert-group">
+            <h3 class="cert-group-title">{group.title}</h3>
 
-        <ul>
-          {group.items.map((item) => (
-            <li>
-              {item.href ? (
-                <a href={item.href} target="_blank" rel="noopener noreferrer">
-                  {item.label}
-                </a>
-              ) : (
-                item.label
-              )}
-            </li>
-          ))}
-        </ul>
-
-        {group.subgroups?.map((sub) => (
-          <div class="cert-subgroup">
-            <p class="cert-subhead">{sub.subhead}</p>
-
-            <ul>
-              {sub.items.map((item) => (
-                <li>
-                  {item.href ? (
-                    <a href={item.href} target="_blank" rel="noopener noreferrer">
-                      {item.label}
-                    </a>
-                  ) : (
-                    item.label
-                  )}
-                </li>
+            <ul class="cert-list" aria-label={group.title}>
+              {group.items.map((item) => (
+                <li class="cert-item">{cleanLabel(item.label)}</li>
               ))}
             </ul>
-          </div>
+
+            {group.subgroups?.map((sub) => (
+              <div class="cert-subgroup">
+                <p class="cert-subhead">{sub.subhead}</p>
+
+                <ul class="cert-list" aria-label={sub.subhead}>
+                  {sub.items.map((item) => (
+                    <li class="cert-item">{cleanLabel(item.label)}</li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </article>
         ))}
       </div>
     ))}
   </div>
 </section>
+<style>
+  .cert-columns {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 2rem;
+    align-items: start;
+  }
+
+  .cert-column {
+    display: grid;
+    gap: 1.5rem;
+    align-content: start;
+  }
+
+  .cert-group {
+    display: grid;
+    gap: 0.35rem;
+  }
+
+  .cert-group-title,
+  .cert-subhead {
+    margin: 0;
+  }
+
+  .cert-group-title {
+    color: var(--green);
+  }
+
+  .cert-list {
+    display: grid;
+    gap: 0.5rem;
+    list-style: disc;
+    margin: 0;
+    padding-left: 1.2rem;
+  }
+
+  .cert-item {
+    font-size: 0.875rem;
+    line-height: 1.6;
+  }
+
+  .cert-subgroup {
+    display: grid;
+    gap: 0.35rem;
+    margin-top: 0.25rem;
+  }
+
+  @media (max-width: 64rem) {
+    .cert-columns {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 48rem) {
+    .cert-columns {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

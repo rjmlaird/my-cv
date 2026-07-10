@@ -1,70 +1,122 @@
 ---
-import { getMemberships } from '@/lib/api';
+import { getMemberships } from "@/lib/api";
+import type { MembershipGroup } from "@/lib/schemas/organization.schema";
+
+const memberships = (await getMemberships()) ?? [];
 
 const TYPE_LABELS: Record<string, string> = {
-  chartered_body: 'Chartered Bodies',
-  professional_body: 'Professional Bodies',
-  scientific_body: 'Scientific Bodies',
-  security_body: 'Security Bodies',
-  industry_association: 'Industry Associations',
-  climate_network: 'Climate Networks',
-  research_network: 'Research Networks',
-  media_network: 'Media Networks',
-  creative_network: 'Creative Networks',
-  space_network: 'Space Networks',
-  urban_network: 'Urban Networks',
-  sustainability_network: 'Sustainability Networks',
-  business_association: 'Business Associations',
-  startup_network: 'Startup Networks',
-  community_network: 'Community Networks',
-  ethics_framework: 'Ethics Frameworks',
-  education_network: 'Education Networks',
-  framework_network: 'Framework Networks',
-  economic_network: 'Economic Networks',
-  advocacy_network: 'Advocacy Networks',
-  climate_lab: 'Climate Labs',
-  industry_initiative: 'Industry Initiatives',
-  nonprofit_network: 'Nonprofit Networks',
-  ethics_network: 'Ethics Networks',
-  business_climate_network: 'Business Climate Networks',
-  urban_innovation_network: 'Urban Innovation Networks',
+  chartered_body: "Chartered Body",
+  professional_body: "Professional Body",
+  scientific_body: "Scientific Body",
+  security_body: "Security Body",
+  industry_association: "Industry Association",
+  climate_network: "Climate Network",
+  research_network: "Research Network",
+  media_network: "Media Network",
+  creative_network: "Creative Network",
+  space_network: "Space Network",
+  urban_network: "Urban Network",
+  sustainability_network: "Sustainability Network",
+  business_association: "Business Association",
+  startup_network: "Startup Network",
+  community_network: "Community Network",
+  ethics_framework: "Ethics Framework",
+  education_network: "Education Network",
+  framework_network: "Framework Network",
+  economic_network: "Economic Network",
+  advocacy_network: "Advocacy Network",
+  climate_lab: "Climate Lab",
+  industry_initiative: "Industry Initiative",
+  nonprofit_network: "Nonprofit Network",
+  ethics_network: "Ethics Network",
+  business_climate_network: "Business Climate Network",
+  urban_innovation_network: "Urban Innovation Network",
+  astronomy_network: "Astronomy Network",
+  environmental_ngo: "Environmental NGO",
 };
-
-const rawMemberships = await getMemberships();
-const memberships = Array.isArray(rawMemberships) ? rawMemberships : [];
-
-const groups = new Map<string, typeof memberships>();
-for (const item of memberships) {
-  if (!item || typeof item !== 'object') continue;
-  const type = (item as { type?: string }).type ?? 'other';
-  if (!groups.has(type)) groups.set(type, []);
-  groups.get(type)!.push(item);
-}
 ---
 
 <section id="memberships" aria-labelledby="memberships-heading">
   <p class="eyebrow">Professional standing</p>
   <h2 id="memberships-heading">Professional Memberships &amp; Affiliations</h2>
 
-  <div class="cert-grid">
-    {[...groups.entries()].map(([type, items]) => (
-      <div class="cert-group">
-        <h3>{TYPE_LABELS[type] ?? type}</h3>
-        <ul>
-          {items.map((item: any) => (
-            <li>
-              {item.links?.website || item.links?.profile ? (
-                <a href={item.links.website ?? item.links.profile} target="_blank" rel="noopener">
-                  {item.organisation}
-                </a>
-              ) : (
-                item.organisation
-              )}
-              {item.role ? <span> — {item.role}</span> : null}
-            </li>
+  <div class="membership-groups">
+    {memberships.map((group: MembershipGroup) => (
+      <article class="membership-group">
+        <h3 class="membership-group-title">{group.title}</h3>
+
+        <div class="membership-columns">
+          {group.items.map((item) => (
+            <div class="membership-entry">
+              <div class="role-header">
+                <div>
+                  <span class="role-title">{item.role}</span>
+                  {item.organisation ? (
+                    <>
+                      {" · "}
+                      <span class="role-org">{item.organisation}</span>
+                    </>
+                  ) : null}
+                </div>
+
+                <span class="pill">{TYPE_LABELS[item.type] ?? item.type}</span>
+              </div>
+            </div>
           ))}
-        </ul>
-      </div>
+        </div>
+      </article>
     ))}
   </div>
 </section>
+
+<style>
+  .membership-groups {
+    display: grid;
+    gap: 2rem;
+  }
+
+  .membership-group {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .membership-group-title {
+    margin: 0;
+  }
+
+  .membership-columns {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem 2rem;
+  }
+
+  .membership-entry {
+    min-width: 0;
+  }
+
+  @media (max-width: 48rem) {
+    .membership-columns {
+      grid-template-columns: 1fr;
+    }
+  }
+  .pill-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.35rem 0.75rem;
+    border-radius: 9999px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.06);
+    font-size: 0.875rem;
+    line-height: 1;
+    white-space: nowrap;
+  }
+</style>

@@ -13,7 +13,7 @@
   --font-display:'Space Grotesk',sans-serif;
   --font-body:'Inter',sans-serif;
   --font-mono:'JetBrains Mono',monospace;
-  --maxw:920px;
+  --maxw:1600px;
 }
 *{box-sizing:border-box;}
 html{scroll-behavior:smooth;}
@@ -182,46 +182,12 @@ body.ats-mode #ats-view{display:block; color:#111;}
 #ats-view .ats-meta{font-size:0.85rem; color:#555;}
 #ats-view ul{list-style:disc; padding-left:1.3em; margin-bottom:0.8em;}
 
-/* ---------- Print / Download ---------- */
-/* Default (visual) print: same branding as the website, re-themed onto a
-   white background so it's safe and legible on paper. The ATS toggle
-   (body.ats-mode) instead prints the plain-text #ats-view above. */
 @media print{
-  :root{
-    --bg:#ffffff;
-    --bg-panel:#f4f6fa;
-    --bg-panel-raised:#eef1f7;
-    --teal:#0e8a78;
-    --teal-dim:#0e8a78;
-    --amber:#a86a06;
-    --text:#12151c;
-    --muted:#3d4658;
-    --muted-dim:#5b6478;
-    --border:rgba(15,20,30,0.14);
-    --border-strong:rgba(15,20,30,0.28);
-  }
-
-  @page{ margin:1.6cm; }
-
-  header.site-nav, .orbit-decor, .btn, .skip-link, .contact-cta form{display:none !important;}
-
-  body{background:#fff !important; background-image:none !important; color:var(--text);}
-  a{color:var(--teal);}
-
-  .hero{padding-top:0;}
-  main{padding:0;}
-  section{padding:1.4rem 0; break-inside:avoid;}
-  .role-item, .edu-item, .cert-group, .skill-group, .lang-card{break-inside:avoid;}
-  h2, h3{break-after:avoid;}
-
-  .contact-cta{background:var(--bg-panel); border:1px solid var(--border);}
-
-  /* Visual (default) print view */
-  body:not(.ats-mode) #ats-view{display:none !important;}
-
-  /* ATS plain-text print view, only when explicitly toggled on-screen first */
-  body.ats-mode header.site-nav, body.ats-mode .hero, body.ats-mode main, body.ats-mode footer, body.ats-mode .orbit-decor{display:none !important;}
-  body.ats-mode #ats-view{display:block; color:#111;}
+  header.site-nav, .orbit-decor, .btn, .contact-cta form{display:none !important;}
+  body{background:#fff; color:#111;}
+  body:not(.ats-mode) #ats-view{display:block;}
+  body:not(.ats-mode) .hero, body:not(.ats-mode) main{display:none;}
+  #ats-view{display:block; color:#111;}
 }
 
 @media (max-width:640px){

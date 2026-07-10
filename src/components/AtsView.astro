@@ -1,57 +1,90 @@
 ---
-import * as api from '@/lib/api';
-import { languages } from '@/data/languages';
-import { profile } from '@/data/profile';
-import { research, teaching, awards as localAwards } from '@/data/awards';
+import * as api from "@/lib/api";
 
 const {
+  getLanguages,
+  getProfile,
   getExperience,
   getEducation,
+  getTeaching,
+  getAwards,
   getSkills,
   getCertifications,
   getMemberships,
-  getAwards,
+  getVolunteering,
 } = api;
 
-const experienceData = await getExperience();
-const educationData = await getEducation();
-const skillsData = await getSkills();
-const certificationsData = await getCertifications();
-const membershipsData = await getMemberships();
-const awardsData = await getAwards();
+const [experienceData, educationData, skillsData, certificationsData, membershipsData, awardsData, volunteeringData, languagesData] =
+  await Promise.all([
+    getExperience(),
+    getEducation(),
+    getSkills(),
+    getCertifications(),
+    getMemberships(),
+    getAwards(),
+    getVolunteering(),
+    getLanguages(),
+  ]);
+
+const profile = await getProfile();
+const teaching = await getTeaching();
 
 const experience = Array.isArray(experienceData) ? experienceData : [];
 const education = Array.isArray(educationData) ? educationData : [];
+const volunteering = Array.isArray(volunteeringData) ? volunteeringData : [];
 
-// getSkills() already returns Record<string, SkillGroup> — unwrap directly.
-const skillsGroups = skillsData && typeof skillsData === 'object' ? Object.values(skillsData) : [];
+// getSkills() already returns Record<string, SkillGroup>.
+const skillsGroups = skillsData && typeof skillsData === "object" ? Object.values(skillsData) : [];
 
 const certsArr = Array.isArray(certificationsData) ? certificationsData : [];
-const membershipsArr = Array.isArray(membershipsData) ? (membershipsData as any[]) : [];
+const membershipsArr = Array.isArray(membershipsData) ? membershipsData : [];
 const awardsArr = Array.isArray(awardsData) && awardsData.length > 0 ? awardsData : localAwards;
+const languagesArr = Array.isArray(languagesData) ? languagesData : [];
 
 const skillsFlat = skillsGroups
-  .map((g: any) => (Array.isArray(g.keywords) ? g.keywords.join(', ') : ''))
+  .map((g: any) => (Array.isArray(g.keywords) ? g.keywords.join(", ") : ""))
   .filter(Boolean)
-  .join(', ');
+  .join(", ");
 
 const certsFlat = certsArr
-  .map((g) => `${g.title ?? ''}: ${Array.isArray(g.items) ? g.items.map((i) => i.label ?? String(i)).join(', ') : ''}`)
+  .map((g) => `${g.title ?? ""}: ${Array.isArray(g.items) ? g.items.map((i) => i.label ?? String(i)).join(", ") : ""}`)
   .filter((s) => s.trim().length > 1)
-  .join('. ');
+  .join(". ");
 
 const membershipsFlat = membershipsArr
-  .map((m) => (typeof m === 'string' ? m : [m.organisation, m.role].filter(Boolean).join(' — ')))
+  .map((group: any) =>
+    group && typeof group === "object" && Array.isArray(group.items)
+      ? `${group.title ?? ""}: ${group.items
+          .map((item: any) => [item.organisation, item.role].filter(Boolean).join(" — "))
+          .filter(Boolean)
+          .join(", ")}`
+      : ""
+  )
   .filter(Boolean)
-  .join('; ');
+  .join(". ");
 
-const languagesFlat = languages.map((l) => `${l.name} (${l.level})`).join('; ');
+const languagesFlat = languagesArr
+  .map((l: any) => `${l.name ?? l.label ?? ""}${l.level ? ` (${l.level})` : ""}`)
+  .filter(Boolean)
+  .join("; ");
+
+const volunteeringFlat = volunteering
+  .map((g: any) =>
+    g && typeof g === "object" && Array.isArray(g.items)
+      ? `${g.title ?? ""}: ${g.items
+          .map((i: any) => [i.organisation, i.role].filter(Boolean).join(" — "))
+          .filter(Boolean)
+          .join(", ")}`
+      : ""
+  )
+  .filter(Boolean)
+  .join(". ");
 
 function formatAward(award: (typeof awardsArr)[number]): string {
-  if (typeof award === 'string') return award;
-  return [award.title, award.issuer ? `— ${award.issuer}` : '', award.date ? `(${award.date})` : '']
+  if (typeof award === "string") return award;
+  return [award.title, award.issuer ? `— ${award.issuer}` : "", award.date ? `(${award.date})` : ""]
     .filter(Boolean)
-    .join(' ');
+    .join(" ");
 }
 ---
 
@@ -64,18 +97,18 @@ function formatAward(award: (typeof awardsArr)[number]): string {
   </p>
 
   <h2>Summary</h2>
-  {profile.summary.map((p) => <p>{p}</p>)}
+  {Array.isArray(profile.summary) ? profile.summary.map((p) => <p>{p}</p>) : null}
 
   <h2>Core Skills</h2>
-  <p>{profile.tags.join(', ')}. Technical: {skillsFlat}.</p>
+  <p>{Array.isArray(profile.tags) ? profile.tags.join(", ") : ""}. Technical: {skillsFlat}.</p>
 
   <h2>Experience</h2>
   {experience.map((role) => (
     <div class="ats-entry">
-      <strong>{role.role}</strong> — {role.organisation ?? 'Self-employed'}
+      <strong>{role.role}</strong> — {role.organisation ?? "Self-employed"}
       <span class="ats-meta">
         ({role.startDate}
-        {role.endDate ? ` to ${role.endDate}` : role.current ? ' to present' : ''})
+        {role.endDate ? ` to ${role.endDate}` : role.current ? " to present" : ""})
       </span>
       <p>{role.summary}</p>
       {Array.isArray(role.responsibilities) && role.responsibilities.length > 0 && (
@@ -91,19 +124,17 @@ function formatAward(award: (typeof awardsArr)[number]): string {
     {education.map((item) => (
       <li>
         {item.qualification} — {item.institution}
-        {item.field ? `, ${item.field}` : ''}
-        {item.startDate ? ` (${item.startDate}${item.endDate ? ` – ${item.endDate}` : ''})` : ''}
+        {item.field ? `, ${item.field}` : ""}
+        {item.startDate ? ` (${item.startDate}${item.endDate ? ` – ${item.endDate}` : ""})` : ""}
       </li>
     ))}
   </ul>
 
-  <h2>Research</h2>
-  {research.paragraphs.map((p) => <p>{p}</p>)}
 
   <h2>Teaching</h2>
   <p class="ats-meta">{teaching.org}</p>
   <ul>
-    {teaching.items.map((item) => <li>{item}</li>)}
+    {Array.isArray(teaching.items) ? teaching.items.map((item) => <li>{item}</li>) : null}
   </ul>
 
   <h2>Certifications</h2>
@@ -115,6 +146,9 @@ function formatAward(award: (typeof awardsArr)[number]): string {
   <h2>Languages</h2>
   <p>{languagesFlat}.</p>
 
+  <h2>Volunteering</h2>
+  <p>{volunteeringFlat}.</p>
+
   <h2>Awards</h2>
-  <p>{awardsArr.map(formatAward).join('; ')}.</p>
+  <p>{awardsArr.map(formatAward).join("; ")}.</p>
 </div>

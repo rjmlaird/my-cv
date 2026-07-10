@@ -1,5 +1,6 @@
 ---
-import volunteering from "@/data/volunteering.json";
+import { getVolunteering } from '@/lib/api';
+const volunteering = (await getVolunteering()) ?? [];
 
 const entries = Array.isArray(volunteering) ? volunteering : [];
 ---

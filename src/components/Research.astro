@@ -1,12 +1,129 @@
 ---
-import { research } from '@/data/awards';
+interface Props {
+  item?: Record<string, any>;
+  index?: number;
+  bibText?: string;
+}
+
+const props = Astro.props as Props;
+const item = props.item ?? {};
+const bibText = props.bibText ?? "";
+const number = props.index ? String(props.index).padStart(2, "0") : "";
+
+const clean = (v: unknown) => (v === null || v === undefined ? "" : String(v).trim());
+
+const normalizeAuthors = (authors: unknown) => {
+  if (!Array.isArray(authors)) return "";
+  return authors
+    .map((a: any) => [a.given || "", a.family || ""].filter(Boolean).join(" "))
+    .filter(Boolean)
+    .join(", ");
+};
+
+const normalizeYear = (item: any) => item?.issued?.["date-parts"]?.[0]?.[0] || item?.year || "";
+const normalizeTitle = (item: any) => (Array.isArray(item.title) ? item.title.join(" ") : item.title || "Untitled");
+const normalizeContainer = (item: any) => item["container-title"] || item.journal || item.booktitle || item.publisher || "";
+
+const normalizeType = (item: any) => {
+  if (item.type === "article-journal") return "Journal article";
+  if (item.type === "paper-conference") return "Conference paper";
+  if (item.type === "report") return "Report";
+  if (item.type === "webpage") return "Web page";
+  if (item.type === "thesis") return "Thesis";
+  return item.type || "Publication";
+};
+
+const normalizeUrl = (item: any) => item.URL || item.url || "";
+const normalizeDoi = (item: any) => item.DOI || item.doi || "";
+const normalizeAbstract = (item: any) => item.abstract || "";
+const normalizeKeywords = (item: any) => {
+  const raw = item.keyword || item.keywords || "";
+  if (Array.isArray(raw)) return raw.map(String).filter(Boolean);
+  if (typeof raw === "string") return raw.split(/[;,]/).map((s) => s.trim()).filter(Boolean);
+  return [];
+};
+
+const excerptWords = (text: string, count = 40) => {
+  const words = (text || "").trim().split(/\s+/).filter(Boolean);
+  if (words.length <= count) return { text: text || "", more: false };
+  return { text: words.slice(0, count).join(" ") + "...", more: true };
+};
+
+const pdfUrlFromItem = (item: any) => {
+  const file = item.file;
+  if (!file) return "";
+  const raw = Array.isArray(file) ? String(file[0] || "") : String(file);
+  const match = raw.match(/^[^:]+:([^:]+):application\/pdf$/i);
+  return match ? `/${match[1]}` : "";
+};
+
+const title = normalizeTitle(item);
+const authors = normalizeAuthors(item.author);
+const year = normalizeYear(item);
+const publication = normalizeContainer(item);
+const type = normalizeType(item);
+const abstract = normalizeAbstract(item);
+const preview = excerptWords(abstract, 40);
+const url = normalizeUrl(item);
+const doi = normalizeDoi(item);
+const recordUrl = url || (doi ? `https://doi.org/${doi}` : "");
+const pdf = pdfUrlFromItem(item);
+const keywords = normalizeKeywords(item);
+const titleUrl = doi ? `https://doi.org/${doi}` : url;
+const bibtexHref = `data:text/x-bibtex;charset=utf-8,${encodeURIComponent(bibText)}`;
 ---
 
-<section id="research" aria-labelledby="research-heading">
-  <p class="eyebrow">Academic contributions</p>
-  <h2 id="research-heading">Research</h2>
-  {research.paragraphs.map((paragraph) => <p>{paragraph}</p>)}
-  <p class="research-orcid">
-    ORCID: <a href={research.orcid} target="_blank" rel="noopener">{research.orcid.replace('https://orcid.org/', '')}</a>
-  </p>
+<section id="research" aria-labelledby="research">
+  <p class="eyebrow">Publications</p>
+  <h2 id="cert-heading">Research</h2>
+
+<article class="pr pub">
+  <p class="pn">{number}</p>
+
+  <div class="pm">
+    <div class="pub-top">
+      <h3>{titleUrl ? <a href={titleUrl} target="_blank" rel="noopener noreferrer">{title}</a> : title}</h3>
+      {year && <span class="date">{year}</span>}
+    </div>
+
+    {publication && <div class="client-badge">{publication}</div>}
+
+    {authors && <p class="authors">{authors}</p>}
+
+    {preview.text && <p class="abstract">{preview.text}</p>}
+
+    {keywords.length > 0 && (
+      <div class="pt">
+        {keywords.map((t) => <span class="tag">{t}</span>)}
+      </div>
+    )}
+
+    {type && (
+      <div class="detail-line">
+        <span class="type-pill">{type}</span>
+      </div>
+    )}
+
+    <div class="action-row">
+      <a class="pa" href={bibtexHref} download="publications.bib" target="_blank" rel="noopener noreferrer">
+        <span>BibTeX</span>
+      </a>
+      {doi && (
+        <a class="pa" href={`https://doi.org/${doi}`} target="_blank" rel="noopener noreferrer">
+          <span>DOI</span>
+        </a>
+      )}
+      {pdf && (
+        <a class="pa" href={pdf} target="_blank" rel="noopener noreferrer">
+          <span>Download</span>
+        </a>
+      )}
+      {recordUrl && (
+        <a class="pa pa-primary" href={recordUrl} target="_blank" rel="noopener noreferrer">
+          <span>View</span>
+        </a>
+      )}
+    </div>
+  </div>
+</article>
 </section>

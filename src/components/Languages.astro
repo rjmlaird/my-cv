@@ -1,5 +1,6 @@
 ---
-import { languages } from '@/data/languages';
+import { getLanguages } from '@/lib/api';
+const languages = (await getLanguages()) ?? [];
 ---
 
 <section id="languages" aria-labelledby="lang-heading">

@@ -1,122 +1,108 @@
 ---
-import { getMemberships } from "@/lib/api";
-import type { MembershipGroup } from "@/lib/schemas/membership.schema";
+interface Props {
+  post?: {
+    id?: string;
+    slug?: string;
+    collection?: string;
+    data?: {
+      title?: string;
+      excerpt?: string;
+      description?: string;
+      date?: Date | string;
+      author?: string;
+      avatar?: string;
+      tags?: string[];
+      tag?: string;
+      image?: string;
+      imageCredit?: string;
+    };
+  };
+}
 
-const memberships = (await getMemberships()) ?? [];
+const { post } = Astro.props as Props;
+const data = post?.data ?? {};
 
-const TYPE_LABELS: Record<string, string> = {
-  chartered_body: "Chartered Body",
-  professional_body: "Professional Body",
-  scientific_body: "Scientific Body",
-  security_body: "Security Body",
-  industry_association: "Industry Association",
-  climate_network: "Climate Network",
-  research_network: "Research Network",
-  media_network: "Media Network",
-  creative_network: "Creative Network",
-  space_network: "Space Network",
-  urban_network: "Urban Network",
-  sustainability_network: "Sustainability Network",
-  business_association: "Business Association",
-  startup_network: "Startup Network",
-  community_network: "Community Network",
-  ethics_framework: "Ethics Framework",
-  education_network: "Education Network",
-  framework_network: "Framework Network",
-  economic_network: "Economic Network",
-  advocacy_network: "Advocacy Network",
-  climate_lab: "Climate Lab",
-  industry_initiative: "Industry Initiative",
-  nonprofit_network: "Nonprofit Network",
-  ethics_network: "Ethics Network",
-  business_climate_network: "Business Climate Network",
-  urban_innovation_network: "Urban Innovation Network",
-  astronomy_network: "Astronomy Network",
-  environmental_ngo: "Environmental NGO",
-};
+const collection = post?.collection ?? "blog";
+const slug = post?.slug ?? post?.id ?? "untitled";
+const href = `/${collection}/${slug}`;
+const title = data.title ?? "Untitled";
+const excerpt = data.excerpt ?? data.description ?? "";
+const dateValue = data.date ? new Date(data.date) : null;
+const formattedDate =
+  dateValue && !Number.isNaN(dateValue.getTime())
+    ? dateValue.toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "long",
+        year: "numeric",
+      })
+    : "";
+const authorSlug = typeof data.author === "string" ? data.author.trim() : "";
+const authorLabel = authorSlug
+  ? authorSlug.replace(/(^|-)\w/g, (m) => m.toUpperCase()).replace(/-/g, " ")
+  : "";
+const avatar = typeof data.avatar === "string" ? data.avatar.trim() : "";
+const tags = Array.isArray(data.tags) ? data.tags : data.tag ? [data.tag] : [];
+const image = data.image || "/images/placeholder.jpg";
+const imageCredit = data.imageCredit ?? "";
+
+const tagSlug = (tag: string) =>
+  encodeURIComponent(tag.toLowerCase().replace(/\s+/g, "-"));
 ---
 
-<section id="memberships" aria-labelledby="memberships-heading">
-  <p class="eyebrow">Professional standing</p>
-  <h2 id="memberships-heading">Professional Memberships &amp; Affiliations</h2>
+<article class="pr pub">
+  {image ? (
+    <a href={href} class="pub-media pub-image" aria-label={title}>
+      <img src={image} alt={title} loading="lazy" decoding="async" />
+      {imageCredit && <span class="image-credit">{imageCredit}</span>}
+    </a>
+  ) : null}
 
-  <div class="membership-groups">
-    {memberships.map((group: MembershipGroup) => (
-      <article class="membership-group">
-        <h3 class="membership-group-title">{group.title}</h3>
+  <div class="pm">
+    <div class="pub-top">
+      <h3>
+        <a href={href} class="pub-title-link">{title}</a>
+      </h3>
 
-        <div class="membership-columns">
-          {group.items.map((item) => (
-            <div class="membership-entry">
-              <div class="role-header">
-                <div>
-                  <span class="role-title">{item.role}</span>
-                  {item.organisation ? (
-                    <>
-                      {" · "}
-                      <span class="role-org">{item.organisation}</span>
-                    </>
-                  ) : null}
-                </div>
+      {formattedDate ? <time class="date">{formattedDate}</time> : null}
+    </div>
 
-                <span class="pill">{TYPE_LABELS[item.type] ?? item.type}</span>
-              </div>
-            </div>
-          ))}
-        </div>
-      </article>
-    ))}
+    {excerpt ? <p>{excerpt}</p> : null}
+
+    {authorSlug ? (
+      <div class="author-badge">
+        {avatar ? (
+          <img
+            class="author-avatar"
+            src={avatar}
+            alt={authorLabel || authorSlug}
+            width="32"
+            height="32"
+            loading="lazy"
+            decoding="async"
+          />
+        ) : null}
+
+        <span class="author-by">By</span>
+
+        <a class="author-link" href={`/authors/${authorSlug}`}>
+          {authorLabel || authorSlug}
+        </a>
+      </div>
+    ) : null}
+
+    {tags.length > 0 ? (
+      <div class="pt">
+        {tags.map((tag) => (
+          <a class="tag" href={`/tags/${tagSlug(tag)}/`}>
+            {tag}
+          </a>
+        ))}
+      </div>
+    ) : null}
   </div>
-</section>
 
-<style>
-  .membership-groups {
-    display: grid;
-    gap: 2rem;
-  }
-
-  .membership-group {
-    display: grid;
-    gap: 1rem;
-  }
-
-  .membership-group-title {
-    margin: 0;
-  }
-
-  .membership-columns {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 1rem 2rem;
-  }
-
-  .membership-entry {
-    min-width: 0;
-  }
-
-  @media (max-width: 48rem) {
-    .membership-columns {
-      grid-template-columns: 1fr;
-    }
-  }
-  .pill-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    list-style: none;
-    margin: 0;
-    padding: 0;
-  }
-
-  .pill {
-    display: inline-flex;
-    align-items: center;
-    padding: 0.35rem 0.75rem;
-    border-radius: 9999px;
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    background: rgba(255, 255, 255, 0.06);
-    font-size: 0.875rem;
-    line-height: 1;
-    white-space: nowrap;
-  }
-</style>
+  <a href={href} class="pa">
+    <span class="pa-i">↗</span>
+    <span>View</span>
+  </a>
+</article>

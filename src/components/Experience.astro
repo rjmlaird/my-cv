@@ -5,6 +5,17 @@ import type { ExperienceItem } from "@/lib/schemas/experience.schema";
 
 const experience = (await getExperience()) ?? [];
 
+const formatDate = (value?: string | null) => {
+  if (!value) return "";
+  const [year, month] = value.split("-");
+  if (!year) return value;
+  if (!month) return year;
+  return new Intl.DateTimeFormat("en-GB", {
+    month: "short",
+    year: "numeric",
+  }).format(new Date(Number(year), Number(month) - 1, 1));
+};
+
 const rows = await Promise.all(
   experience.map(async (role: ExperienceItem) => ({
     role,
@@ -20,7 +31,12 @@ const hasMoreDetail = (role: ExperienceItem) =>
       role.clients?.length ||
       role.articles?.length ||
       role.talks?.length ||
-      role.certifications?.length,
+      role.certifications?.length ||
+      role.relatedAwards?.length ||
+      role.relatedCertifications?.length ||
+      role.relatedEducation?.length ||
+      role.relatedMemberships?.length ||
+      role.relatedOrg?.length,
   );
 ---
 
@@ -135,6 +151,51 @@ const hasMoreDetail = (role: ExperienceItem) =>
                   <h4 class="role-subheading">Certifications</h4>
                   <ul class="role-list">
                     {role.certifications.map((c) => <li>{c}</li>)}
+                  </ul>
+                </>
+              ) : null}
+
+              {role.relatedAwards?.length ? (
+                <>
+                  <h4 class="role-subheading">Related awards</h4>
+                  <ul class="role-list">
+                    {role.relatedAwards.map((award) => <li>{award}</li>)}
+                  </ul>
+                </>
+              ) : null}
+
+              {role.relatedCertifications?.length ? (
+                <>
+                  <h4 class="role-subheading">Related certifications</h4>
+                  <ul class="role-list">
+                    {role.relatedCertifications.map((cert) => <li>{cert}</li>)}
+                  </ul>
+                </>
+              ) : null}
+
+              {role.relatedEducation?.length ? (
+                <>
+                  <h4 class="role-subheading">Related education</h4>
+                  <ul class="role-list">
+                    {role.relatedEducation.map((edu) => <li>{edu}</li>)}
+                  </ul>
+                </>
+              ) : null}
+
+              {role.relatedMemberships?.length ? (
+                <>
+                  <h4 class="role-subheading">Related memberships</h4>
+                  <ul class="role-list">
+                    {role.relatedMemberships.map((membership) => <li>{membership}</li>)}
+                  </ul>
+                </>
+              ) : null}
+
+              {role.relatedOrg?.length ? (
+                <>
+                  <h4 class="role-subheading">Related organisations</h4>
+                  <ul class="role-list">
+                    {role.relatedOrg.map((org) => <li>{org}</li>)}
                   </ul>
                 </>
               ) : null}

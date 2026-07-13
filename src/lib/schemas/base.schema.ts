@@ -36,6 +36,13 @@ export const baseSchema = z.object({
   featured: z.boolean().default(false),
   featuredImage: z.string().default(DEFAULT_FEATURED_IMAGE),
   tags: z.array(z.string()).default([]),
+  relatedExperience: z.array(z.string()).optional(),
+  relatedEducation: z.array(z.string()).optional(),
+  relatedCertifications: z.array(z.string()).optional(),
+  relatedMemberships: z.array(z.string()).optional(),
+  relatedVolunteering: z.array(z.string()).optional(),
+  relatedAwards: z.array(z.string()).optional(),
+  relatedOrg: z.array(z.string()).optional(),
   seo: seoSchema.default({
     title: "",
     description: "",

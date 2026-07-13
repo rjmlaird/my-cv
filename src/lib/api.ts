@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { awardItemSchema, type AwardItem } from "@/lib/schemas/award.schema";
+import { certificationItemSchema, type CertificationItem } from "@/lib/schemas/certification.schema";
 import { educationItemSchema, type EducationItem } from "@/lib/schemas/education.schema";
 import { experienceItemSchema, type ExperienceItem } from "@/lib/schemas/experience.schema";
 import { languageItemSchema, type LanguageItem } from "@/lib/schemas/languages.schema";
@@ -39,26 +40,11 @@ export function getCollection<T>(collection: ApiCollectionName) {
 
 const experienceResponseSchema = z.array(experienceItemSchema);
 const educationResponseSchema = z.array(educationItemSchema);
+const certificationResponseSchema = z.array(certificationItemSchema);
 const awardsResponseSchema = z.array(awardItemSchema);
 const languagesResponseSchema = z.array(languageItemSchema);
 const organisationsResponseSchema = z.array(organisationItemSchema);
 const volunteeringResponseSchema = z.array(volunteeringItemSchema);
-
-export type CertificationItem = {
-  label: string;
-  href?: string;
-};
-
-export type CertificationSubgroup = {
-  subhead: string;
-  items: CertificationItem[];
-};
-
-export type CertificationGroup = {
-  title: string;
-  items: CertificationItem[];
-  subgroups?: CertificationSubgroup[];
-};
 
 export const profileSchema = z.object({
   name: z.string().optional(),
@@ -134,49 +120,6 @@ function asArray<T>(value: unknown): T[] {
   return [];
 }
 
-function normalizeCertificationItem(item: unknown): CertificationItem | null {
-  if (typeof item === "string") return { label: item };
-
-  if (item && typeof item === "object") {
-    const v = item as { label?: unknown; href?: unknown; name?: unknown; url?: unknown };
-    const label = typeof v.label === "string" ? v.label : typeof v.name === "string" ? v.name : null;
-    if (!label) return null;
-
-    const href = typeof v.href === "string" ? v.href : typeof v.url === "string" ? v.url : undefined;
-    return href ? { label, href } : { label };
-  }
-
-  return null;
-}
-
-function normalizeCertificationGroup(group: unknown): CertificationGroup | null {
-  if (!group || typeof group !== "object") return null;
-
-  const v = group as { title?: unknown; organisation?: unknown; items?: unknown; subgroups?: unknown };
-  const title = typeof v.title === "string" ? v.title : typeof v.organisation === "string" ? v.organisation : null;
-  if (!title) return null;
-
-  const items = asArray<unknown>(v.items)
-    .map(normalizeCertificationItem)
-    .filter((x): x is CertificationItem => x !== null);
-
-  const subgroups = asArray<unknown>(v.subgroups)
-    .map((sub): CertificationSubgroup | null => {
-      if (!sub || typeof sub !== "object") return null;
-      const s = sub as { subhead?: unknown; items?: unknown };
-      if (typeof s.subhead !== "string") return null;
-
-      const subItems = asArray<unknown>(s.items)
-        .map(normalizeCertificationItem)
-        .filter((x): x is CertificationItem => x !== null);
-
-      return { subhead: s.subhead, items: subItems };
-    })
-    .filter((x): x is CertificationSubgroup => x !== null);
-
-  return subgroups.length ? { title, items, subgroups } : { title, items };
-}
-
 export async function getExperience(): Promise<ExperienceItem[]> {
   return experienceResponseSchema.parse(await fetchJson<unknown>("experience"));
 }
@@ -185,16 +128,14 @@ export async function getEducation(): Promise<EducationItem[]> {
   return educationResponseSchema.parse(await fetchJson<unknown>("education"));
 }
 
-export async function getCertifications(): Promise<CertificationGroup[]> {
+export async function getCertifications(): Promise<CertificationItem[]> {
   const data = await fetchJson<unknown>("certifications");
   const root =
     data && typeof data === "object" && "certifications" in data
       ? (data as { certifications?: unknown }).certifications
       : data;
 
-  return asArray<unknown>(root)
-    .map(normalizeCertificationGroup)
-    .filter((x): x is CertificationGroup => x !== null);
+  return certificationResponseSchema.parse(asArray<unknown>(root));
 }
 
 export async function getMemberships(): Promise<MembershipGroup[]> {

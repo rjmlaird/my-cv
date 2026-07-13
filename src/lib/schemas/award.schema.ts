@@ -3,7 +3,7 @@ import { z } from "zod";
 export const awardItemSchema = z.object({
   id: z.string(),
   title: z.string(),
-  issuer: z.string(),
+  issuer: z.union([z.string(), z.array(z.string())]),
   year: z.number(),
   type: z.string().optional(),
   role: z.string().optional(),
@@ -23,10 +23,8 @@ export const awardItemSchema = z.object({
   items: z.array(z.string()).default([]),
   keywords: z.array(z.string()).default([]),
   entities: z.array(z.string()).default([]),
-  relatedExperience: z.array(z.string()).default([]),
-  relatedEducation: z.array(z.string()).default([]),
   description: z.string().default(""),
-  url: z.string().url().optional(),
+  url: z.url().optional(),
   featured: z.boolean().default(false),
 });
 

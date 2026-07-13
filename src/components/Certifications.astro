@@ -2,39 +2,55 @@
 import { getCertifications } from "@/lib/api";
 
 type CertItem = {
-  label: string;
-  href?: string;
-};
-
-type CertSubgroup = {
-  subhead: string;
-  items: CertItem[];
+  id: string;
+  name: string;
+  url?: string;
+  badgeUrl?: string;
+  issuer?: string;
 };
 
 type CertGroup = {
-  title: string;
+  issuer: string;
   items: CertItem[];
-  subgroups?: CertSubgroup[];
 };
 
-const certifications: CertGroup[] = await getCertifications();
+const certifications = (await getCertifications()) ?? [];
 
-const orderedCertifications = [...certifications].sort((a, b) =>
-  a.title.localeCompare(b.title),
-);
+const grouped = certifications.reduce<Record<string, CertItem[]>>((acc, item) => {
+  const issuer = String(item.issuer ?? "Other").trim() || "Other";
 
-const chunk = <T,>(array: T[], size: number) =>
-  Array.from({ length: Math.ceil(array.length / size) }, (_, i) =>
-    array.slice(i * size, i * size + size),
-  );
+  const normalizedItem: CertItem = {
+    id: String(item.id ?? ""),
+    name: String(item.name ?? ""),
+    url: item.url ?? item.badgeUrl,
+    badgeUrl: item.badgeUrl,
+    issuer: item.issuer,
+  };
 
-const certColumns = chunk(
-  orderedCertifications,
-  Math.ceil(orderedCertifications.length / 3),
-);
+  (acc[issuer] ||= []).push(normalizedItem);
+  return acc;
+}, {});
+
+const orderedCertifications: CertGroup[] = Object.entries(grouped)
+  .map(([issuer, items]) => ({
+    issuer,
+    items: [...items].sort((a, b) =>
+      String(a.name ?? "").localeCompare(String(b.name ?? "")),
+    ),
+  }))
+  .sort((a, b) => a.issuer.localeCompare(b.issuer));
+
+const columns = 3;
+const size = Math.max(1, Math.ceil(orderedCertifications.length / columns));
+
+const certColumns = [
+  orderedCertifications.slice(0, size),
+  orderedCertifications.slice(size, size * 2),
+  orderedCertifications.slice(size * 2),
+].filter((column) => column.length > 0);
 
 const cleanLabel = (value: string) =>
-  value
+  String(value ?? "")
     .replace(/\s*[\r\n]+\s*/g, " ")
     .replace(/\s*–\s*/g, " – ")
     .replace(/\s+/g, " ")
@@ -45,51 +61,35 @@ const cleanLabel = (value: string) =>
   <p class="eyebrow">Credentials</p>
   <h2 id="cert-heading">Certifications</h2>
 
-  <div class="cert-columns">
-    {certColumns.map((column) => (
-      <div class="cert-column">
-        {column.map((group) => (
-          <article>
-            <h3 class="role-subheading">{group.title}</h3>
+  {certColumns.length > 0 ? (
+    <div class="cert-columns">
+      {certColumns.map((column) => (
+        <div class="cert-column">
+          {column.map((group) => (
+            <article>
+              <h3 class="role-subheading">{group.issuer}</h3>
 
-            <ul class="cert-list clean-list" aria-label={group.title}>
-              {group.items.map((item) => (
-                <li class="cert-item">
-                  {item.href ? (
-                    <a href={item.href} target="_blank" rel="noopener noreferrer">
-                      {cleanLabel(item.label)}
-                    </a>
-                  ) : (
-                    cleanLabel(item.label)
-                  )}
-                </li>
-              ))}
-            </ul>
-
-            {group.subgroups?.map((sub) => (
-              <div class="cert-subgroup">
-                <p class="cert-subhead">{sub.subhead}</p>
-
-                <ul class="cert-list clean-list" aria-label={sub.subhead}>
-                  {sub.items.map((item) => (
-                    <li class="cert-item">
-                      {item.href ? (
-                        <a href={item.href} target="_blank" rel="noopener noreferrer">
-                          {cleanLabel(item.label)}
-                        </a>
-                      ) : (
-                        cleanLabel(item.label)
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </article>
-        ))}
-      </div>
-    ))}
-  </div>
+              <ul class="cert-list clean-list" aria-label={group.issuer}>
+                {group.items.map((item) => (
+                  <li class="cert-item">
+                    {item.url ? (
+                      <a href={item.url} target="_blank" rel="noopener noreferrer">
+                        {cleanLabel(item.name)}
+                      </a>
+                    ) : (
+                      cleanLabel(item.name)
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </article>
+          ))}
+        </div>
+      ))}
+    </div>
+  ) : (
+    <p>No certifications found.</p>
+  )}
 </section>
 
 <style>
@@ -104,20 +104,6 @@ const cleanLabel = (value: string) =>
     display: grid;
     gap: 1.5rem;
     align-content: start;
-  }
-
-  .cert-group {
-    display: grid;
-    gap: 0.35rem;
-  }
-
-  .cert-group-title,
-  .cert-subhead {
-    margin: 0;
-  }
-
-  .cert-group-title {
-    color: var(--green);
   }
 
   .cert-list {
@@ -147,12 +133,6 @@ const cleanLabel = (value: string) =>
 
   .cert-item a:hover {
     text-decoration: underline;
-  }
-
-  .cert-subgroup {
-    display: grid;
-    gap: 0.35rem;
-    margin-top: 0.25rem;
   }
 
   @media (max-width: 64rem) {

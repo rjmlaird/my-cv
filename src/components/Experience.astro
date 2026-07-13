@@ -1,10 +1,11 @@
 ---
 import { getExperience, getProjects } from "@/lib/api";
 import { resolveSkillTags, resolveProjectRefs } from "@/lib/skills";
+import type { ExperienceItem } from "@/lib/schemas/experience.schema";
 
 const experience = (await getExperience()) ?? [];
 
-let projects = [];
+let projects: Awaited<ReturnType<typeof getProjects>> = [];
 try {
   projects = await getProjects();
 } catch {
@@ -12,14 +13,14 @@ try {
 }
 
 const rows = await Promise.all(
-  experience.map(async (role) => ({
+  experience.map(async (role: ExperienceItem) => ({
     role,
     skills: await resolveSkillTags(role.skills),
     projectRefs: resolveProjectRefs(role.projects, projects),
   })),
 );
 
-const hasMoreDetail = (role) =>
+const hasMoreDetail = (role: ExperienceItem) =>
   Boolean(
     role.responsibilities?.length ||
       role.achievements?.length ||

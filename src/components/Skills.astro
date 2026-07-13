@@ -1,8 +1,23 @@
 ---
 import { getSkills } from "@/lib/api";
+import { resolveSkillTags } from "@/lib/skills";
 
-const skillsObject = await getSkills();
-const skills = Object.values(skillsObject);
+let skillsObject: Awaited<ReturnType<typeof getSkills>> = {};
+
+try {
+  skillsObject = await getSkills();
+} catch {
+  skillsObject = {};
+}
+
+const groups = Object.values(skillsObject);
+
+const groupsWithResolved = await Promise.all(
+  groups.map(async (group) => ({
+    group,
+    resolved: await resolveSkillTags(group.keywords),
+  })),
+);
 ---
 
 <section id="skills" aria-labelledby="skills-heading">
@@ -10,18 +25,56 @@ const skills = Object.values(skillsObject);
   <h2 id="skills-heading">Skills</h2>
 
   <div class="skills-grid">
-    {skills.map((group) => (
+    {groupsWithResolved.map(({ group, resolved }) => (
       <article class="skill-group">
         <h3>{group.label}</h3>
 
         {group.kind && <p class="skill-kind">{group.kind}</p>}
 
         <ul class="skill-tags" aria-label={`${group.label} skills`}>
-          {group.keywords.map((keyword) => (
-            <li class={`skill-tag skill-tag--${group.kind ?? "mixed"}`}>{keyword}</li>
-          ))}
+          {resolved.map((skill) =>
+            skill.resolved && skill.description ? (
+              <li id={`skill-${skill.slug}`} class={`skill-tag skill-tag--${group.kind ?? "mixed"} skill-tag--resolved`}>
+                <details class="more-detail skill-detail">
+                  <summary>{skill.label}</summary>
+                  <p>{skill.description}</p>
+                </details>
+              </li>
+            ) : (
+              <li id={skill.resolved ? `skill-${skill.slug}` : undefined} class={`skill-tag skill-tag--${group.kind ?? "mixed"}`}>
+                {skill.label}
+              </li>
+            ),
+          )}
         </ul>
       </article>
     ))}
   </div>
 </section>
+
+<style>
+  .skill-detail {
+    border-top: none;
+    padding-top: 0;
+    margin-top: 0;
+  }
+
+  .skill-detail summary {
+    text-transform: none;
+    letter-spacing: normal;
+    font-family: var(--font-body);
+    font-size: inherit;
+    color: inherit;
+  }
+
+  .skill-detail summary::before {
+    content: none;
+  }
+
+  .skill-detail p {
+    margin: 0.4em 0 0;
+    max-width: 32ch;
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+</style>

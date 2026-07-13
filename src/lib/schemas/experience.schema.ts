@@ -33,8 +33,12 @@ export const experienceItemSchema = z.object({
   summary: z.string(),
   responsibilities: z.array(z.string()),
   achievements: z.array(z.string()),
-  skills: z.array(z.string()),
-  projects: z.array(z.string()),
+  // Tag slugs (or free-text names) cross-referenced against the local
+  // `skills` content collection — see src/content/skills. Optional/defaulted
+  // so existing API records don't need to be updated before this ships;
+  // populate this array in the API as skill tags become available.
+  skills: z.array(z.string()).optional().default([]),
+  projects: z.array(z.string()).optional().default([]),
   clients: z.array(z.string()),
   articles: z.array(z.string()),
   talks: z.array(z.string()),

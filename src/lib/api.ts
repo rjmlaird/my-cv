@@ -6,6 +6,7 @@ import { educationItemSchema, type EducationItem } from "@/lib/schemas/education
 import { experienceItemSchema, type ExperienceItem } from "@/lib/schemas/experience.schema";
 import { languageItemSchema, type LanguageItem } from "@/lib/schemas/languages.schema";
 import { organisationItemSchema, type OrganisationItem } from "@/lib/schemas/organisation.schema";
+import { projectsResponseSchema, type ProjectItem } from "@/lib/schemas/project.schema";
 import { skillItemSchema, type SkillItem } from "@/lib/schemas/skill.schema";
 import { toolItemSchema, type ToolItem } from "@/lib/schemas/tool.schema";
 import { volunteeringItemSchema, type VolunteeringItem } from "@/lib/schemas/volunteering.schema";
@@ -21,6 +22,7 @@ type ApiCollectionName =
   | "memberships"
   | "organisations"
   | "profile"
+  | "projects"
   | "research"
   | "skills"
   | "tools"
@@ -287,6 +289,17 @@ export async function getCauses(): Promise<Causes> {
   return causesSchema.parse(await fetchJson<unknown>("causes"));
 }
 
+export async function getProjects(): Promise<ProjectItem[]> {
+  try {
+    const data = await fetchJson<unknown>("projects");
+    return projectsResponseSchema.parse(data);
+  } catch {
+    // Endpoint may not exist yet in the API — degrade to an empty list
+    // rather than failing the whole build.
+    return [];
+  }
+}
+
 export const api = {
   getCollection,
   getExperience,
@@ -297,6 +310,7 @@ export const api = {
   getLanguages,
   getSkills,
   getProfile,
+  getProjects,
   getTeaching,
   getOrganisations,
   getTools,

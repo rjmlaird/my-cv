@@ -10,6 +10,9 @@ const {
   title = 'Ryan Laird — CV | Director, Green Orbit Digital',
   description = 'Ryan Laird — Chartered Marketer (CMktr), Director of Green Orbit Digital, sustainable marketing specialist for the space sector. Full CV: experience, education, skills, certifications.',
 } = Astro.props;
+
+const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? 'https://cv.rjmlaird.co.uk');
+const ogImageURL = new URL('/og-image.png', Astro.site ?? 'https://cv.rjmlaird.co.uk');
 ---
 
 <!DOCTYPE html>
@@ -20,28 +23,61 @@ const {
   <title>{title}</title>
   <meta name="description" content={description} />
   <meta name="author" content="Ryan Laird" />
+  <meta name="robots" content="index, follow" />
   <meta name="keywords" content="Ryan Laird, CV, Curriculum Vitae, Green Orbit Digital, sustainable marketing, space sector, Chartered Marketer, Leicester, UKspace" />
+
+  <link rel="canonical" href={canonicalURL} />
+
+  <!-- Open Graph -->
+  <meta property="og:site_name" content="Ryan Laird — CV" />
   <meta property="og:title" content="Ryan Laird — CV | Green Orbit Digital" />
   <meta property="og:description" content="Director and Founder of Green Orbit Digital, specialising in sustainable marketing for the space sector." />
   <meta property="og:type" content="profile" />
+  <meta property="og:url" content={canonicalURL} />
+  <meta property="og:image" content={ogImageURL} />
+  <meta property="profile:first_name" content="Ryan" />
+  <meta property="profile:last_name" content="Laird" />
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Ryan Laird — CV | Green Orbit Digital" />
+  <meta name="twitter:description" content={description} />
+  <meta name="twitter:image" content={ogImageURL} />
+  <meta name="twitter:site" content="@rjmlaird" />
+
   <meta name="theme-color" content="#0a0f1a" />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-  <link rel="canonical" href="https://cv.rjmlaird.co.uk/" />
 
   <script type="application/ld+json" set:html={JSON.stringify({
     '@context': 'https://schema.org',
     '@type': 'Person',
     name: 'Ryan Laird',
     jobTitle: 'Director, Green Orbit Digital',
+    description: 'Chartered Marketer specialising in sustainable marketing for the space sector.',
     url: 'https://cv.rjmlaird.co.uk/',
+    image: ogImageURL.toString(),
     sameAs: [
       'https://linkedin.com/in/rjmlaird87',
       'https://github.com/rjmlaird',
       'https://x.com/rjmlaird',
       'https://orcid.org/0000-0002-5992-684X',
     ],
-    alumniOf: ['University of Leicester', 'University of Kent', 'International Space University'],
+    worksFor: {
+      '@type': 'Organization',
+      name: 'Green Orbit Digital',
+      url: 'https://greenorbit.space',
+    },
+    alumniOf: [
+      { '@type': 'CollegeOrUniversity', name: 'University of Leicester' },
+      { '@type': 'CollegeOrUniversity', name: 'University of Kent' },
+      { '@type': 'CollegeOrUniversity', name: 'International Space University' },
+    ],
     email: 'mailto:rjmlaird@gmail.com',
+    address: {
+      '@type': 'PostalAddress',
+      addressLocality: 'Leicester',
+      addressCountry: 'GB',
+    },
   })} />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />

@@ -1,108 +1,45 @@
 ---
-interface Props {
-  post?: {
-    id?: string;
-    slug?: string;
-    collection?: string;
-    data?: {
-      title?: string;
-      excerpt?: string;
-      description?: string;
-      date?: Date | string;
-      author?: string;
-      avatar?: string;
-      tags?: string[];
-      tag?: string;
-      image?: string;
-      imageCredit?: string;
-    };
-  };
+import { getMemberships } from "@/lib/api";
+
+let membershipGroups: Awaited<ReturnType<typeof getMemberships>> = [];
+
+try {
+  membershipGroups = await getMemberships();
+} catch {
+  membershipGroups = [];
 }
-
-const { post } = Astro.props as Props;
-const data = post?.data ?? {};
-
-const collection = post?.collection ?? "blog";
-const slug = post?.slug ?? post?.id ?? "untitled";
-const href = `/${collection}/${slug}`;
-const title = data.title ?? "Untitled";
-const excerpt = data.excerpt ?? data.description ?? "";
-const dateValue = data.date ? new Date(data.date) : null;
-const formattedDate =
-  dateValue && !Number.isNaN(dateValue.getTime())
-    ? dateValue.toLocaleDateString("en-GB", {
-        day: "2-digit",
-        month: "long",
-        year: "numeric",
-      })
-    : "";
-const authorSlug = typeof data.author === "string" ? data.author.trim() : "";
-const authorLabel = authorSlug
-  ? authorSlug.replace(/(^|-)\w/g, (m) => m.toUpperCase()).replace(/-/g, " ")
-  : "";
-const avatar = typeof data.avatar === "string" ? data.avatar.trim() : "";
-const tags = Array.isArray(data.tags) ? data.tags : data.tag ? [data.tag] : [];
-const image = data.image || "/images/placeholder.jpg";
-const imageCredit = data.imageCredit ?? "";
-
-const tagSlug = (tag: string) =>
-  encodeURIComponent(tag.toLowerCase().replace(/\s+/g, "-"));
 ---
 
-<article class="pr pub">
-  {image ? (
-    <a href={href} class="pub-media pub-image" aria-label={title}>
-      <img src={image} alt={title} loading="lazy" decoding="async" />
-      {imageCredit && <span class="image-credit">{imageCredit}</span>}
-    </a>
-  ) : null}
+{membershipGroups.length > 0 && (
+  <section id="memberships" aria-labelledby="memberships-heading">
+    <p class="eyebrow">Professional standing</p>
+    <h2 id="memberships-heading">Memberships</h2>
 
-  <div class="pm">
-    <div class="pub-top">
-      <h3>
-        <a href={href} class="pub-title-link">{title}</a>
-      </h3>
+    <div class="membership-groups">
+      {membershipGroups.map((group) => (
+        <div class="membership-group">
+          <h3 class="membership-group-title">{group.title}</h3>
 
-      {formattedDate ? <time class="date">{formattedDate}</time> : null}
+          <div class="membership-list">
+            {group.items.map((item) => (
+              <article class="membership-entry" id={`membership-${item.organisationSlug || item.organisation}`}>
+                <div class="membership-entry-header">
+                  <span class="membership-org">{item.organisation}</span>
+                  {item.role && <span class="membership-role">{item.role}</span>}
+                  {item.type && <span class="membership-type">{item.type}</span>}
+                </div>
+
+                {item.description && (
+                  <details class="more-detail">
+                    <summary>More detail</summary>
+                    <p>{item.description}</p>
+                  </details>
+                )}
+              </article>
+            ))}
+          </div>
+        </div>
+      ))}
     </div>
-
-    {excerpt ? <p>{excerpt}</p> : null}
-
-    {authorSlug ? (
-      <div class="author-badge">
-        {avatar ? (
-          <img
-            class="author-avatar"
-            src={avatar}
-            alt={authorLabel || authorSlug}
-            width="32"
-            height="32"
-            loading="lazy"
-            decoding="async"
-          />
-        ) : null}
-
-        <span class="author-by">By</span>
-
-        <a class="author-link" href={`/authors/${authorSlug}`}>
-          {authorLabel || authorSlug}
-        </a>
-      </div>
-    ) : null}
-
-    {tags.length > 0 ? (
-      <div class="pt">
-        {tags.map((tag) => (
-          <a class="tag" href={`/tags/${tagSlug(tag)}/`}>
-            {tag}
-          </a>
-        ))}
-      </div>
-    ) : null}
-  </div>
-
-  <a href={href} class="pa">
-    <span class="pa-i">↗</span>
-    <span>View</span>
-  </a>
-</article>
+  </section>
+)}

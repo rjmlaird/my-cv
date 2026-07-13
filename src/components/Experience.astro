@@ -1,15 +1,40 @@
 ---
-import { getExperience } from "@/lib/api";
+import { getExperience, getProjects } from "@/lib/api";
+import { resolveSkillTags, resolveProjectRefs } from "@/lib/skills";
 
 const experience = (await getExperience()) ?? [];
+
+let projects: Awaited<ReturnType<typeof getProjects>> = [];
+try {
+  projects = await getProjects();
+} catch {
+  projects = [];
+}
+
+const rows = await Promise.all(
+  experience.map(async (role) => ({
+    role,
+    skills: await resolveSkillTags(role.skills),
+    projectRefs: resolveProjectRefs(role.projects, projects),
+  })),
+);
+
+const hasMoreDetail = (role: (typeof experience)[number]) =>
+  Boolean(
+    (role.technologies && role.technologies.length) ||
+      (role.clients && role.clients.length) ||
+      (role.articles && role.articles.length) ||
+      (role.talks && role.talks.length) ||
+      (role.certifications && role.certifications.length),
+  );
 ---
 
 <section id="experience" aria-labelledby="experience-heading">
   <p class="eyebrow">Career history</p>
   <h2 id="experience-heading">Experience</h2>
 
-  {experience.length > 0 ? (
-    experience.map((role) => {
+  {rows.length > 0 ? (
+    rows.map(({ role, skills, projectRefs }) => {
       const organisation =
         (typeof role.organisation === "string" ? role.organisation : role.organisation?.name) ??
         "Self-employed";
@@ -61,6 +86,69 @@ const experience = (await getExperience()) ?? [];
                 {achievements.map((item) => <li>{item}</li>)}
               </ul>
             </>
+          ) : null}
+
+          {projectRefs.length > 0 ? (
+            <ul class="pill-list" aria-label="Related projects">
+              {projectRefs.map((ref) => (
+                <li class="pill">
+                  {ref.resolved ? <a href={ref.href}>{ref.label}</a> : ref.label}
+                </li>
+              ))}
+            </ul>
+          ) : null}
+
+          {skills.length > 0 ? (
+            <ul class="pill-list" aria-label="Skills used in this role">
+              {skills.map((skill) => (
+                <li class="pill">
+                  {skill.resolved ? <a href={skill.href}>{skill.label}</a> : skill.label}
+                </li>
+              ))}
+            </ul>
+          ) : null}
+
+          {hasMoreDetail(role) ? (
+            <details class="more-detail">
+              <summary>More detail</summary>
+
+              {role.technologies?.length ? (
+                <>
+                  <h4 class="role-subheading">Technologies</h4>
+                  <ul class="pill-list">
+                    {role.technologies.map((t) => <li class="pill pill--mono">{t}</li>)}
+                  </ul>
+                </>
+              ) : null}
+
+              {role.clients?.length ? (
+                <>
+                  <h4 class="role-subheading">Clients</h4>
+                  <ul class="role-list">{role.clients.map((c) => <li>{c}</li>)}</ul>
+                </>
+              ) : null}
+
+              {role.talks?.length ? (
+                <>
+                  <h4 class="role-subheading">Talks</h4>
+                  <ul class="role-list">{role.talks.map((t) => <li>{t}</li>)}</ul>
+                </>
+              ) : null}
+
+              {role.articles?.length ? (
+                <>
+                  <h4 class="role-subheading">Articles</h4>
+                  <ul class="role-list">{role.articles.map((a) => <li>{a}</li>)}</ul>
+                </>
+              ) : null}
+
+              {role.certifications?.length ? (
+                <>
+                  <h4 class="role-subheading">Certifications</h4>
+                  <ul class="role-list">{role.certifications.map((c) => <li>{c}</li>)}</ul>
+                </>
+              ) : null}
+            </details>
           ) : null}
         </article>
       );

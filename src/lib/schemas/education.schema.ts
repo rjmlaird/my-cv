@@ -15,8 +15,11 @@ export const educationSourceSchema = z.object({
   summary: z.string().default(""),
   responsibilities: z.array(z.string()).default([]),
   achievements: z.array(z.string()).default([]),
-  skills: z.array(z.string()).default([]),
-  projects: z.array(z.string()).default([]),
+  // Tag slugs (or free-text names) cross-referenced against the local
+  // `skills` content collection — see src/content/skills. Already optional
+  // via .default([]); safe to leave unset in the API until populated.
+  skills: z.array(z.string()).optional().default([]),
+  projects: z.array(z.string()).optional().default([]),
   clients: z.array(z.string()).default([]),
   articles: z.array(z.string()).default([]),
   talks: z.array(z.string()).default([]),

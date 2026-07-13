@@ -12,9 +12,10 @@ const {
   getCertifications,
   getMemberships,
   getVolunteering,
+  getProjects,
 } = api;
 
-const [experienceData, educationData, skillsData, certificationsData, membershipsData, awardsData, volunteeringData, languagesData] =
+const [experienceData, educationData, skillsData, certificationsData, membershipsData, awardsData, volunteeringData, languagesData, projectsData] =
   await Promise.all([
     getExperience(),
     getEducation(),
@@ -24,6 +25,7 @@ const [experienceData, educationData, skillsData, certificationsData, membership
     getAwards(),
     getVolunteering(),
     getLanguages(),
+    getProjects(),
   ]);
 
 const profile = await getProfile();
@@ -32,6 +34,7 @@ const teaching = await getTeaching();
 const experience = Array.isArray(experienceData) ? experienceData : [];
 const education = Array.isArray(educationData) ? educationData : [];
 const volunteering = Array.isArray(volunteeringData) ? volunteeringData : [];
+const projects = Array.isArray(projectsData) ? projectsData : [];
 
 // getSkills() already returns Record<string, SkillGroup>.
 const skillsGroups = skillsData && typeof skillsData === "object" ? Object.values(skillsData) : [];
@@ -130,6 +133,22 @@ function formatAward(award: (typeof awardsArr)[number]): string {
     ))}
   </ul>
 
+  {projects.length > 0 && (
+    <>
+      <h2>Projects</h2>
+      <ul>
+        {projects.map((project) => (
+          <li>
+            {project.title}
+            {project.description ? ` — ${project.description}` : ""}
+            {Array.isArray(project.toolsTech) && project.toolsTech.length > 0
+              ? ` (${project.toolsTech.join(", ")})`
+              : ""}
+          </li>
+        ))}
+      </ul>
+    </>
+  )}
 
   <h2>Teaching</h2>
   <p class="ats-meta">{teaching.org}</p>

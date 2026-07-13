@@ -432,18 +432,42 @@ section > h2 {
   letter-spacing: 0.08em;
 }
 
-.skill-group ul {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4em;
+.skill-kind {
+  margin: -0.5em 0 0.7em;
+  color: var(--muted-dim);
+  font-size: 0.72rem;
+  text-transform: capitalize;
 }
 
-.skill-group li {
+.skill-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5em;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.skill-tag {
   padding: 0.3em 0.65em;
   border: 1px solid var(--border);
   border-radius: 5px;
   color: var(--muted);
   font-size: 0.82rem;
+}
+
+.skill-tag--resolved {
+  border-color: var(--border-strong);
+  color: var(--text);
+  scroll-margin-top: 6rem;
+}
+
+.skill-tag--hard {
+  border-color: rgba(45, 212, 191, 0.35);
+}
+
+.skill-tag--soft {
+  border-color: rgba(242, 181, 68, 0.35);
 }
 
 .cert-grid {
@@ -751,23 +775,53 @@ body.ats-mode #ats-view {
   gap: 2rem;
 }
 
-.membership-group {
-  display: grid;
-  gap: 1rem;
-}
-
 .membership-group-title {
-  margin: 0;
+  margin: 0 0 1rem;
+  color: var(--amber);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
 }
 
-.membership-columns {
+.membership-list {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1rem 2rem;
+  gap: 1.1rem;
 }
 
 .membership-entry {
   min-width: 0;
+  display: grid;
+  gap: 0.2rem;
+}
+
+.membership-entry-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5em;
+}
+
+.membership-org {
+  font-family: var(--font-display);
+  font-weight: 600;
+  color: var(--text);
+}
+
+.membership-role {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.membership-type {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--teal);
+  border: 1px solid var(--border-strong);
+  border-radius: 9999px;
+  padding: 0.12em 0.6em;
 }
 
 .pill-list {
@@ -791,45 +845,95 @@ body.ats-mode #ats-view {
   white-space: nowrap;
 }
 
-.author-badge {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  flex-wrap: nowrap;
-  margin-top: 0.25rem;
+.pill a {
+  color: var(--teal);
 }
 
-.author-avatar {
-  display: block;
-  width: 32px;
-  height: 32px;
-  min-width: 32px;
-  min-height: 32px;
-  border-radius: 9999px;
-  object-fit: cover;
-  flex: 0 0 32px;
+.pill--mono {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
 }
 
-.author-by,
-.author-link {
-  white-space: nowrap;
+.role-list {
+  margin: 0.6em 0 0;
+  padding-left: 1.2em;
+  display: grid;
+  gap: 0.4em;
+  list-style: disc;
+  color: var(--muted);
+  font-size: 0.9rem;
 }
 
-.pt {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-top: 0.75rem;
+.role-subheading {
+  margin: 1em 0 0.2em;
+  color: var(--amber);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
 }
 
-.tag {
-  display: inline-flex;
-  align-items: center;
+/* Progressive-disclosure "further info" pattern used across Experience,
+   Education, Memberships, and Projects. Native <details>/<summary> keeps
+   this content in the DOM (good for SEO/ATS parsing and Ctrl+F) while
+   collapsing it visually until requested — and it prints/exports open. */
+details.more-detail,
+details.project-more {
+  margin-top: 0.75em;
+  border-top: 1px dashed var(--border);
+  padding-top: 0.6em;
+}
+
+details.more-detail summary,
+details.project-more summary {
+  cursor: pointer;
+  color: var(--teal);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  list-style: none;
+}
+
+details.more-detail summary::-webkit-details-marker,
+details.project-more summary::-webkit-details-marker {
+  display: none;
+}
+
+details.more-detail summary::before,
+details.project-more summary::before {
+  content: "+ ";
+}
+
+details.more-detail[open] summary::before,
+details.project-more[open] summary::before {
+  content: "− ";
+}
+
+.skill-tag--resolved a,
+.pill a {
   text-decoration: none;
 }
 
+.skill-tag--resolved a:hover,
+.pill a:hover {
+  text-decoration: underline;
+}
+
+@media print {
+  details.more-detail,
+  details.project-more {
+    display: block;
+  }
+
+  details.more-detail summary,
+  details.project-more summary {
+    display: none;
+  }
+}
+
 @media (max-width: 48rem) {
-  .membership-columns {
-    grid-template-columns: 1fr;
+  .membership-groups {
+    gap: 1.5rem;
   }
 }

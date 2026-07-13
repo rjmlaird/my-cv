@@ -127,3 +127,96 @@ export interface ProjectsSchema {
   community_projects: CommunityProject[];
   other_projects: OtherProject[];
 }
+
+// --- Runtime (zod) validation -------------------------------------------
+// The TS types above previously had no matching runtime schema, so nothing
+// validated project data from the API and no page consumed it. This mirrors
+// BaseProject loosely and permissively (API data here is still evolving),
+// and adds an optional `skills` tag array — separate from the existing
+// freeform `tags` — for cross-referencing against the skills content
+// collection (src/content/skills) the same way experience/education do.
+import { z } from "zod";
+
+const projectLinksSchema = z.record(z.string(), z.string().url()).optional();
+
+const clientSchema = z.object({
+  name: z.string(),
+  slug: z.string().optional(),
+  url: z.string().url().optional(),
+  sector: z.string().optional(),
+});
+
+const experienceRefSchema = z.object({
+  organisation: z.string(),
+  role: z.string().optional(),
+  period: z.string().optional(),
+  context: z.string().optional(),
+});
+
+const caseStudySchema = z.object({
+  title: z.string(),
+  slug: z.string(),
+  url: z.string().url().optional(),
+  summary: z.string().optional(),
+});
+
+const articleRefSchema = z.object({
+  title: z.string(),
+  url: z.string().url(),
+  publisher: z.string().optional(),
+  date: z.string().optional(),
+});
+
+const awardRefSchema = z.object({
+  title: z.string(),
+  organisation: z.string().optional(),
+  year: z.string().optional(),
+  url: z.string().url().optional(),
+});
+
+export const projectItemSchema = z.object({
+  id: z.union([z.string(), z.number()]),
+  slug: z.string(),
+  title: z.string(),
+  description: z.string().default(""),
+  type: z.enum(["featured", "collaborative", "community", "other", "automation"]).default("other"),
+  status: z.enum(["completed", "in_progress", "archived", "concept"]).default("completed"),
+  date: z.string().optional(),
+  toolsTech: z.array(z.string()).optional().default([]),
+  features: z.array(z.string()).optional().default([]),
+  tags: z.array(z.string()).optional().default([]),
+  // Optional — tag slugs cross-referenced against src/content/skills.
+  skills: z.array(z.string()).optional().default([]),
+  links: projectLinksSchema,
+  client: z.union([clientSchema, z.array(clientSchema)]).optional(),
+  experience: z.union([experienceRefSchema, z.array(experienceRefSchema)]).optional(),
+  caseStudies: z.array(caseStudySchema).optional(),
+  articles: z.array(articleRefSchema).optional(),
+  awards: z.array(awardRefSchema).optional(),
+  impact: z.record(z.string(), z.union([z.number(), z.string()])).optional(),
+  relatedProjects: z.array(z.string()).optional(),
+  relatedPeople: z.array(z.string()).optional(),
+  relatedOrgs: z.array(z.string()).optional(),
+  collaborators: z.array(z.string()).optional(),
+  communityRole: z.string().optional(),
+  automationLevel: z.enum(["low", "medium", "high"]).optional(),
+});
+
+export type ProjectItem = z.infer<typeof projectItemSchema>;
+
+export const projectsResponseSchema = z.union([
+  z.array(projectItemSchema),
+  z
+    .object({
+      featured_projects: z.array(projectItemSchema).optional(),
+      collaborative_projects: z.array(projectItemSchema).optional(),
+      community_projects: z.array(projectItemSchema).optional(),
+      other_projects: z.array(projectItemSchema).optional(),
+    })
+    .transform((grouped) => [
+      ...(grouped.featured_projects ?? []),
+      ...(grouped.collaborative_projects ?? []),
+      ...(grouped.community_projects ?? []),
+      ...(grouped.other_projects ?? []),
+    ]),
+]);

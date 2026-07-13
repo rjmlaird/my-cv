@@ -1,8 +1,16 @@
 ---
-import { getEducation } from "@/lib/api";
+import { getEducation, getProjects } from "@/lib/api";
+import { resolveSkillTags, resolveProjectRefs } from "@/lib/skills";
 import type { EducationItem } from "@/lib/schemas/education.schema";
 
 const education = (await getEducation()) ?? [];
+
+let projects: Awaited<ReturnType<typeof getProjects>> = [];
+try {
+  projects = await getProjects();
+} catch {
+  projects = [];
+}
 
 const formatDate = (value?: string | null) => {
   if (!value) return "";
@@ -14,13 +22,30 @@ const formatDate = (value?: string | null) => {
     year: "numeric",
   }).format(new Date(Number(year), Number(month) - 1, 1));
 };
+
+const rows = await Promise.all(
+  education.map(async (item: EducationItem) => ({
+    item,
+    skills: await resolveSkillTags(item.skills),
+    projectRefs: resolveProjectRefs(item.projects, projects),
+  })),
+);
+
+const hasMoreDetail = (item: EducationItem) =>
+  Boolean(
+    (item.responsibilities && item.responsibilities.length) ||
+      (item.achievements && item.achievements.length) ||
+      (item.articles && item.articles.length) ||
+      (item.talks && item.talks.length) ||
+      (item.certifications && item.certifications.length),
+  );
 ---
 
 <section id="education" aria-labelledby="education-heading">
   <p class="eyebrow">Academic background</p>
   <h2 id="education-heading">Education</h2>
 
-  {education.map((item: EducationItem) => {
+  {rows.map(({ item, skills, projectRefs }) => {
     const title = item.qualification || item.role || "Education";
     const startDate = formatDate(item.startDate);
     const endDate = item.current ? "Present" : formatDate(item.endDate);
@@ -62,50 +87,63 @@ const formatDate = (value?: string | null) => {
 
         {item.summary ? <p>{item.summary}</p> : null}
 
-        {Array.isArray(item.projects) && item.projects.length > 0 ? (
-          <>
-            <h3 class="role-subheading">Projects</h3>
-            <ul class="pill-list" aria-label="Projects">
-              {item.projects.map((project) => (
-                <li class="pill">{project}</li>
-              ))}
-            </ul>
-          </>
+        {projectRefs.length > 0 ? (
+          <ul class="pill-list" aria-label="Related projects">
+            {projectRefs.map((ref) => (
+              <li class="pill">{ref.resolved ? <a href={ref.href}>{ref.label}</a> : ref.label}</li>
+            ))}
+          </ul>
         ) : null}
 
-        {Array.isArray(item.skills) && item.skills.length > 0 ? (
-          <>
-            <ul class="pill-list" aria-label="Skills">
-              {item.skills.map((skill) => (
-                <li class="pill">{skill}</li>
-              ))}
-            </ul>
-          </>
+        {skills.length > 0 ? (
+          <ul class="pill-list" aria-label="Skills">
+            {skills.map((skill) => (
+              <li class="pill">{skill.resolved ? <a href={skill.href}>{skill.label}</a> : skill.label}</li>
+            ))}
+          </ul>
+        ) : null}
+
+        {hasMoreDetail(item) ? (
+          <details class="more-detail">
+            <summary>More detail</summary>
+
+            {item.responsibilities?.length ? (
+              <>
+                <h4 class="role-subheading">Responsibilities</h4>
+                <ul class="role-list">{item.responsibilities.map((r) => <li>{r}</li>)}</ul>
+              </>
+            ) : null}
+
+            {item.achievements?.length ? (
+              <>
+                <h4 class="role-subheading">Achievements</h4>
+                <ul class="role-list">{item.achievements.map((a) => <li>{a}</li>)}</ul>
+              </>
+            ) : null}
+
+            {item.talks?.length ? (
+              <>
+                <h4 class="role-subheading">Talks</h4>
+                <ul class="role-list">{item.talks.map((t) => <li>{t}</li>)}</ul>
+              </>
+            ) : null}
+
+            {item.articles?.length ? (
+              <>
+                <h4 class="role-subheading">Articles</h4>
+                <ul class="role-list">{item.articles.map((a) => <li>{a}</li>)}</ul>
+              </>
+            ) : null}
+
+            {item.certifications?.length ? (
+              <>
+                <h4 class="role-subheading">Certifications</h4>
+                <ul class="role-list">{item.certifications.map((c) => <li>{c}</li>)}</ul>
+              </>
+            ) : null}
+          </details>
         ) : null}
       </article>
     );
   })}
 </section>
-
-<style>
-  .pill-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    list-style: none;
-    margin: 0;
-    padding: 0;
-  }
-
-  .pill {
-    display: inline-flex;
-    align-items: center;
-    padding: 0.35rem 0.75rem;
-    border-radius: 9999px;
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    background: rgba(255, 255, 255, 0.06);
-    font-size: 0.875rem;
-    line-height: 1;
-    white-space: nowrap;
-  }
-</style>

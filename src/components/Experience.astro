@@ -4,7 +4,7 @@ import { resolveSkillTags, resolveProjectRefs } from "@/lib/skills";
 
 const experience = (await getExperience()) ?? [];
 
-let projects: Awaited<ReturnType<typeof getProjects>> = [];
+let projects = [];
 try {
   projects = await getProjects();
 } catch {
@@ -19,13 +19,15 @@ const rows = await Promise.all(
   })),
 );
 
-const hasMoreDetail = (role: (typeof experience)[number]) =>
+const hasMoreDetail = (role) =>
   Boolean(
-    (role.technologies && role.technologies.length) ||
-      (role.clients && role.clients.length) ||
-      (role.articles && role.articles.length) ||
-      (role.talks && role.talks.length) ||
-      (role.certifications && role.certifications.length),
+    role.responsibilities?.length ||
+      role.achievements?.length ||
+      role.technologies?.length ||
+      role.clients?.length ||
+      role.articles?.length ||
+      role.talks?.length ||
+      role.certifications?.length,
   );
 ---
 
@@ -50,7 +52,10 @@ const hasMoreDetail = (role: (typeof experience)[number]) =>
       const achievements = Array.isArray(role.achievements) ? role.achievements : [];
 
       return (
-        <article id={`exp-${role.id}`} class={["role-item", role.current ? "" : "dim"].filter(Boolean).join(" ")}>
+        <article
+          id={`exp-${role.id}`}
+          class={["role-item", role.current ? "" : "dim"].filter(Boolean).join(" ")}
+        >
           <div class="role-header">
             <div>
               <span class="role-title">{role.role}</span>

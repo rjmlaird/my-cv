@@ -8,6 +8,7 @@ export const awardItemSchema = z.object({
   type: z.string().optional(),
   role: z.string().optional(),
   event: z.string().optional(),
+  location: z.string().optional(),
   session_title: z.string().optional(),
   project: z.string().optional(),
   category: z.string().optional(),
@@ -15,7 +16,6 @@ export const awardItemSchema = z.object({
   value: z.string().optional(),
   programme: z.string().optional(),
   funded_by: z.array(z.string()).default([]),
-  location: z.string().optional(),
   instrument: z.string().optional(),
   duration: z.string().optional(),
   research_area: z.string().optional(),
@@ -26,6 +26,11 @@ export const awardItemSchema = z.object({
   description: z.string().default(""),
   url: z.url().optional(),
   featured: z.boolean().default(false),
+  relatedCertifications: z.array(z.string()).default([]),
+  relatedExperience: z.array(z.string()).default([]),
+  relatedEducation: z.array(z.string()).default([]),
+  relatedVolunteering: z.array(z.string()).default([]),
+  relatedOrg: z.array(z.string()).default([]),
 });
 
 export type AwardItem = z.infer<typeof awardItemSchema>;

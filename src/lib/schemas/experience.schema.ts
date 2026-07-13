@@ -31,19 +31,25 @@ export const experienceItemSchema = z.object({
   workMode: z.string().optional(),
   location: locationSchema.optional(),
   summary: z.string(),
-  responsibilities: z.array(z.string()).optional().default([]),
-  achievements: z.array(z.string()).optional().default([]),
-  skills: z.array(z.string()).optional().default([]),
-  projects: z.array(z.string()).optional().default([]),
-  clients: z.array(z.string()).optional().default([]),
-  articles: z.array(z.string()).optional().default([]),
-  talks: z.array(z.string()).optional().default([]),
-  technologies: z.array(z.string()).optional().default([]),
-  media: z.array(z.string()).optional().default([]),
+  responsibilities: z.array(z.string()).default([]),
+  achievements: z.array(z.string()).default([]),
+  skills: z.array(z.string()).default([]),
+  projects: z.array(z.string()).default([]),
+  clients: z.array(z.string()).default([]),
+  articles: z.array(z.string()).default([]),
+  talks: z.array(z.string()).default([]),
+  technologies: z.array(z.string()).default([]),
+  media: z.array(z.string()).default([]),
   featured: z.boolean(),
   order: z.number().int(),
+  relatedOrg: z.array(z.string()).default([]),
+  relatedEducation: z.array(z.string()).default([]),
+  relatedMemberships: z.array(z.string()).default([]),
+  relatedCertifications: z.array(z.string()).default([]),
+  relatedAwards: z.array(z.string()).default([]),
 });
 
 export const experienceSchema = z.array(experienceItemSchema);
+
 export type ExperienceItem = z.infer<typeof experienceItemSchema>;
 export type Experience = z.infer<typeof experienceSchema>;

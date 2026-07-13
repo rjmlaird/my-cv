@@ -3,17 +3,6 @@ import { getAwards, getExperience, getEducation } from "@/lib/api";
 import { awardItemSchema, type AwardItem } from "@/lib/schemas/award.schema";
 import { educationItemSchema, type EducationItem } from "@/lib/schemas/education.schema";
 import { experienceItemSchema, type ExperienceItem } from "@/lib/schemas/experience.schema";
-import type { Base } from "@/lib/schemas/base.schema";
-
-type CrossLinkFields = Pick<
-  Base,
-  | "relatedExperience"
-  | "relatedEducation"
-  | "relatedCertifications"
-  | "relatedMemberships"
-  | "relatedAwards"
-  | "relatedOrg"
->;
 
 const rawAwards = await getAwards();
 const rawExperience = await getExperience();

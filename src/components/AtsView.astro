@@ -14,29 +14,27 @@ const {
   getVolunteering,
 } = api;
 
-const [
-  experienceData,
-  educationData,
-  certificationsData,
-  membershipsData,
-  awardsData,
-  volunteeringData,
-  languagesData,
-] = await Promise.all([
-  getExperience(),
-  getEducation(),
-  getCertifications(),
-  getMemberships(),
-  getAwards(),
-  getVolunteering(),
-  getLanguages(),
-]);
+const [experienceData, educationData, certificationsData, membershipsData, awardsData, volunteeringData, languagesData] =
+  await Promise.all([
+    getExperience(),
+    getEducation(),
+    getCertifications(),
+    getMemberships(),
+    getAwards(),
+    getVolunteering(),
+    getLanguages(),
+  ]);
 
 const profile = await getProfile();
 const teaching = await getTeaching();
 
 const experience = Array.isArray(experienceData) ? experienceData : [];
 const education = Array.isArray(educationData) ? educationData : [];
+const certifications = Array.isArray(certificationsData) ? certificationsData : [];
+const memberships = Array.isArray(membershipsData) ? membershipsData : [];
+const awards = Array.isArray(awardsData) ? awardsData : [];
+const volunteering = Array.isArray(volunteeringData) ? volunteeringData : [];
+const languages = Array.isArray(languagesData) ? languagesData : [];
 
 const skillSources: SkillSource[] = [
   ...experience.map((role) => ({ tags: role.skills, ref: { label: role.role, href: `#exp-${role.id}` } })),
@@ -48,21 +46,28 @@ const skillSources: SkillSource[] = [
 
 const skillsFlat = (await aggregateSkills(skillSources)).map((s) => s.label).join(", ");
 
-const certsArr = Array.isArray(certificationsData) ? certificationsData : [];
-const membershipsArr = Array.isArray(membershipsData) ? membershipsData : [];
-const awardsArr = Array.isArray(awardsData) ? awardsData : [];
-const languagesArr = Array.isArray(languagesData) ? languagesData : [];
-
-const certsFlat = certsArr
-  .map((g) => `${g.title ?? ""}: ${Array.isArray(g.items) ? g.items.map((i) => i.label ?? String(i)).join(", ") : ""}`)
-  .filter((s) => s.trim().length > 1)
+const certsFlat = certifications
+  .map((cert) => {
+    if (!cert || typeof cert !== "object") return "";
+    const name = "name" in cert && typeof cert.name === "string" ? cert.name : "";
+    const issuer = "issuer" in cert && typeof cert.issuer === "string" ? cert.issuer : "";
+    const type = "type" in cert && typeof cert.type === "string" ? cert.type : "";
+    const parts = [name, issuer ? `— ${issuer}` : "", type ? `(${type})` : ""].filter(Boolean);
+    return parts.join(" ");
+  })
+  .filter((s) => s.trim().length > 0)
   .join(". ");
 
-const membershipsFlat = membershipsArr
-  .map((group: any) =>
-    group && typeof group === "object" && Array.isArray(group.items)
-      ? `${group.title ?? ""}: ${group.items
-          .map((item: any) => [item.organisation, item.role].filter(Boolean).join(" — "))
+const membershipsFlat = memberships
+  .map((group) =>
+    group && typeof group === "object" && "items" in group && Array.isArray(group.items)
+      ? `${"title" in group && typeof group.title === "string" ? group.title : ""}: ${group.items
+          .map((item) => {
+            if (!item || typeof item !== "object") return "";
+            const organisation = "organisation" in item && typeof item.organisation === "string" ? item.organisation : "";
+            const role = "role" in item && typeof item.role === "string" ? item.role : "";
+            return [organisation, role].filter(Boolean).join(" — ");
+          })
           .filter(Boolean)
           .join(", ")}`
       : "",
@@ -70,16 +75,26 @@ const membershipsFlat = membershipsArr
   .filter(Boolean)
   .join(". ");
 
-const languagesFlat = languagesArr
-  .map((l: any) => `${l.name ?? l.label ?? ""}${l.level ? ` (${l.level})` : ""}`)
+const languagesFlat = languages
+  .map((l) => {
+    if (!l || typeof l !== "object") return "";
+    const name = "name" in l && typeof l.name === "string" ? l.name : "label" in l && typeof l.label === "string" ? l.label : "";
+    const level = "level" in l && typeof l.level === "string" ? l.level : "";
+    return `${name}${level ? ` (${level})` : ""}`.trim();
+  })
   .filter(Boolean)
   .join("; ");
 
-const volunteeringFlat = volunteeringData
-  .map((g: any) =>
-    g && typeof g === "object" && Array.isArray(g.items)
-      ? `${g.title ?? ""}: ${g.items
-          .map((i: any) => [i.organisation, i.role].filter(Boolean).join(" — "))
+const volunteeringFlat = volunteering
+  .map((group) =>
+    group && typeof group === "object" && "items" in group && Array.isArray(group.items)
+      ? `${"title" in group && typeof group.title === "string" ? group.title : ""}: ${group.items
+          .map((item) => {
+            if (!item || typeof item !== "object") return "";
+            const organisation = "organisation" in item && typeof item.organisation === "string" ? item.organisation : "";
+            const role = "role" in item && typeof item.role === "string" ? item.role : "";
+            return [organisation, role].filter(Boolean).join(" — ");
+          })
           .filter(Boolean)
           .join(", ")}`
       : "",
@@ -87,11 +102,9 @@ const volunteeringFlat = volunteeringData
   .filter(Boolean)
   .join(". ");
 
-function formatAward(award: (typeof awardsArr)[number]): string {
+function formatAward(award: (typeof awards)[number]): string {
   if (typeof award === "string") return award;
-  return [award.title, award.issuer ? `— ${award.issuer}` : "", award.year ? `(${award.year})` : ""]
-    .filter(Boolean)
-    .join(" ");
+  return [award.title, award.issuer ? `— ${award.issuer}` : "", award.year ? `(${award.year})` : ""].filter(Boolean).join(" ");
 }
 ---
 
@@ -156,5 +169,5 @@ function formatAward(award: (typeof awardsArr)[number]): string {
   <p>{volunteeringFlat}.</p>
 
   <h2>Awards</h2>
-  <p>{awardsArr.map(formatAward).join("; ")}.</p>
+  <p>{awards.map(formatAward).join("; ")}.</p>
 </div>

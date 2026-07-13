@@ -29,7 +29,6 @@ const hasMoreDetail = (item: EducationItem) =>
       item.achievements?.length ||
       item.articles?.length ||
       item.talks?.length ||
-      item.certifications?.length ||
       item.relatedAwards?.length ||
       item.relatedCertifications?.length,
   );
@@ -120,13 +119,6 @@ const hasMoreDetail = (item: EducationItem) =>
               <>
                 <h4 class="role-subheading">Articles</h4>
                 <ul class="role-list">{item.articles.map((a) => <li>{a}</li>)}</ul>
-              </>
-            ) : null}
-
-            {item.certifications?.length ? (
-              <>
-                <h4 class="role-subheading">Certifications</h4>
-                <ul class="role-list">{item.certifications.map((c) => <li>{c}</li>)}</ul>
               </>
             ) : null}
 

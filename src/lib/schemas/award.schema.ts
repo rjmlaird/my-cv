@@ -5,7 +5,6 @@ export const awardItemSchema = z.object({
   title: z.string(),
   issuer: z.string(),
   year: z.number(),
-
   type: z.string().optional(),
   role: z.string().optional(),
   event: z.string().optional(),
@@ -22,12 +21,10 @@ export const awardItemSchema = z.object({
   research_area: z.string().optional(),
   award: z.string().optional(),
   items: z.array(z.string()).optional(),
-
   keywords: z.array(z.string()).default([]),
   entities: z.array(z.string()).default([]),
-
   description: z.string().default(""),
-  url: z.string().url().optional(),
+  url: z.url().optional(),
   featured: z.boolean().default(false),
 });
 

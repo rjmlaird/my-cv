@@ -12,13 +12,13 @@ export const seoSchema = z.object({
 
 export const linkSchema = z.object({
   label: z.string(),
-  url: z.string().url(),
+  url: z.url(),
 });
 
 export const socialSchema = z.object({
   platform: z.string(),
   username: z.string().optional(),
-  url: z.string().url(),
+  url: z.url(),
   icon: z.string().optional(),
 });
 
@@ -29,29 +29,19 @@ export const imageSchema = z.object({
 
 export const baseSchema = z.object({
   id: z.string(),
-
   slug: z.string(),
-
   title: z.string(),
-
   summary: z.string().default(""),
-
   description: z.string().default(""),
-
   featured: z.boolean().default(false),
-
   featuredImage: z.string().default(DEFAULT_FEATURED_IMAGE),
-
   tags: z.array(z.string()).default([]),
-
   seo: seoSchema.default({
     title: "",
     description: "",
     image: DEFAULT_FEATURED_IMAGE,
   }),
-
   created: z.string().optional(),
-
   updated: z.string().optional(),
 });
 

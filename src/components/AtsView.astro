@@ -37,7 +37,6 @@ const teaching = await getTeaching();
 
 const experience = Array.isArray(experienceData) ? experienceData : [];
 const education = Array.isArray(educationData) ? educationData : [];
-const volunteering = Array.isArray(volunteeringData) ? volunteeringData : [];
 
 const skillSources: SkillSource[] = [
   ...experience.map((role) => ({ tags: role.skills, ref: { label: role.role, href: `#exp-${role.id}` } })),
@@ -46,6 +45,7 @@ const skillSources: SkillSource[] = [
     ref: { label: item.qualification || item.role, href: `#edu-${item.id}` },
   })),
 ];
+
 const skillsFlat = (await aggregateSkills(skillSources)).map((s) => s.label).join(", ");
 
 const certsArr = Array.isArray(certificationsData) ? certificationsData : [];
@@ -65,7 +65,7 @@ const membershipsFlat = membershipsArr
           .map((item: any) => [item.organisation, item.role].filter(Boolean).join(" — "))
           .filter(Boolean)
           .join(", ")}`
-      : ""
+      : "",
   )
   .filter(Boolean)
   .join(". ");
@@ -82,7 +82,7 @@ const volunteeringFlat = volunteeringData
           .map((i: any) => [i.organisation, i.role].filter(Boolean).join(" — "))
           .filter(Boolean)
           .join(", ")}`
-      : ""
+      : "",
   )
   .filter(Boolean)
   .join(". ");

@@ -12,9 +12,7 @@ try {
 const name = profile?.name ?? "Ryan Laird";
 const credentials = profile?.credentials ?? "";
 const summary = Array.isArray(profile?.summary) ? profile.summary : [];
-const portfolioLinks = Array.isArray(profile?.portfolioLinks) ? profile.portfolioLinks : [];
 const tags = Array.isArray(profile?.tags) ? profile.tags : [];
-const contact = Array.isArray(profile?.contact) ? profile.contact : [];
 
 const roleHtml =
   typeof profile?.role === "string"
@@ -39,7 +37,6 @@ const roleHtml =
   {summary.length > 0 && (
     <div class="hero-summary">
       {summary.map((paragraph) => <p>{paragraph}</p>)}
-
     </div>
   )}
 
@@ -48,5 +45,4 @@ const roleHtml =
       {tags.map((tag) => <span class="tag">{tag}</span>)}
     </div>
   )}
-
 </section>

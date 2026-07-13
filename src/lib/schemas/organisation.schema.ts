@@ -37,7 +37,7 @@ export const organisationItemSchema = z.object({
   organisation: z.string(),
   slug: z.string(),
   description: z.string().optional(),
-  url: z.string().url().optional(),
+  url: z.url().optional(),
   hubspotId: z.string().optional(),
   industry: z
     .enum(["space", "marketing", "climate", "technology", "education", "research", "other"])

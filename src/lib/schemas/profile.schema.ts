@@ -7,8 +7,8 @@ export const profileSchema = z.object({
   headline: z.string().optional(),
   biography: z.string().optional(),
   location: z.string().optional(),
-  email: z.string().email().optional(),
-  website: z.string().url().optional(),
+  email: z.email().optional(),
+  website: z.url().optional(),
   avatar: z.string().optional(),
   role: z.string().optional(),
   credentials: z.string().optional(),
@@ -18,8 +18,8 @@ export const profileSchema = z.object({
     .array(
       z.object({
         label: z.string(),
-        href: z.string().url(),
-      })
+        href: z.url(),
+      }),
     )
     .default([]),
   contact: z
@@ -27,10 +27,9 @@ export const profileSchema = z.object({
       z.object({
         label: z.string(),
         href: z.string(),
-      })
+      }),
     )
     .default([]),
 });
-
 
 export type Profile = z.infer<typeof profileSchema>;

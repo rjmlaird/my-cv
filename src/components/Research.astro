@@ -10,8 +10,6 @@ const item = props.item ?? {};
 const bibText = props.bibText ?? "";
 const number = props.index ? String(props.index).padStart(2, "0") : "";
 
-const clean = (v: unknown) => (v === null || v === undefined ? "" : String(v).trim());
-
 const normalizeAuthors = (authors: unknown) => {
   if (!Array.isArray(authors)) return "";
   return authors
@@ -77,53 +75,53 @@ const bibtexHref = `data:text/x-bibtex;charset=utf-8,${encodeURIComponent(bibTex
   <p class="eyebrow">Publications</p>
   <h2 id="cert-heading">Research</h2>
 
-<article class="pr pub">
-  <p class="pn">{number}</p>
+  <article class="pr pub">
+    <p class="pn">{number}</p>
 
-  <div class="pm">
-    <div class="pub-top">
-      <h3>{titleUrl ? <a href={titleUrl} target="_blank" rel="noopener noreferrer">{title}</a> : title}</h3>
-      {year && <span class="date">{year}</span>}
-    </div>
-
-    {publication && <div class="client-badge">{publication}</div>}
-
-    {authors && <p class="authors">{authors}</p>}
-
-    {preview.text && <p class="abstract">{preview.text}</p>}
-
-    {keywords.length > 0 && (
-      <div class="pt">
-        {keywords.map((t) => <span class="tag">{t}</span>)}
+    <div class="pm">
+      <div class="pub-top">
+        <h3>{titleUrl ? <a href={titleUrl} target="_blank" rel="noopener noreferrer">{title}</a> : title}</h3>
+        {year && <span class="date">{year}</span>}
       </div>
-    )}
 
-    {type && (
-      <div class="detail-line">
-        <span class="type-pill">{type}</span>
+      {publication && <div class="client-badge">{publication}</div>}
+
+      {authors && <p class="authors">{authors}</p>}
+
+      {preview.text && <p class="abstract">{preview.text}</p>}
+
+      {keywords.length > 0 && (
+        <div class="pt">
+          {keywords.map((t) => <span class="tag">{t}</span>)}
+        </div>
+      )}
+
+      {type && (
+        <div class="detail-line">
+          <span class="type-pill">{type}</span>
+        </div>
+      )}
+
+      <div class="action-row">
+        <a class="pa" href={bibtexHref} download="publications.bib" target="_blank" rel="noopener noreferrer">
+          <span>BibTeX</span>
+        </a>
+        {doi && (
+          <a class="pa" href={`https://doi.org/${doi}`} target="_blank" rel="noopener noreferrer">
+            <span>DOI</span>
+          </a>
+        )}
+        {pdf && (
+          <a class="pa" href={pdf} target="_blank" rel="noopener noreferrer">
+            <span>Download</span>
+          </a>
+        )}
+        {recordUrl && (
+          <a class="pa pa-primary" href={recordUrl} target="_blank" rel="noopener noreferrer">
+            <span>View</span>
+          </a>
+        )}
       </div>
-    )}
-
-    <div class="action-row">
-      <a class="pa" href={bibtexHref} download="publications.bib" target="_blank" rel="noopener noreferrer">
-        <span>BibTeX</span>
-      </a>
-      {doi && (
-        <a class="pa" href={`https://doi.org/${doi}`} target="_blank" rel="noopener noreferrer">
-          <span>DOI</span>
-        </a>
-      )}
-      {pdf && (
-        <a class="pa" href={pdf} target="_blank" rel="noopener noreferrer">
-          <span>Download</span>
-        </a>
-      )}
-      {recordUrl && (
-        <a class="pa pa-primary" href={recordUrl} target="_blank" rel="noopener noreferrer">
-          <span>View</span>
-        </a>
-      )}
     </div>
-  </div>
-</article>
+  </article>
 </section>

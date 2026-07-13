@@ -1,7 +1,6 @@
 import { z } from "zod";
 
 import { awardItemSchema, type AwardItem } from "@/lib/schemas/award.schema";
-import { certificationItemSchema } from "@/lib/schemas/certification.schema";
 import { educationItemSchema, type EducationItem } from "@/lib/schemas/education.schema";
 import { experienceItemSchema, type ExperienceItem } from "@/lib/schemas/experience.schema";
 import { languageItemSchema, type LanguageItem } from "@/lib/schemas/languages.schema";
@@ -42,7 +41,6 @@ const experienceResponseSchema = z.array(experienceItemSchema);
 const educationResponseSchema = z.array(educationItemSchema);
 const awardsResponseSchema = z.array(awardItemSchema);
 const languagesResponseSchema = z.array(languageItemSchema);
-const certificationsResponseSchema = z.array(certificationItemSchema);
 const organisationsResponseSchema = z.array(organisationItemSchema);
 const volunteeringResponseSchema = z.array(volunteeringItemSchema);
 
@@ -69,8 +67,8 @@ export const profileSchema = z.object({
   headline: z.string().optional(),
   biography: z.array(z.string()).default([]),
   location: z.string().optional(),
-  email: z.string().email().optional(),
-  website: z.string().url().optional(),
+  email: z.email().optional(),
+  website: z.url().optional(),
   avatar: z.string().optional(),
   role: z.string().optional(),
   credentials: z.string().optional(),
@@ -80,7 +78,7 @@ export const profileSchema = z.object({
     .array(
       z.object({
         label: z.string(),
-        href: z.string().url(),
+        href: z.url(),
       }),
     )
     .default([]),
@@ -189,9 +187,10 @@ export async function getEducation(): Promise<EducationItem[]> {
 
 export async function getCertifications(): Promise<CertificationGroup[]> {
   const data = await fetchJson<unknown>("certifications");
-  const root = data && typeof data === "object" && "certifications" in data
-    ? (data as { certifications?: unknown }).certifications
-    : data;
+  const root =
+    data && typeof data === "object" && "certifications" in data
+      ? (data as { certifications?: unknown }).certifications
+      : data;
 
   return asArray<unknown>(root)
     .map(normalizeCertificationGroup)
@@ -237,9 +236,10 @@ export async function getTeaching(): Promise<{ org: string; items: string[] }> {
 
 export async function getAwards(): Promise<AwardItem[]> {
   const data = await fetchJson<unknown>("awards");
-  const root = data && typeof data === "object" && "awards" in data
-    ? (data as { awards?: unknown }).awards
-    : data;
+  const root =
+    data && typeof data === "object" && "awards" in data
+      ? (data as { awards?: unknown }).awards
+      : data;
 
   return awardsResponseSchema.parse(asArray<unknown>(root));
 }

@@ -6,7 +6,6 @@ import { educationItemSchema, type EducationItem } from "@/lib/schemas/education
 import { experienceItemSchema, type ExperienceItem } from "@/lib/schemas/experience.schema";
 import { languageItemSchema, type LanguageItem } from "@/lib/schemas/languages.schema";
 import { organisationItemSchema, type OrganisationItem } from "@/lib/schemas/organisation.schema";
-import { toolItemSchema, type ToolItem } from "@/lib/schemas/tool.schema";
 import { volunteeringItemSchema, type VolunteeringItem } from "@/lib/schemas/volunteering.schema";
 
 const API_BASE = "https://api.rjmlaird.co.uk/api";
@@ -21,7 +20,6 @@ type ApiCollectionName =
   | "organisations"
   | "profile"
   | "research"
-  | "tools"
   | "volunteering";
 
 async function fetchJson<T>(path: string): Promise<T> {
@@ -46,7 +44,6 @@ const awardsResponseSchema = z.array(awardItemSchema);
 const languagesResponseSchema = z.array(languageItemSchema);
 const certificationsResponseSchema = z.array(certificationItemSchema);
 const organisationsResponseSchema = z.array(organisationItemSchema);
-const toolsResponseSchema = z.array(toolItemSchema);
 const volunteeringResponseSchema = z.array(volunteeringItemSchema);
 
 export type CertificationItem = {
@@ -251,10 +248,6 @@ export async function getOrganisations(): Promise<OrganisationItem[]> {
   return organisationsResponseSchema.parse(await fetchJson<unknown>("organisations"));
 }
 
-export async function getTools(): Promise<ToolItem[]> {
-  return toolsResponseSchema.parse(await fetchJson<unknown>("tools"));
-}
-
 export async function getVolunteering(): Promise<VolunteeringItem[]> {
   return volunteeringResponseSchema.parse(await fetchJson<unknown>("volunteering"));
 }
@@ -274,7 +267,6 @@ export const api = {
   getProfile,
   getTeaching,
   getOrganisations,
-  getTools,
   getVolunteering,
   getCauses,
 };

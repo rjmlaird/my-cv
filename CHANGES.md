@@ -1,6 +1,33 @@
 # Changes made
 
-## Latest pass — skills taxonomy, projects, membership fix, SEO/ATS, branding
+## Latest pass — Skills section is now usage-driven, not manually curated
+
+- **`Skills.astro` rewritten to build its content from actual tag usage.**
+  Previously it rendered a hand-maintained, separately-curated list from the
+  API's `/skills` endpoint (grouped keyword lists unrelated to what was
+  actually tagged elsewhere). Now `src/lib/skills.ts` (`aggregateSkills` +
+  `groupSkillsByCategory`) scans every experience, education, and project
+  entry's `skills` array, dedupes and counts the tags, and that's the whole
+  section — nothing is added unless it's genuinely applied somewhere on the
+  CV. Add or remove a `skills` tag on a role/degree/project and the section
+  updates automatically; no separate list to keep in sync.
+  - Each pill shows a `×N` usage count when a skill is tagged more than once,
+    and expands (via the existing "More detail" `<details>` pattern) to show
+    its description (if the tag matches the local skills collection) plus a
+    linked list of exactly which roles/education/projects use it.
+  - Skills are still grouped by category, sourced from the local skills
+    collection when a tag resolves to one; unmatched tags land in "Other"
+    rather than being dropped.
+  - `AtsView.astro`'s "Core Skills" line now uses the same aggregation, so
+    the plain-text/ATS export and the visual Skills section always agree.
+  - The API's `/skills` endpoint and `getSkills()` are no longer called by
+    the site (kept in `api.ts` in case you want it for something else later
+    — e.g. a machine-readable skills matrix — but nothing renders it now).
+  - Experience/education entries now carry stable `#exp-{id}` / `#edu-{id}`
+    anchors (Projects already had `#project-{slug}`) so the Skills section
+    can link back to exactly where each skill is used.
+
+## Previous pass — skills taxonomy, projects, membership fix, SEO/ATS, branding
 
 - **New: skills content collection.** `src/content.config.ts` + `src/content/skills/*.md`
   — a local, version-controlled taxonomy (name, category, proficiency, description,

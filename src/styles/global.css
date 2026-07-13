@@ -433,10 +433,7 @@ section > h2 {
 }
 
 .skill-kind {
-  margin: -0.5em 0 0.7em;
-  color: var(--muted-dim);
-  font-size: 0.72rem;
-  text-transform: capitalize;
+  display: none;
 }
 
 .skill-tags {
@@ -462,12 +459,9 @@ section > h2 {
   scroll-margin-top: 6rem;
 }
 
-.skill-tag--hard {
-  border-color: rgba(45, 212, 191, 0.35);
-}
-
-.skill-tag--soft {
-  border-color: rgba(242, 181, 68, 0.35);
+.skill-tag--unresolved {
+  border-style: dashed;
+  scroll-margin-top: 6rem;
 }
 
 .cert-grid {

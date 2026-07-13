@@ -1,56 +1,97 @@
 ---
-import { getSkills } from "@/lib/api";
-import { resolveSkillTags } from "@/lib/skills";
+// This section is not manually curated — it's built entirely from the
+// `skills` tags actually applied to your experience, education, and
+// project entries. A skill only appears here if something on the CV is
+// tagged with it; add/remove a tag on a role or project and this section
+// updates automatically. The local skills collection (src/content/skills)
+// only supplies enrichment — category, description — when a tag matches a
+// known entry; it never adds a skill that isn't in use.
+import { getExperience, getEducation, getProjects } from "@/lib/api";
+import { aggregateSkills, groupSkillsByCategory, type SkillSource } from "@/lib/skills";
 
-let skillsObject: Awaited<ReturnType<typeof getSkills>> = {};
+let experience: Awaited<ReturnType<typeof getExperience>> = [];
+let education: Awaited<ReturnType<typeof getEducation>> = [];
+let projects: Awaited<ReturnType<typeof getProjects>> = [];
 
 try {
-  skillsObject = await getSkills();
+  [experience, education, projects] = await Promise.all([
+    getExperience(),
+    getEducation(),
+    getProjects(),
+  ]);
 } catch {
-  skillsObject = {};
+  experience = [];
+  education = [];
+  projects = [];
 }
 
-const groups = Object.values(skillsObject);
+const orgName = (role: (typeof experience)[number]) =>
+  (typeof role.organisation === "string" ? role.organisation : role.organisation?.name) ?? "";
 
-const groupsWithResolved = await Promise.all(
-  groups.map(async (group) => ({
-    group,
-    resolved: await resolveSkillTags(group.keywords),
+const sources: SkillSource[] = [
+  ...experience.map((role) => ({
+    tags: role.skills,
+    ref: {
+      label: [role.role, orgName(role)].filter(Boolean).join(" · "),
+      href: `#exp-${role.id}`,
+    },
   })),
-);
+  ...education.map((item) => ({
+    tags: item.skills,
+    ref: {
+      label: [item.qualification || item.role, item.institution].filter(Boolean).join(" · "),
+      href: `#edu-${item.id}`,
+    },
+  })),
+  ...projects.map((project) => ({
+    tags: project.skills,
+    ref: { label: project.title, href: `#project-${project.slug}` },
+  })),
+];
+
+const aggregated = await aggregateSkills(sources);
+const grouped = groupSkillsByCategory(aggregated);
 ---
 
-<section id="skills" aria-labelledby="skills-heading">
-  <p class="eyebrow">Capabilities</p>
-  <h2 id="skills-heading">Skills</h2>
+{aggregated.length > 0 && (
+  <section id="skills" aria-labelledby="skills-heading">
+    <p class="eyebrow">Capabilities, as applied</p>
+    <h2 id="skills-heading">Skills</h2>
 
-  <div class="skills-grid">
-    {groupsWithResolved.map(({ group, resolved }) => (
-      <article class="skill-group">
-        <h3>{group.label}</h3>
+    <div class="skills-grid">
+      {grouped.map(({ category, skills }) => (
+        <article class="skill-group">
+          <h3>{category}</h3>
 
-        {group.kind && <p class="skill-kind">{group.kind}</p>}
-
-        <ul class="skill-tags" aria-label={`${group.label} skills`}>
-          {resolved.map((skill) =>
-            skill.resolved && skill.description ? (
-              <li id={`skill-${skill.slug}`} class={`skill-tag skill-tag--${group.kind ?? "mixed"} skill-tag--resolved`}>
+          <ul class="skill-tags" aria-label={`${category} skills`}>
+            {skills.map((skill) => (
+              <li
+                id={`skill-${skill.slug}`}
+                class={`skill-tag ${skill.resolved ? "skill-tag--resolved" : "skill-tag--unresolved"}`}
+              >
                 <details class="more-detail skill-detail">
-                  <summary>{skill.label}</summary>
-                  <p>{skill.description}</p>
+                  <summary>
+                    {skill.label}
+                    {skill.count > 1 && <span class="skill-count">×{skill.count}</span>}
+                  </summary>
+
+                  {skill.description && <p>{skill.description}</p>}
+                  {skill.proficiency && <p class="skill-proficiency">{skill.proficiency}</p>}
+
+                  <ul class="skill-usage">
+                    {skill.usedIn.map((ref) => (
+                      <li><a href={ref.href}>{ref.label}</a></li>
+                    ))}
+                  </ul>
                 </details>
               </li>
-            ) : (
-              <li id={skill.resolved ? `skill-${skill.slug}` : undefined} class={`skill-tag skill-tag--${group.kind ?? "mixed"}`}>
-                {skill.label}
-              </li>
-            ),
-          )}
-        </ul>
-      </article>
-    ))}
-  </div>
-</section>
+            ))}
+          </ul>
+        </article>
+      ))}
+    </div>
+  </section>
+)}
 
 <style>
   .skill-detail {
@@ -60,6 +101,9 @@ const groupsWithResolved = await Promise.all(
   }
 
   .skill-detail summary {
+    display: flex;
+    align-items: center;
+    gap: 0.4em;
     text-transform: none;
     letter-spacing: normal;
     font-family: var(--font-body);
@@ -71,10 +115,42 @@ const groupsWithResolved = await Promise.all(
     content: none;
   }
 
+  .skill-count {
+    color: var(--muted-dim);
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+  }
+
   .skill-detail p {
     margin: 0.4em 0 0;
     max-width: 32ch;
     font-size: 0.8rem;
     color: var(--muted);
+  }
+
+  .skill-proficiency {
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-size: 0.68rem !important;
+    color: var(--teal) !important;
+  }
+
+  .skill-usage {
+    margin: 0.5em 0 0;
+    padding-left: 1em;
+    display: grid;
+    gap: 0.25em;
+    list-style: disc;
+    font-size: 0.78rem;
+  }
+
+  .skill-usage a {
+    color: var(--muted);
+    text-decoration-color: var(--border-strong);
+  }
+
+  .skill-usage a:hover {
+    color: var(--teal);
   }
 </style>

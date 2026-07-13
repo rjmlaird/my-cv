@@ -1,5 +1,6 @@
 ---
 import * as api from "@/lib/api";
+import { aggregateSkills, type SkillSource } from "@/lib/skills";
 
 const {
   getLanguages,
@@ -8,18 +9,16 @@ const {
   getEducation,
   getTeaching,
   getAwards,
-  getSkills,
   getCertifications,
   getMemberships,
   getVolunteering,
   getProjects,
 } = api;
 
-const [experienceData, educationData, skillsData, certificationsData, membershipsData, awardsData, volunteeringData, languagesData, projectsData] =
+const [experienceData, educationData, certificationsData, membershipsData, awardsData, volunteeringData, languagesData, projectsData] =
   await Promise.all([
     getExperience(),
     getEducation(),
-    getSkills(),
     getCertifications(),
     getMemberships(),
     getAwards(),
@@ -36,18 +35,25 @@ const education = Array.isArray(educationData) ? educationData : [];
 const volunteering = Array.isArray(volunteeringData) ? volunteeringData : [];
 const projects = Array.isArray(projectsData) ? projectsData : [];
 
-// getSkills() already returns Record<string, SkillGroup>.
-const skillsGroups = skillsData && typeof skillsData === "object" ? Object.values(skillsData) : [];
+const orgName = (role: (typeof experience)[number]) =>
+  (typeof role.organisation === "string" ? role.organisation : role.organisation?.name) ?? "";
+
+// Same usage-driven source as Skills.astro — the ATS "Core Skills" line
+// reflects what's actually tagged on the CV, not a separately maintained list.
+const skillSources: SkillSource[] = [
+  ...experience.map((role) => ({ tags: role.skills, ref: { label: role.role, href: `#exp-${role.id}` } })),
+  ...education.map((item) => ({
+    tags: item.skills,
+    ref: { label: item.qualification || item.role, href: `#edu-${item.id}` },
+  })),
+  ...projects.map((project) => ({ tags: project.skills, ref: { label: project.title, href: `#project-${project.slug}` } })),
+];
+const skillsFlat = (await aggregateSkills(skillSources)).map((s) => s.label).join(", ");
 
 const certsArr = Array.isArray(certificationsData) ? certificationsData : [];
 const membershipsArr = Array.isArray(membershipsData) ? membershipsData : [];
 const awardsArr = Array.isArray(awardsData) ? awardsData : [];
 const languagesArr = Array.isArray(languagesData) ? languagesData : [];
-
-const skillsFlat = skillsGroups
-  .map((g: any) => (Array.isArray(g.keywords) ? g.keywords.join(", ") : ""))
-  .filter(Boolean)
-  .join(", ");
 
 const certsFlat = certsArr
   .map((g) => `${g.title ?? ""}: ${Array.isArray(g.items) ? g.items.map((i) => i.label ?? String(i)).join(", ") : ""}`)

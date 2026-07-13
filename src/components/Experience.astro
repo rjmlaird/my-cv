@@ -50,7 +50,7 @@ const hasMoreDetail = (role: (typeof experience)[number]) =>
       const achievements = Array.isArray(role.achievements) ? role.achievements : [];
 
       return (
-        <article class={["role-item", role.current ? "" : "dim"].filter(Boolean).join(" ")}>
+        <article id={`exp-${role.id}`} class={["role-item", role.current ? "" : "dim"].filter(Boolean).join(" ")}>
           <div class="role-header">
             <div>
               <span class="role-title">{role.role}</span>

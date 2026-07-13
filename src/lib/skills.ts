@@ -32,7 +32,7 @@ function slugify(value: string): string {
 async function loadSkillsYaml(): Promise<SkillTaxonomyEntry[]> {
   if (cachedSkills) return cachedSkills;
 
-  const url = new URL("../data/skills.yaml", import.meta.url);
+  const url = new URL("../content/skills/skills.yaml", import.meta.url);
   const raw = await readFile(fileURLToPath(url), "utf8");
   const parsed = parse(raw) as unknown;
   const result = skillTaxonomySchema.parse(Array.isArray(parsed) ? parsed : []);

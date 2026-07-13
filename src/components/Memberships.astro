@@ -1,45 +1,100 @@
 ---
 import { getMemberships } from "@/lib/api";
 
-let membershipGroups: Awaited<ReturnType<typeof getMemberships>> = [];
+type MembershipItem = {
+  organisation: string;
+  role: string;
+  type: string;
+  description?: string;
+};
 
-try {
-  membershipGroups = await getMemberships();
-} catch {
-  membershipGroups = [];
-}
+type MembershipGroup = {
+  title: string;
+  items: MembershipItem[];
+};
+
+const membershipsResponse = await getMemberships();
+const memberships: MembershipGroup[] = Array.isArray(membershipsResponse)
+  ? membershipsResponse
+  : [];
 ---
 
-{membershipGroups.length > 0 && (
-  <section id="memberships" aria-labelledby="memberships-heading">
-    <p class="eyebrow">Professional standing</p>
-    <h2 id="memberships-heading">Memberships</h2>
+<section id="memberships" aria-labelledby="memberships-heading">
+  <p class="eyebrow">Professional network</p>
+  <h2 id="memberships-heading">Memberships</h2>
 
-    <div class="membership-groups">
-      {membershipGroups.map((group) => (
-        <div class="membership-group">
-          <h3 class="membership-group-title">{group.title}</h3>
+  <div class="membership-columns">
+    {memberships.map((group) => (
+      <article class="membership-group">
+        <h3 class="role-subheading">{group.title}</h3>
 
-          <div class="membership-list">
-            {group.items.map((item) => (
-              <article class="membership-entry" id={`membership-${item.organisationSlug || item.organisation}`}>
-                <div class="membership-entry-header">
-                  <span class="membership-org">{item.organisation}</span>
-                  {item.role && <span class="membership-role">{item.role}</span>}
-                  {item.type && <span class="membership-type">{item.type}</span>}
-                </div>
+        <ul class="membership-list">
+          {group.items.map((item) => (
+            <li class="membership-item">
+              <strong>{item.organisation}</strong>
+              {item.role ? <span class="membership-role"> — {item.role}</span> : null}
+            </li>
+          ))}
+        </ul>
+      </article>
+    ))}
+  </div>
+</section>
 
-                {item.description && (
-                  <details class="more-detail">
-                    <summary>More detail</summary>
-                    <p>{item.description}</p>
-                  </details>
-                )}
-              </article>
-            ))}
-          </div>
-        </div>
-      ))}
-    </div>
-  </section>
-)}
+
+<style>
+  .membership-columns {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 2rem;
+    align-items: start;
+  }
+
+  .membership-column {
+    display: grid;
+    gap: 1.5rem;
+    align-content: start;
+  }
+
+  .membership-group {
+    display: grid;
+    gap: 0.35rem;
+  }
+
+  .membership-group-title {
+    margin: 0;
+    color: var(--green);
+  }
+
+  .membership-list {
+    display: grid;
+    gap: 0.5rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    font-family: inherit;
+  }
+
+  .membership-item {
+    margin: 0;
+    font-family: inherit;
+    font-size: 0.875rem;
+    line-height: 1.6;
+  }
+
+  .membership-role {
+    opacity: 0.8;
+  }
+
+  @media (max-width: 64rem) {
+    .membership-columns {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 48rem) {
+    .membership-columns {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

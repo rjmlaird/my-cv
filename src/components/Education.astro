@@ -1,16 +1,9 @@
 ---
-import { getEducation, getProjects } from "@/lib/api";
-import { resolveSkillTags, resolveProjectRefs } from "@/lib/skills";
+import { getEducation } from "@/lib/api";
+import { resolveSkillTags } from "@/lib/skills";
 import type { EducationItem } from "@/lib/schemas/education.schema";
 
 const education = (await getEducation()) ?? [];
-
-let projects: Awaited<ReturnType<typeof getProjects>> = [];
-try {
-  projects = await getProjects();
-} catch {
-  projects = [];
-}
 
 const formatDate = (value?: string | null) => {
   if (!value) return "";
@@ -27,7 +20,6 @@ const rows = await Promise.all(
   education.map(async (item: EducationItem) => ({
     item,
     skills: await resolveSkillTags(item.skills),
-    projectRefs: resolveProjectRefs(item.projects, projects),
   })),
 );
 
@@ -45,7 +37,7 @@ const hasMoreDetail = (item: EducationItem) =>
   <p class="eyebrow">Academic background</p>
   <h2 id="education-heading">Education</h2>
 
-  {rows.map(({ item, skills, projectRefs }) => {
+  {rows.map(({ item, skills }) => {
     const title = item.qualification || item.role || "Education";
     const startDate = formatDate(item.startDate);
     const endDate = item.current ? "Present" : formatDate(item.endDate);
@@ -87,18 +79,12 @@ const hasMoreDetail = (item: EducationItem) =>
 
         {item.summary ? <p>{item.summary}</p> : null}
 
-        {projectRefs.length > 0 ? (
-          <ul class="pill-list" aria-label="Related projects">
-            {projectRefs.map((ref) => (
-              <li class="pill">{ref.resolved ? <a href={ref.href}>{ref.label}</a> : ref.label}</li>
-            ))}
-          </ul>
-        ) : null}
-
         {skills.length > 0 ? (
           <ul class="pill-list" aria-label="Skills">
             {skills.map((skill) => (
-              <li class="pill">{skill.resolved ? <a href={skill.href}>{skill.label}</a> : skill.label}</li>
+              <li class="pill">
+                {skill.resolved ? <a href={skill.href}>{skill.label}</a> : skill.label}
+              </li>
             ))}
           </ul>
         ) : null}

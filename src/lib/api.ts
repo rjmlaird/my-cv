@@ -6,8 +6,6 @@ import { educationItemSchema, type EducationItem } from "@/lib/schemas/education
 import { experienceItemSchema, type ExperienceItem } from "@/lib/schemas/experience.schema";
 import { languageItemSchema, type LanguageItem } from "@/lib/schemas/languages.schema";
 import { organisationItemSchema, type OrganisationItem } from "@/lib/schemas/organisation.schema";
-import { projectsResponseSchema, type ProjectItem } from "@/lib/schemas/project.schema";
-import { skillItemSchema, type SkillItem } from "@/lib/schemas/skill.schema";
 import { toolItemSchema, type ToolItem } from "@/lib/schemas/tool.schema";
 import { volunteeringItemSchema, type VolunteeringItem } from "@/lib/schemas/volunteering.schema";
 
@@ -22,9 +20,7 @@ type ApiCollectionName =
   | "memberships"
   | "organisations"
   | "profile"
-  | "projects"
   | "research"
-  | "skills"
   | "tools"
   | "volunteering";
 
@@ -50,22 +46,8 @@ const awardsResponseSchema = z.array(awardItemSchema);
 const languagesResponseSchema = z.array(languageItemSchema);
 const certificationsResponseSchema = z.array(certificationItemSchema);
 const organisationsResponseSchema = z.array(organisationItemSchema);
-const skillsResponseSchema = z.array(skillItemSchema);
 const toolsResponseSchema = z.array(toolItemSchema);
 const volunteeringResponseSchema = z.array(volunteeringItemSchema);
-
-export const skillGroupSchema = z.object({
-  label: z.string(),
-  kind: z.enum(["hard", "soft", "mixed"]),
-  keywords: z.array(z.string()),
-});
-
-export const skillsGroupsResponseSchema = z.object({
-  skills: z.record(z.string(), skillGroupSchema).default({}),
-});
-
-export type SkillGroup = z.infer<typeof skillGroupSchema>;
-export type SkillGroups = z.infer<typeof skillsGroupsResponseSchema>["skills"];
 
 export type CertificationItem = {
   label: string;
@@ -228,14 +210,6 @@ export async function getLanguages(): Promise<LanguageItem[]> {
   return languagesResponseSchema.parse(await fetchJson<unknown>("languages"));
 }
 
-export async function getSkills(): Promise<SkillGroups> {
-  const data = await fetchJson<unknown>("skills");
-  const parsed = skillsGroupsResponseSchema.parse(
-    data && typeof data === "object" ? data : { skills: {} },
-  );
-  return parsed.skills;
-}
-
 export async function getProfile(): Promise<Profile> {
   return profileSchema.parse(await fetchJson<unknown>("profile"));
 }
@@ -289,17 +263,6 @@ export async function getCauses(): Promise<Causes> {
   return causesSchema.parse(await fetchJson<unknown>("causes"));
 }
 
-export async function getProjects(): Promise<ProjectItem[]> {
-  try {
-    const data = await fetchJson<unknown>("projects");
-    return projectsResponseSchema.parse(data);
-  } catch {
-    // Endpoint may not exist yet in the API — degrade to an empty list
-    // rather than failing the whole build.
-    return [];
-  }
-}
-
 export const api = {
   getCollection,
   getExperience,
@@ -308,9 +271,7 @@ export const api = {
   getMemberships,
   getAwards,
   getLanguages,
-  getSkills,
   getProfile,
-  getProjects,
   getTeaching,
   getOrganisations,
   getTools,

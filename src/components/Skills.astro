@@ -1,51 +1,39 @@
 ---
-// This section is not manually curated — it's built entirely from the
-// `skills` tags actually applied to your experience, education, and
-// project entries. A skill only appears here if something on the CV is
-// tagged with it; add/remove a tag on a role or project and this section
-// updates automatically. The local skills collection (src/content/skills)
-// only supplies enrichment — category, description — when a tag matches a
-// known entry; it never adds a skill that isn't in use.
-import { getExperience, getEducation, getProjects } from "@/lib/api";
+import { getExperience, getEducation } from "@/lib/api";
 import { aggregateSkills, groupSkillsByCategory, type SkillSource } from "@/lib/skills";
+
+const visibleCount = 6;
 
 let experience: Awaited<ReturnType<typeof getExperience>> = [];
 let education: Awaited<ReturnType<typeof getEducation>> = [];
-let projects: Awaited<ReturnType<typeof getProjects>> = [];
 
 try {
-  [experience, education, projects] = await Promise.all([
-    getExperience(),
-    getEducation(),
-    getProjects(),
-  ]);
+  [experience, education] = await Promise.all([getExperience(), getEducation()]);
 } catch {
   experience = [];
   education = [];
-  projects = [];
 }
 
 const orgName = (role: (typeof experience)[number]) =>
   (typeof role.organisation === "string" ? role.organisation : role.organisation?.name) ?? "";
 
+const makeRefLabel = (...parts: Array<string | undefined | null>) =>
+  parts.filter(Boolean).join(" · ");
+
 const sources: SkillSource[] = [
   ...experience.map((role) => ({
     tags: role.skills,
     ref: {
-      label: [role.role, orgName(role)].filter(Boolean).join(" · "),
+      label: makeRefLabel(role.role, orgName(role)),
       href: `#exp-${role.id}`,
     },
   })),
   ...education.map((item) => ({
     tags: item.skills,
     ref: {
-      label: [item.qualification || item.role, item.institution].filter(Boolean).join(" · "),
+      label: makeRefLabel(item.qualification || item.role, item.institution),
       href: `#edu-${item.id}`,
     },
-  })),
-  ...projects.map((project) => ({
-    tags: project.skills,
-    ref: { label: project.title, href: `#project-${project.slug}` },
   })),
 ];
 
@@ -58,42 +46,94 @@ const grouped = groupSkillsByCategory(aggregated);
     <p class="eyebrow">Capabilities, as applied</p>
     <h2 id="skills-heading">Skills</h2>
 
+    <p class="section-intro">
+      Intro
+    </p>
+
     <div class="skills-grid">
-      {grouped.map(({ category, skills }) => (
-        <article class="skill-group">
-          <h3>{category}</h3>
+      {grouped.map(({ category, skills }) => {
+        const visibleSkills = skills.slice(0, visibleCount);
+        const hiddenSkills = skills.slice(visibleCount);
 
-          <ul class="skill-tags" aria-label={`${category} skills`}>
-            {skills.map((skill) => (
-              <li
-                id={`skill-${skill.slug}`}
-                class={`skill-tag ${skill.resolved ? "skill-tag--resolved" : "skill-tag--unresolved"}`}
-              >
-                <details class="more-detail skill-detail">
-                  <summary>
-                    {skill.label}
-                    {skill.count > 1 && <span class="skill-count">×{skill.count}</span>}
-                  </summary>
+        return (
+          <article class="skill-group">
+            <h3>{category}</h3>
 
-                  {skill.description && <p>{skill.description}</p>}
-                  {skill.proficiency && <p class="skill-proficiency">{skill.proficiency}</p>}
+            <ul class="skill-tags" aria-label={`${category} skills`}>
+              {visibleSkills.map((skill) => (
+                <li
+                  id={`skill-${skill.slug}`}
+                  class={`skill-tag ${skill.resolved ? "skill-tag--resolved" : "skill-tag--unresolved"}`}
+                >
+                  <details class="skill-detail">
+                    <summary>
+                      {skill.label}
+                      {skill.count > 1 && <span class="skill-count">×{skill.count}</span>}
+                    </summary>
 
-                  <ul class="skill-usage">
-                    {skill.usedIn.map((ref) => (
-                      <li><a href={ref.href}>{ref.label}</a></li>
-                    ))}
-                  </ul>
-                </details>
-              </li>
-            ))}
-          </ul>
-        </article>
-      ))}
+                    {skill.description && <p>{skill.description}</p>}
+                    {skill.proficiency && <p class="skill-proficiency">{skill.proficiency}</p>}
+
+                    <details class="more-detail skill-detail--nested">
+                      <summary>More detail</summary>
+
+                      <ul class="skill-usage">
+                        {skill.usedIn.map((ref) => (
+                          <li><a href={ref.href}>{ref.label}</a></li>
+                        ))}
+                      </ul>
+                    </details>
+                  </details>
+                </li>
+              ))}
+            </ul>
+
+            {hiddenSkills.length > 0 ? (
+              <details class="more-detail skill-group__more">
+                <summary>More detail</summary>
+
+                <ul class="skill-tags" aria-label={`${category} additional skills`}>
+                  {hiddenSkills.map((skill) => (
+                    <li
+                      id={`skill-${skill.slug}`}
+                      class={`skill-tag ${skill.resolved ? "skill-tag--resolved" : "skill-tag--unresolved"}`}
+                    >
+                      <details class="skill-detail">
+                        <summary>
+                          {skill.label}
+                          {skill.count > 1 && <span class="skill-count">×{skill.count}</span>}
+                        </summary>
+
+                        {skill.description && <p>{skill.description}</p>}
+                        {skill.proficiency && <p class="skill-proficiency">{skill.proficiency}</p>}
+
+                        <details class="more-detail skill-detail--nested">
+                          <summary>More detail</summary>
+
+                          <ul class="skill-usage">
+                            {skill.usedIn.map((ref) => (
+                              <li><a href={ref.href}>{ref.label}</a></li>
+                            ))}
+                          </ul>
+                        </details>
+                      </details>
+                    </li>
+                  ))}
+                </ul>
+              </details>
+            ) : null}
+          </article>
+        );
+      })}
     </div>
   </section>
 )}
 
 <style>
+  .section-intro {
+    max-width: 60ch;
+  }
+
   .skill-detail {
     border-top: none;
     padding-top: 0;
@@ -101,6 +141,10 @@ const grouped = groupSkillsByCategory(aggregated);
   }
 
   .skill-detail summary {
+    font: inherit;
+  }
+
+  .more-detail summary {
     display: flex;
     align-items: center;
     gap: 0.4em;
@@ -109,10 +153,15 @@ const grouped = groupSkillsByCategory(aggregated);
     font-family: var(--font-body);
     font-size: inherit;
     color: inherit;
+    cursor: pointer;
   }
 
-  .skill-detail summary::before {
-    content: none;
+  .more-detail summary::before {
+    content: "+";
+  }
+
+  .more-detail[open] > summary::before {
+    content: "−";
   }
 
   .skill-count {
@@ -136,6 +185,10 @@ const grouped = groupSkillsByCategory(aggregated);
     color: var(--teal) !important;
   }
 
+  .skill-detail--nested {
+    margin-top: 0.5rem;
+  }
+
   .skill-usage {
     margin: 0.5em 0 0;
     padding-left: 1em;
@@ -152,5 +205,9 @@ const grouped = groupSkillsByCategory(aggregated);
 
   .skill-usage a:hover {
     color: var(--teal);
+  }
+
+  .skill-group__more {
+    margin-top: 0.75rem;
   }
 </style>

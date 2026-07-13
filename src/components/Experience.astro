@@ -1,22 +1,14 @@
 ---
-import { getExperience, getProjects } from "@/lib/api";
-import { resolveSkillTags, resolveProjectRefs } from "@/lib/skills";
+import { getExperience } from "@/lib/api";
+import { resolveSkillTags } from "@/lib/skills";
 import type { ExperienceItem } from "@/lib/schemas/experience.schema";
 
 const experience = (await getExperience()) ?? [];
-
-let projects: Awaited<ReturnType<typeof getProjects>> = [];
-try {
-  projects = await getProjects();
-} catch {
-  projects = [];
-}
 
 const rows = await Promise.all(
   experience.map(async (role: ExperienceItem) => ({
     role,
     skills: await resolveSkillTags(role.skills),
-    projectRefs: resolveProjectRefs(role.projects, projects),
   })),
 );
 
@@ -37,7 +29,7 @@ const hasMoreDetail = (role: ExperienceItem) =>
   <h2 id="experience-heading">Experience</h2>
 
   {rows.length > 0 ? (
-    rows.map(({ role, skills, projectRefs }) => {
+    rows.map(({ role, skills }) => {
       const organisation =
         (typeof role.organisation === "string" ? role.organisation : role.organisation?.name) ??
         "Self-employed";
@@ -94,16 +86,6 @@ const hasMoreDetail = (role: ExperienceItem) =>
             </>
           ) : null}
 
-          {projectRefs.length > 0 ? (
-            <ul class="pill-list" aria-label="Related projects">
-              {projectRefs.map((ref) => (
-                <li class="pill">
-                  {ref.resolved ? <a href={ref.href}>{ref.label}</a> : ref.label}
-                </li>
-              ))}
-            </ul>
-          ) : null}
-
           {skills.length > 0 ? (
             <ul class="pill-list" aria-label="Skills used in this role">
               {skills.map((skill) => (
@@ -151,7 +133,9 @@ const hasMoreDetail = (role: ExperienceItem) =>
               {role.certifications?.length ? (
                 <>
                   <h4 class="role-subheading">Certifications</h4>
-                  <ul class="role-list">{role.certifications.map((c) => <li>{c}</li>)}</ul>
+                  <ul class="role-list">
+                    {role.certifications.map((c) => <li>{c}</li>)}
+                  </ul>
                 </>
               ) : null}
             </details>

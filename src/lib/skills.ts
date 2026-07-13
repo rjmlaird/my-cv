@@ -1,9 +1,24 @@
-import { getCollection, type CollectionEntry } from "astro:content";
+import { readFile } from "node:fs/promises";
+import { fileURLToPath } from "node:url";
+import { parse } from "yaml";
+import { z } from "zod";
 
-export type SkillEntry = CollectionEntry<"skills">;
+const skillEntrySchema = z.object({
+  id: z.string().optional(),
+  name: z.string(),
+  category: z.string(),
+  subcategory: z.string().optional(),
+  proficiency: z.string().optional(),
+  description: z.string().optional(),
+  relatedSkills: z.array(z.string()).default([]),
+});
 
-let cachedSkills: SkillEntry[] | null = null;
-let cachedMap: Map<string, SkillEntry> | null = null;
+const skillTaxonomySchema = z.array(skillEntrySchema);
+
+export type SkillTaxonomyEntry = z.infer<typeof skillEntrySchema> & { id: string };
+
+let cachedSkills: SkillTaxonomyEntry[] | null = null;
+let cachedMap: Map<string, SkillTaxonomyEntry> | null = null;
 
 function slugify(value: string): string {
   return value
@@ -14,45 +29,52 @@ function slugify(value: string): string {
     .replace(/(^-|-$)/g, "");
 }
 
-export async function getAllSkills(): Promise<SkillEntry[]> {
-  if (!cachedSkills) {
-    cachedSkills = await getCollection("skills");
-  }
+async function loadSkillsYaml(): Promise<SkillTaxonomyEntry[]> {
+  if (cachedSkills) return cachedSkills;
+
+  const url = new URL("../data/skills.yaml", import.meta.url);
+  const raw = await readFile(fileURLToPath(url), "utf8");
+  const parsed = parse(raw) as unknown;
+  const result = skillTaxonomySchema.parse(Array.isArray(parsed) ? parsed : []);
+
+  cachedSkills = result.map((entry) => ({
+    ...entry,
+    id: entry.id ?? slugify(entry.name),
+    relatedSkills: entry.relatedSkills ?? [],
+  }));
+
   return cachedSkills;
 }
 
-async function getSkillMap(): Promise<Map<string, SkillEntry>> {
-  if (!cachedMap) {
-    const all = await getAllSkills();
-    cachedMap = new Map();
-    for (const entry of all) {
-      cachedMap.set(entry.id, entry);
-      cachedMap.set(slugify(entry.data.name), entry);
-    }
+async function getSkillMap(): Promise<Map<string, SkillTaxonomyEntry>> {
+  if (cachedMap) return cachedMap;
+
+  const all = await loadSkillsYaml();
+  cachedMap = new Map();
+
+  for (const entry of all) {
+    cachedMap.set(entry.id, entry);
+    cachedMap.set(slugify(entry.id), entry);
+    cachedMap.set(slugify(entry.name), entry);
   }
+
   return cachedMap;
 }
 
 export interface ResolvedSkillTag {
-  /** The slug to anchor-link to in the Skills section, if resolved. */
   slug: string;
-  /** Display label — the canonical name if resolved, otherwise the raw tag. */
   label: string;
-  /** Present only when the tag matched an entry in the skills collection. */
   href?: string;
   category?: string;
+  subcategory?: string;
   description?: string;
+  proficiency?: string;
+  relatedSkills?: string[];
   resolved: boolean;
 }
 
-/**
- * Resolves raw skill tag strings (as supplied by the API, in either slug or
- * free-text form) against the local skills content collection. Unmatched
- * tags degrade gracefully to a plain, unlinked pill so the site never
- * breaks while the API is still being populated with matching tags.
- */
 export async function resolveSkillTags(tags: string[] = []): Promise<ResolvedSkillTag[]> {
-  if (!tags || tags.length === 0) return [];
+  if (!tags.length) return [];
   const map = await getSkillMap();
 
   return tags
@@ -64,10 +86,13 @@ export async function resolveSkillTags(tags: string[] = []): Promise<ResolvedSki
       if (entry) {
         return {
           slug: entry.id,
-          label: entry.data.name,
+          label: entry.name,
           href: `#skill-${entry.id}`,
-          category: entry.data.category,
-          description: entry.data.description,
+          category: entry.category,
+          subcategory: entry.subcategory,
+          description: entry.description,
+          proficiency: entry.proficiency,
+          relatedSkills: entry.relatedSkills,
           resolved: true,
         };
       }
@@ -82,34 +107,23 @@ export interface SkillUsageRef {
 }
 
 export interface SkillSource {
-  /** Raw skill tag strings from one experience/education/project entry. */
   tags?: string[];
-  /** Where to link back to that entry from the Skills section. */
   ref: SkillUsageRef;
 }
 
 export interface AggregatedSkill {
   slug: string;
   label: string;
-  /** The matched content-collection category, or "Other" for untagged skills. */
   category: string;
+  subcategory?: string;
   description?: string;
   proficiency?: string;
-  /** Whether this tag matched an entry in the local skills collection. */
+  relatedSkills?: string[];
   resolved: boolean;
-  /** How many CV entries reference this skill — drives display order. */
   count: number;
   usedIn: SkillUsageRef[];
 }
 
-/**
- * Builds the Skills section's content directly from what's actually tagged
- * on experience, education, and project entries — rather than a hand-curated
- * list. A skill only appears here if it's genuinely applied somewhere on the
- * CV; the local skills collection only supplies enrichment (category,
- * description) when a tag matches a known slug/name, it never adds skills
- * that aren't in use.
- */
 export async function aggregateSkills(sources: SkillSource[]): Promise<AggregatedSkill[]> {
   const map = await getSkillMap();
   const bySlug = new Map<string, AggregatedSkill>();
@@ -135,10 +149,12 @@ export async function aggregateSkills(sources: SkillSource[]): Promise<Aggregate
 
       bySlug.set(slug, {
         slug,
-        label: entry ? entry.data.name : tag,
-        category: entry ? entry.data.category : "Other",
-        description: entry?.data.description,
-        proficiency: entry?.data.proficiency,
+        label: entry ? entry.name : tag,
+        category: entry ? entry.category : "Other",
+        subcategory: entry?.subcategory,
+        description: entry?.description,
+        proficiency: entry?.proficiency,
+        relatedSkills: entry?.relatedSkills,
         resolved: Boolean(entry),
         count: 1,
         usedIn: [source.ref],
@@ -169,31 +185,5 @@ export function groupSkillsByCategory(skills: AggregatedSkill[]): SkillCategoryG
       if (a.category === "Other") return 1;
       if (b.category === "Other") return -1;
       return a.category.localeCompare(b.category);
-    });
-}
-
-/**
- * Cross-references a list of project name/slug strings (as stored on
- * experience and education entries) against a resolved projects list so
- * they can be rendered as links back to the Projects section rather than
- * inert text.
- */
-export function resolveProjectRefs<T extends { id: string | number; slug: string; title: string }>(
-  refs: string[] = [],
-  projects: T[] = [],
-) {
-  const bySlug = new Map<string, T>();
-  for (const project of projects) {
-    bySlug.set(project.slug, project);
-    bySlug.set(slugify(project.title), project);
-  }
-
-  return (refs ?? [])
-    .filter((ref): ref is string => typeof ref === "string" && ref.trim().length > 0)
-    .map((ref) => {
-      const match = bySlug.get(slugify(ref)) ?? bySlug.get(ref);
-      return match
-        ? { label: match.title, href: `#project-${match.slug}`, resolved: true }
-        : { label: ref, resolved: false };
     });
 }

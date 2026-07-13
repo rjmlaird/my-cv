@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { socialSchema } from "./base.schema";
 
 export const profileSchema = z.object({
   name: z.string().optional(),

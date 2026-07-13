@@ -1,5 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
+import path from "node:path";
 import { parse } from "yaml";
 import { z } from "zod";
 
@@ -32,8 +33,8 @@ function slugify(value: string): string {
 async function loadSkillsYaml(): Promise<SkillTaxonomyEntry[]> {
   if (cachedSkills) return cachedSkills;
 
-  const url = new URL("../content/skills/skills.yaml", import.meta.url);
-  const raw = await readFile(fileURLToPath(url), "utf8");
+  const filePath = path.join(process.cwd(), "src/content/skills/skills.yaml");
+  const raw = await readFile(filePath, "utf8");
   const parsed = parse(raw) as unknown;
   const result = skillTaxonomySchema.parse(Array.isArray(parsed) ? parsed : []);
 

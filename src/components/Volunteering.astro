@@ -1,8 +1,22 @@
 ---
-import { getVolunteering } from '@/lib/api';
+import { getVolunteering, getProjects } from "@/lib/api";
+import type { VolunteeringItem } from "@/lib/schemas/volunteering.schema";
+
+// 1. Fetch and process data
 const volunteering = (await getVolunteering()) ?? [];
+const allProjects = (await getProjects()) ?? [];
 
 const entries = Array.isArray(volunteering) ? volunteering : [];
+const projectMap = new Map(allProjects.map((p) => [p.slug, p.title]));
+
+const hasMoreDetail = (item: VolunteeringItem) =>
+  Boolean(
+    item.projects?.length ||
+      item.articles?.length ||
+      item.talks?.length ||
+      item.relatedAwards?.length ||
+      item.relatedCertifications?.length
+  );
 ---
 
 <section id="volunteering" aria-labelledby="volunteering-heading">
@@ -43,6 +57,58 @@ const entries = Array.isArray(volunteering) ? volunteering : [];
           </div>
 
           {item.summary ? <p>{item.summary}</p> : null}
+
+          {hasMoreDetail(item) ? (
+            <details class="more-detail">
+              <summary>More detail</summary>
+              
+              {item.projects?.length ? (
+                <>
+                  <h4 class="role-subheading">Projects</h4>
+                  <ul class="role-list">
+                    {item.projects.map((slug) => {
+                      const title = projectMap.get(slug) || slug;
+                      return (
+                        <li>
+                          <a href={`https://rjmlaird.co.uk/projects/${slug}`} target="_blank" rel="noopener noreferrer">
+                            {title}
+                          </a>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </>
+              ) : null}
+
+              {item.articles?.length ? (
+                <>
+                  <h4 class="role-subheading">Articles</h4>
+                  <ul class="role-list">{item.articles.map((a) => <li>{a}</li>)}</ul>
+                </>
+              ) : null}
+
+              {item.talks?.length ? (
+                <>
+                  <h4 class="role-subheading">Talks</h4>
+                  <ul class="role-list">{item.talks.map((t) => <li>{t}</li>)}</ul>
+                </>
+              ) : null}
+
+              {item.relatedAwards?.length ? (
+                <>
+                  <h4 class="role-subheading">Related awards</h4>
+                  <ul class="role-list">{item.relatedAwards.map((a) => <li>{a}</li>)}</ul>
+                </>
+              ) : null}
+
+              {item.relatedCertifications?.length ? (
+                <>
+                  <h4 class="role-subheading">Related certifications</h4>
+                  <ul class="role-list">{item.relatedCertifications.map((c) => <li>{c}</li>)}</ul>
+                </>
+              ) : null}
+            </details>
+          ) : null}
         </article>
       );
     })}

@@ -1,9 +1,14 @@
 ---
-import { getEducation } from "@/lib/api";
+import { getEducation, getProjects } from "@/lib/api";
 import { resolveSkillTags } from "@/lib/skills";
 import type { EducationItem } from "@/lib/schemas/education.schema";
 
+// 1. Fetch and process data
 const education = (await getEducation()) ?? [];
+const allProjects = (await getProjects()) ?? [];
+
+// Create a map for quick lookup: slug -> title
+const projectMap = new Map(allProjects.map((p) => [p.slug, p.title]));
 
 const formatDate = (value?: string | null) => {
   if (!value) return "";
@@ -16,6 +21,7 @@ const formatDate = (value?: string | null) => {
   }).format(new Date(Number(year), Number(month) - 1, 1));
 };
 
+// 2. Define 'rows' here, inside the frontmatter
 const rows = await Promise.all(
   education.map(async (item: EducationItem) => ({
     item,
@@ -25,12 +31,13 @@ const rows = await Promise.all(
 
 const hasMoreDetail = (item: EducationItem) =>
   Boolean(
-    item.responsibilities?.length ||
+    item.keyActivities?.length ||
       item.achievements?.length ||
       item.articles?.length ||
       item.talks?.length ||
       item.relatedAwards?.length ||
-      item.relatedCertifications?.length,
+      item.relatedCertifications?.length ||
+      item.projects?.length, // Added check for projects
   );
 ---
 
@@ -42,6 +49,8 @@ const hasMoreDetail = (item: EducationItem) =>
     const title = item.qualification || item.role || "Education";
     const startDate = formatDate(item.startDate);
     const endDate = item.current ? "Present" : formatDate(item.endDate);
+    
+    // Normalized location: City, Country
     const location = [item.city, item.country].filter(Boolean).join(", ");
 
     return (
@@ -49,24 +58,8 @@ const hasMoreDetail = (item: EducationItem) =>
         <div class="role-header">
           <div>
             <span class="role-title">{title}</span>
-            {item.institution ? (
-              <>
-                {" · "}
-                <span class="role-org">{item.institution}</span>
-              </>
-            ) : null}
-            {item.field ? (
-              <>
-                {" · "}
-                <span class="role-location">{item.field}</span>
-              </>
-            ) : null}
-            {location ? (
-              <>
-                {" · "}
-                <span class="role-location">{location}</span>
-              </>
-            ) : null}
+            {item.institution ? <>{" · "}<span class="role-org">{item.institution}</span></> : null}
+            {location ? <>{" · "}<span class="role-location">{location}</span></> : null}
           </div>
 
           {(startDate || endDate) ? (
@@ -93,48 +86,35 @@ const hasMoreDetail = (item: EducationItem) =>
         {hasMoreDetail(item) ? (
           <details class="more-detail">
             <summary>More detail</summary>
+            
+            {item.projects?.length ? (
+                <>
+                  <h4 class="role-subheading">Projects</h4>
+                  <ul class="role-list">
+                    {item.projects.map((slug) => {
+                      const title = projectMap.get(slug) || slug;
+                      return (
+                        <li>
+                          <a href={`https://rjmlaird.co.uk/projects/${slug}`} target="_blank" rel="noopener noreferrer">
+                            {title}
+                          </a>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </>
+              ) : null}
 
-            {item.responsibilities?.length ? (
+            {item.keyActivities?.length ? (
               <>
-                <h4 class="role-subheading">Responsibilities</h4>
-                <ul class="role-list">{item.responsibilities.map((r) => <li>{r}</li>)}</ul>
+                <h4 class="role-subheading">Key Activities</h4>
+                <ul class="role-list">{item.keyActivities.map((r) => <li>{r}</li>)}</ul>
               </>
             ) : null}
-
             {item.achievements?.length ? (
               <>
                 <h4 class="role-subheading">Achievements</h4>
                 <ul class="role-list">{item.achievements.map((a) => <li>{a}</li>)}</ul>
-              </>
-            ) : null}
-
-            {item.talks?.length ? (
-              <>
-                <h4 class="role-subheading">Talks</h4>
-                <ul class="role-list">{item.talks.map((t) => <li>{t}</li>)}</ul>
-              </>
-            ) : null}
-
-            {item.articles?.length ? (
-              <>
-                <h4 class="role-subheading">Articles</h4>
-                <ul class="role-list">{item.articles.map((a) => <li>{a}</li>)}</ul>
-              </>
-            ) : null}
-
-            {item.relatedAwards?.length ? (
-              <>
-                <h4 class="role-subheading">Related awards</h4>
-                <ul class="role-list">{item.relatedAwards.map((award) => <li>{award}</li>)}</ul>
-              </>
-            ) : null}
-
-            {item.relatedCertifications?.length ? (
-              <>
-                <h4 class="role-subheading">Related certifications</h4>
-                <ul class="role-list">
-                  {item.relatedCertifications.map((cert) => <li>{cert}</li>)}
-                </ul>
               </>
             ) : null}
           </details>
@@ -143,9 +123,3 @@ const hasMoreDetail = (item: EducationItem) =>
     );
   })}
 </section>
-
-<style>
-.education-summary {
-  white-space: pre-line;
-}
-</style>

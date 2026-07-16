@@ -1,9 +1,13 @@
 ---
-import { getExperience } from "@/lib/api";
+import { getExperience, getProjects } from "@/lib/api";
 import { resolveSkillTags } from "@/lib/skills";
 import type { ExperienceItem } from "@/lib/schemas/experience.schema";
 
 const experience = (await getExperience()) ?? [];
+const allProjects = (await getProjects()) ?? [];
+
+// Create a map for quick lookup: slug -> title
+const projectMap = new Map(allProjects.map((p) => [p.slug, p.title]));
 
 const rows = await Promise.all(
   experience.map(async (role: ExperienceItem) => ({
@@ -16,6 +20,7 @@ const hasMoreDetail = (role: ExperienceItem) =>
   Boolean(
     role.responsibilities?.length ||
       role.achievements?.length ||
+      role.projects?.length ||
       role.technologies?.length ||
       role.clients?.length ||
       role.articles?.length ||
@@ -38,12 +43,9 @@ const hasMoreDetail = (role: ExperienceItem) =>
         (typeof role.organisation === "string" ? role.organisation : role.organisation?.name) ??
         "Self-employed";
 
-      const location =
-        typeof role.location === "string"
-          ? role.location
-          : role.location?.city && role.location?.country
-            ? `${role.location.city}, ${role.location.country}`
-            : role.location?.city ?? role.location?.country ?? "";
+      const city = role.city || role.location?.city;
+      const country = role.country || role.location?.country;
+      const location = [city, country].filter(Boolean).join(", ");
 
       const responsibilities = Array.isArray(role.responsibilities) ? role.responsibilities : [];
       const achievements = Array.isArray(role.achievements) ? role.achievements : [];
@@ -103,6 +105,24 @@ const hasMoreDetail = (role: ExperienceItem) =>
           {hasMoreDetail(role) ? (
             <details class="more-detail">
               <summary>More detail</summary>
+
+              {role.projects?.length ? (
+                <>
+                  <h4 class="role-subheading">Projects</h4>
+                  <ul class="role-list">
+                    {role.projects.map((slug) => {
+                      const title = projectMap.get(slug) || slug;
+                      return (
+                        <li>
+                          <a href={`https://rjmlaird.co.uk/projects/${slug}`} target="_blank" rel="noopener noreferrer">
+                            {title}
+                          </a>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </>
+              ) : null}
 
               {role.technologies?.length ? (
                 <>

@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+// --- Schemas ---
 import { awardItemSchema, type AwardItem } from "@/lib/schemas/award.schema";
 import { certificationItemSchema, type CertificationItem } from "@/lib/schemas/certification.schema";
 import { educationItemSchema, type EducationItem } from "@/lib/schemas/education.schema";
@@ -7,45 +8,45 @@ import { experienceItemSchema, type ExperienceItem } from "@/lib/schemas/experie
 import { languageItemSchema, type LanguageItem } from "@/lib/schemas/languages.schema";
 import { organisationItemSchema, type OrganisationItem } from "@/lib/schemas/organisation.schema";
 import { volunteeringItemSchema, type VolunteeringItem } from "@/lib/schemas/volunteering.schema";
+import { projectSchema, type ProjectItem } from "@/lib/schemas/project.schema";
 
+// --- Constants ---
 const API_BASE = "https://api.rjmlaird.co.uk/api";
+const MANIFEST_URL = "https://pub-2bd99ffbe3b44222ae5b1b9c3482209f.r2.dev/manifest.json";
 
-type ApiCollectionName =
-  | "awards"
-  | "certifications"
-  | "education"
-  | "experience"
-  | "languages"
-  | "memberships"
-  | "organisations"
-  | "profile"
-  | "research"
-  | "volunteering";
-
-async function fetchJson<T>(path: string): Promise<T> {
-  const res = await fetch(`${API_BASE}/${path}`, {
-    headers: { accept: "application/json" },
-  });
-
-  if (!res.ok) {
-    throw new Error(`Failed to fetch ${path}: ${res.status} ${res.statusText}`);
-  }
-
+// --- Utilities ---
+async function fetchJson<T>(url: string, isFullUrl = false): Promise<T> {
+  const fullUrl = isFullUrl ? url : `${API_BASE}/${url}`;
+  const res = await fetch(fullUrl, { headers: { accept: "application/json" } });
+  if (!res.ok) throw new Error(`Failed to fetch ${url}: ${res.status}`);
   return res.json() as Promise<T>;
 }
 
-export function getCollection<T>(collection: ApiCollectionName) {
-  return fetchJson<T>(collection);
+function asArray<T>(value: unknown): T[] {
+  if (Array.isArray(value)) return value as T[];
+  if (value && typeof value === "object") return Object.values(value as Record<string, T>);
+  return [];
 }
 
-const experienceResponseSchema = z.array(experienceItemSchema);
-const educationResponseSchema = z.array(educationItemSchema);
-const certificationResponseSchema = z.array(certificationItemSchema);
-const awardsResponseSchema = z.array(awardItemSchema);
-const languagesResponseSchema = z.array(languageItemSchema);
-const organisationsResponseSchema = z.array(organisationItemSchema);
-const volunteeringResponseSchema = z.array(volunteeringItemSchema);
+// --- Manifest / CDN Logic ---
+export const manifestEntrySchema = z.object({
+  id: z.string(),
+  key: z.string(),
+});
 
+export type ManifestEntry = z.infer<typeof manifestEntrySchema>;
+
+export async function getDocuments(): Promise<ManifestEntry[]> {
+  try {
+    const data = await fetchJson<unknown>(MANIFEST_URL, true);
+    return z.array(manifestEntrySchema).parse(data);
+  } catch (e) {
+    console.error("[API] Failed to fetch manifest:", e);
+    return [];
+  }
+}
+
+// --- Profile & Content Schemas ---
 export const profileSchema = z.object({
   name: z.string().optional(),
   preferredName: z.string().optional(),
@@ -53,29 +54,15 @@ export const profileSchema = z.object({
   headline: z.string().optional(),
   biography: z.array(z.string()).default([]),
   location: z.string().optional(),
-  email: z.email().optional(),
-  website: z.url().optional(),
+  email: z.string().email().optional(),
+  website: z.string().url().optional(),
   avatar: z.string().optional(),
   role: z.string().optional(),
   credentials: z.string().optional(),
   summary: z.array(z.string()).default([]),
   tags: z.array(z.string()).default([]),
-  portfolioLinks: z
-    .array(
-      z.object({
-        label: z.string(),
-        href: z.url(),
-      }),
-    )
-    .default([]),
-  contact: z
-    .array(
-      z.object({
-        label: z.string(),
-        href: z.string(),
-      }),
-    )
-    .default([]),
+  portfolioLinks: z.array(z.object({ label: z.string(), href: z.string().url() })).default([]),
+  contact: z.array(z.object({ label: z.string(), href: z.string() })).default([]),
 });
 
 export type Profile = z.infer<typeof profileSchema>;
@@ -97,45 +84,21 @@ export const membershipsResponseSchema = z.object({
   memberships: z.array(membershipGroupSchema),
 });
 
-export type MembershipItem = z.infer<typeof membershipItemSchema>;
 export type MembershipGroup = z.infer<typeof membershipGroupSchema>;
-export type MembershipsResponse = z.infer<typeof membershipsResponseSchema>;
 
-export type ResearchResponse = {
-  bibtex: string;
-  orcid: string;
-  paragraphs: string[];
-};
-
-export const causesSchema = z.object({
-  description: z.string().default(""),
-  tags: z.array(z.string()).default([]),
-});
-
-export type Causes = z.infer<typeof causesSchema>;
-
-function asArray<T>(value: unknown): T[] {
-  if (Array.isArray(value)) return value as T[];
-  if (value && typeof value === "object") return Object.values(value as Record<string, T>);
-  return [];
-}
-
-export async function getExperience(): Promise<ExperienceItem[]> {
-  return experienceResponseSchema.parse(await fetchJson<unknown>("experience"));
-}
-
-export async function getEducation(): Promise<EducationItem[]> {
-  return educationResponseSchema.parse(await fetchJson<unknown>("education"));
-}
+// --- Data Fetchers ---
+export async function getExperience() { return z.array(experienceItemSchema).parse(await fetchJson<unknown>("experience")); }
+export async function getEducation() { return z.array(educationItemSchema).parse(await fetchJson<unknown>("education")); }
+export async function getLanguages() { return z.array(languageItemSchema).parse(await fetchJson<unknown>("languages")); }
+export async function getOrganisations() { return z.array(organisationItemSchema).parse(await fetchJson<unknown>("organisations")); }
+export async function getVolunteering() { return z.array(volunteeringItemSchema).parse(await fetchJson<unknown>("volunteering")); }
+export async function getProfile() { return profileSchema.parse(await fetchJson<unknown>("profile")); }
+export async function getProjects() { return z.array(projectSchema).parse(await fetchJson<unknown>("portfolio/projects")); }
 
 export async function getCertifications(): Promise<CertificationItem[]> {
   const data = await fetchJson<unknown>("certifications");
-  const root =
-    data && typeof data === "object" && "certifications" in data
-      ? (data as { certifications?: unknown }).certifications
-      : data;
-
-  return certificationResponseSchema.parse(asArray<unknown>(root));
+  const root = (data && typeof data === "object" && "certifications" in data) ? (data as any).certifications : data;
+  return z.array(certificationItemSchema).parse(asArray<unknown>(root));
 }
 
 export async function getMemberships(): Promise<MembershipGroup[]> {
@@ -143,62 +106,15 @@ export async function getMemberships(): Promise<MembershipGroup[]> {
   return membershipsResponseSchema.parse(data).memberships;
 }
 
-export async function getLanguages(): Promise<LanguageItem[]> {
-  return languagesResponseSchema.parse(await fetchJson<unknown>("languages"));
-}
-
-export async function getProfile(): Promise<Profile> {
-  return profileSchema.parse(await fetchJson<unknown>("profile"));
-}
-
-export async function getTeaching(): Promise<{ org: string; items: string[] }> {
-  const data = await fetchJson<unknown>("teaching");
-  if (data && typeof data === "object" && "teaching" in data) {
-    const teaching = (data as { teaching?: unknown }).teaching;
-    if (teaching && typeof teaching === "object") {
-      const t = teaching as { org?: unknown; items?: unknown };
-      return {
-        org: typeof t.org === "string" ? t.org : "",
-        items: asArray<string>(t.items).filter((item): item is string => typeof item === "string"),
-      };
-    }
-  }
-
-  if (data && typeof data === "object") {
-    const t = data as { org?: unknown; items?: unknown };
-    return {
-      org: typeof t.org === "string" ? t.org : "",
-      items: asArray<string>(t.items).filter((item): item is string => typeof item === "string"),
-    };
-  }
-
-  return { org: "", items: [] };
-}
-
 export async function getAwards(): Promise<AwardItem[]> {
   const data = await fetchJson<unknown>("awards");
-  const root =
-    data && typeof data === "object" && "awards" in data
-      ? (data as { awards?: unknown }).awards
-      : data;
-
-  return awardsResponseSchema.parse(asArray<unknown>(root));
+  const root = (data && typeof data === "object" && "awards" in data) ? (data as any).awards : data;
+  return z.array(awardItemSchema).parse(asArray<unknown>(root));
 }
 
-export async function getOrganisations(): Promise<OrganisationItem[]> {
-  return organisationsResponseSchema.parse(await fetchJson<unknown>("organisations"));
-}
-
-export async function getVolunteering(): Promise<VolunteeringItem[]> {
-  return volunteeringResponseSchema.parse(await fetchJson<unknown>("volunteering"));
-}
-
-export async function getCauses(): Promise<Causes> {
-  return causesSchema.parse(await fetchJson<unknown>("causes"));
-}
-
+// --- API Export ---
 export const api = {
-  getCollection,
+  getDocuments,
   getExperience,
   getEducation,
   getCertifications,
@@ -206,10 +122,9 @@ export const api = {
   getAwards,
   getLanguages,
   getProfile,
-  getTeaching,
   getOrganisations,
   getVolunteering,
-  getCauses,
+  getProjects,
 };
 
 export default api;

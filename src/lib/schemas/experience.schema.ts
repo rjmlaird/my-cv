@@ -26,8 +26,9 @@ export const experienceItemSchema = z.object({
   startDate: z.string(),
   endDate: z.string().nullable(),
   current: z.boolean(),
-  city: z.string(),
-  country: z.string(),
+  // Keep these as optional if some legacy items don't have them
+  city: z.string().optional(),
+  country: z.string().optional(),
   workMode: z.string().optional(),
   location: locationSchema.optional(),
   summary: z.string(),

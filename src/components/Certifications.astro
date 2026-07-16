@@ -1,12 +1,25 @@
 ---
 import { getCertifications } from "@/lib/api";
+import { getCdnUrl } from "@/lib/cdn";
 
+// 1. Fetch raw certification data
+const rawCertifications = await getCertifications().catch(() => []);
+
+// 2. Resolve dynamic links
+// We map over the certifications and resolve the CDN URL using the cdnId
+const certifications = await Promise.all(
+  rawCertifications.map(async (cert) => ({
+    ...cert,
+    resolvedUrl: cert.cdnId ? await getCdnUrl(cert.cdnId) : undefined,
+  }))
+);
+
+// 3. Define Types
 type CertItem = {
   id: string;
   name: string;
   url?: string;
-  badgeUrl?: string;
-  issuer?: string;
+  issuer: string;
 };
 
 type CertGroup = {
@@ -14,29 +27,27 @@ type CertGroup = {
   items: CertItem[];
 };
 
-const certifications = (await getCertifications()) ?? [];
-
+// 4. Grouping Logic
 const grouped = certifications.reduce<Record<string, CertItem[]>>((acc, item) => {
-  const issuer = String(item.issuer ?? "Other").trim() || "Other";
+  const issuer = (item.issuer ?? "Other").trim() || "Other";
 
   const normalizedItem: CertItem = {
     id: String(item.id ?? ""),
     name: String(item.name ?? ""),
-    url: item.url ?? item.badgeUrl,
-    badgeUrl: item.badgeUrl,
-    issuer: item.issuer,
+    url: item.resolvedUrl,
+    issuer: issuer,
   };
 
-  (acc[issuer] ||= []).push(normalizedItem);
+  if (!acc[issuer]) acc[issuer] = [];
+  acc[issuer].push(normalizedItem);
   return acc;
 }, {});
 
+// 5. Ordering and Layout Logic
 const orderedCertifications: CertGroup[] = Object.entries(grouped)
   .map(([issuer, items]) => ({
     issuer,
-    items: [...items].sort((a, b) =>
-      String(a.name ?? "").localeCompare(String(b.name ?? "")),
-    ),
+    items: [...items].sort((a, b) => a.name.localeCompare(b.name)),
   }))
   .sort((a, b) => a.issuer.localeCompare(b.issuer));
 
@@ -50,7 +61,7 @@ const certColumns = [
 ].filter((column) => column.length > 0);
 
 const cleanLabel = (value: string) =>
-  String(value ?? "")
+  value
     .replace(/\s*[\r\n]+\s*/g, " ")
     .replace(/\s*–\s*/g, " – ")
     .replace(/\s+/g, " ")
@@ -68,7 +79,6 @@ const cleanLabel = (value: string) =>
           {column.map((group) => (
             <article>
               <h3 class="role-subheading">{group.issuer}</h3>
-
               <ul class="cert-list clean-list" aria-label={group.issuer}>
                 {group.items.map((item) => (
                   <li class="cert-item">
@@ -77,7 +87,7 @@ const cleanLabel = (value: string) =>
                         {cleanLabel(item.name)}
                       </a>
                     ) : (
-                      cleanLabel(item.name)
+                      <span>{cleanLabel(item.name)}</span>
                     )}
                   </li>
                 ))}
@@ -117,33 +127,27 @@ const cleanLabel = (value: string) =>
     padding: 0;
   }
 
-  .clean-list li {
-    margin: 0;
-  }
-
   .cert-item {
     font-size: 0.875rem;
     line-height: 1.6;
   }
 
   .cert-item a {
-    color: inherit;
+    color: var(--text-link); /* Ensure you have this variable or swap to your brand color */
     text-decoration: none;
+    transition: opacity 0.2s;
   }
 
   .cert-item a:hover {
     text-decoration: underline;
+    opacity: 0.8;
   }
 
   @media (max-width: 64rem) {
-    .cert-columns {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
+    .cert-columns { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   }
 
   @media (max-width: 48rem) {
-    .cert-columns {
-      grid-template-columns: 1fr;
-    }
+    .cert-columns { grid-template-columns: 1fr; }
   }
 </style>

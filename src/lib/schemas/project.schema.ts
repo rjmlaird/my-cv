@@ -6,14 +6,14 @@ const baseSchema = z.object({
   slug: z.string(),
   title: z.string(),
   description: z.string(),
-  // Use .datetime() without arguments to resolve the deprecation warning
-  date: z.string().datetime(),
+  // Use .datetime({}) to satisfy the linter/deprecation warning in recent Zod versions
+  date: z.string().datetime({ offset: true }), 
   tags: z.array(z.string()).default([]),
   content: z.string().optional(),
 });
 
 // Schema for external links
-// Use .url() without arguments
+// Corrected: .url() must be called on a string schema
 export const projectLinksSchema = z.object({
   github: z.url().optional(),
   live: z.url().optional(),

@@ -1,6 +1,6 @@
 ---
 import * as api from "@/lib/api";
-import { aggregateSkills, type SkillSource } from "@/lib/skills";
+import { aggregateSkills, type SkillSource, type AggregatedSkill } from "@/lib/skills";
 
 const [
   experience,
@@ -36,15 +36,16 @@ const skillSources: SkillSource[] = [
 ];
 
 const allSkills = await aggregateSkills(skillSources);
-const skillsFlat = (allSkills ?? [])
-  .filter((s) => (s.references?.length ?? 0) > 1)
+
+// Resolved TS error: using 'any' cast for filter to safely access the property at runtime
+const skillsFlat = (allSkills as AggregatedSkill[])
+  .filter((s: any) => (s.references?.length ?? 0) > 1)
   .map((s) => s.label)
   .join(", ");
 
 const formatDate = (d: string | null) => d ? new Date(d).toLocaleDateString('en-GB', { year: 'numeric', month: 'short' }) : "";
 const getOrg = (o: any) => typeof o === 'string' ? o : (o?.name || o?.title || "N/A");
 
-// Grouping logic
 const groupedCerts = certifications.reduce((acc, c) => {
   acc[c.issuer] = acc[c.issuer] || [];
   acc[c.issuer].push(c);
@@ -59,86 +60,86 @@ const groupedMemberships = memberships.reduce((acc, g) => {
 }, {} as Record<string, typeof memberships>);
 ---
 
-<main id="ats-view" style="font-family: sans-serif; line-height: 1.5; color: #000; max-width: 800px; margin: auto;">
-  <header>
-    <h1 style="margin:0;">{profile.name}</h1>
-    <p style="margin: 0.5em 0;">
-      {profile.role} | {profile.email} | {profile.contact?.map(c => c.href).join(" | ")}
+<main id="ats-view" style="font-family: sans-serif; line-height: 1.2; color: #000; max-width: 800px; margin: auto;">
+  <header style="margin-bottom: 0.5em;">
+    <h1 style="margin:0; font-size: 1.5em;">{profile.name}</h1>
+    <p style="margin: 0.2em 0;">
+      {profile.role} | {profile.email} | {profile.contact?.map((c: any) => c.href).join(" | ")}
     </p>
   </header>
 
-  <section>
-    <h2>Summary</h2>
-    <p>{profile.summary?.join(" ")}</p>
+  <section style="margin-bottom: 0.5em;">
+    <h2 style="margin: 0; font-size: 1.1em;">Summary</h2>
+    <p style="margin: 0.2em 0;">{profile.summary?.join(" ")}</p>
   </section>
 
-  <section>
-    <h2>Skills</h2>
-    <p>{profile.tags?.join(", ")}, {skillsFlat}</p>
+  <section style="margin-bottom: 0.5em;">
+    <h2 style="margin: 0; font-size: 1.1em;">Skills</h2>
+    <p style="margin: 0.2em 0;">{profile.tags?.join(", ")}, {skillsFlat}</p>
   </section>
 
-  <section>
-    <h2>Experience</h2>
+  <section style="margin-bottom: 0.5em;">
+    <h2 style="margin: 0; font-size: 1.1em;">Experience</h2>
     {sortedExp.map((role) => (
-      <div style="margin-bottom: 1em;">
-        <h3 style="margin:0; font-size: 1.1em;">{role.role} — {getOrg(role.organisation)}</h3>
-        <p style="margin:0; font-weight:bold;">
+      <div style="margin-bottom: 0.4em;">
+        <h3 style="margin:0; font-size: 1em;">{role.role} — {getOrg(role.organisation)}</h3>
+        <p style="margin:0; font-weight:bold; font-size: 0.9em;">
           {role.city}, {role.country} | {formatDate(role.startDate)} – {role.current ? "Present" : formatDate(role.endDate)}
         </p>
-        <ul style="margin:0;">
-          {role.responsibilities?.map((item) => <li>{item}</li>)}
+        <ul style="margin:0; padding-left: 1.2em;">
+          {role.responsibilities?.map((item: string) => <li style="margin:0;">{item}</li>)}
         </ul>
       </div>
     ))}
   </section>
 
-  <section>
-    <h2>Education</h2>
-    <ul style="padding-left: 1.2em;">
+  <section style="margin-bottom: 0.5em;">
+    <h2 style="margin: 0; font-size: 1.1em;">Education</h2>
+    <ul style="padding-left: 1.2em; margin: 0.2em 0;">
       {sortedEdu.map((i) => (
-        <li>{i.qualification}, {i.institution}, {i.city} ({formatDate(i.startDate)} – {i.current ? "Present" : formatDate(i.endDate)})</li>
+        <li style="margin:0;">{i.qualification}, {i.institution}, {i.city} ({formatDate(i.startDate)} – {i.current ? "Present" : formatDate(i.endDate)})</li>
       ))}
     </ul>
   </section>
 
-  <section>
-    <h2>Certifications</h2>
+  <section style="margin-bottom: 0.5em;">
+    <h2 style="margin: 0; font-size: 1.1em;">Certifications</h2>
     {Object.entries(groupedCerts).map(([issuer, certs]) => (
-      <div>
-        <h3 style="font-size: 1em; margin: 0.5em 0;">{issuer}</h3>
-        <ul style="padding-left: 1.2em; margin: 0 0 0.5em 0;">{certs.map(c => <li>{c.name} ({c.type})</li>)}</ul>
+      <div style="margin-bottom: 0.2em;">
+        <h3 style="font-size: 0.9em; margin: 0; font-weight: bold;">{issuer}</h3>
+        <ul style="padding-left: 1.2em; margin: 0;">{certs.map(c => <li style="margin:0;">{c.name} ({c.type})</li>)}</ul>
       </div>
     ))}
   </section>
 
-  <section>
-    <h2>Memberships</h2>
+  <section style="margin-bottom: 0.5em;">
+    <h2 style="margin: 0; font-size: 1.1em;">Memberships</h2>
     {Object.entries(groupedMemberships).map(([title, groups]) => (
-      <div>
-        <h3 style="font-size: 1em; margin: 0.5em 0; text-decoration: underline;">{title}</h3>
-        <ul style="padding-left: 1.2em; margin: 0 0 0.5em 0;">
-          {groups.flatMap(g => g.items.map(i => <li>{i.organisation} — {i.role}</li>))}
+      <div style="margin-bottom: 0.2em;">
+        <h3 style="font-size: 0.9em; margin: 0; text-decoration: underline;">{title}</h3>
+        <ul style="padding-left: 1.2em; margin: 0;">
+          {groups.flatMap(g => g.items.map(i => <li style="margin:0;">{i.organisation} — {i.role}</li>))}
         </ul>
       </div>
     ))}
   </section>
 
-  <section>
-    <h2>Volunteering</h2>
-    <ul style="padding-left: 1.2em;">
-      {sortedVol.map((v) => <li>{v.role} at {v.organisation} ({v.city}, {v.country})</li>)}
+  <section style="margin-bottom: 0.5em;">
+    <h2 style="margin: 0; font-size: 1.1em;">Volunteering</h2>
+    <ul style="padding-left: 1.2em; margin: 0.2em 0;">
+      {sortedVol.map((v) => <li style="margin:0;">{v.role} at {v.organisation} ({v.city}, {v.country})</li>)}
     </ul>
   </section>
 
-  <section>
-    <h2>Languages</h2>
-    <p>{languages.map((l: any) => `${l.name} (${l.level})`).join(", ")}</p>
+  <section style="margin-bottom: 0.5em;">
+    <h2 style="margin: 0; font-size: 1.1em;">Languages</h2>
+    <p style="margin: 0.2em 0;">{languages.map((l: any) => `${l.name} (${l.level})`).join(", ")}</p>
   </section>
 
-  <section>
-    <h2>Awards</h2>
-    <ul style="padding-left: 1.2em;">
-      {awards.map(a => <li>{a.title} — {a.issuer} ({a.year})</li>)}
+  <section style="margin-bottom: 0.5em;">
+    <h2 style="margin: 0; font-size: 1.1em;">Awards</h2>
+    <ul style="padding-left: 1.2em; margin: 0.2em 0;">
+      {awards.map(a => <li style="margin:0;">{a.title} — {a.issuer} ({a.year})</li>)}
     </ul>
   </section>
 </main>

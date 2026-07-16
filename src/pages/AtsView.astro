@@ -2,7 +2,6 @@
 import * as api from "@/lib/api";
 import { aggregateSkills, type SkillSource } from "@/lib/skills";
 
-// Fetch data
 const [
   experience,
   education,
@@ -23,120 +22,123 @@ const [
   api.getProfile(),
 ]);
 
-// Skills
+const sortByDate = (arr: any[]) => [...(arr ?? [])].sort((a, b) => 
+  new Date(b.startDate ?? 0).getTime() - new Date(a.startDate ?? 0).getTime()
+).slice(0, 5);
+
+const sortedExp = sortByDate(experience);
+const sortedEdu = sortByDate(education);
+const sortedVol = sortByDate(volunteering);
+
 const skillSources: SkillSource[] = [
-  ...experience.map((role) => ({ 
-    tags: role.skills ?? [], 
-    ref: { label: role.role, href: `#exp-${role.id}` } 
-  })),
-  ...education.map((item) => ({
-    tags: item.skills ?? [],
-    ref: { label: item.qualification || item.role || "Education", href: `#edu-${item.id}` },
-  })),
+  ...experience.map((r) => ({ tags: r.skills ?? [], ref: { label: r.role, href: "" } })),
+  ...education.map((e) => ({ tags: e.skills ?? [], ref: { label: e.qualification || "", href: "" } })),
 ];
 
-const skillsFlat = (await aggregateSkills(skillSources)).map((s) => s.label).join(", ");
+const allSkills = await aggregateSkills(skillSources);
+const skillsFlat = (allSkills ?? [])
+  .filter((s) => (s.references?.length ?? 0) > 1)
+  .map((s) => s.label)
+  .join(", ");
 
-// Flattening Helpers (Safe Version)
-const certsFlat = (certifications ?? [])
-  .map((c: any) => [c.name, c.issuer ? `— ${c.issuer}` : "", c.type ? `(${c.type})` : ""].filter(Boolean).join(" "))
-  .filter(Boolean)
-  .join(". ");
+const formatDate = (d: string | null) => d ? new Date(d).toLocaleDateString('en-GB', { year: 'numeric', month: 'short' }) : "";
+const getOrg = (o: any) => typeof o === 'string' ? o : (o?.name || o?.title || "N/A");
 
-// Fixed groupFlat: Added defensive defaults
-const groupFlat = (data: any[]) => 
-  (data ?? [])
-    .map((g) => {
-      const items = Array.isArray(g.items) ? g.items : [];
-      const itemStrings = items
-        .map((i: any) => [i.organisation, i.role].filter(Boolean).join(" — "))
-        .filter(Boolean)
-        .join(", ");
-      return itemStrings ? `${g.title}: ${itemStrings}` : "";
-    })
-    .filter(Boolean)
-    .join(". ");
+// Grouping logic
+const groupedCerts = certifications.reduce((acc, c) => {
+  acc[c.issuer] = acc[c.issuer] || [];
+  acc[c.issuer].push(c);
+  return acc;
+}, {} as Record<string, typeof certifications>);
 
-const membershipsFlat = groupFlat(memberships);
-const volunteeringFlat = groupFlat(volunteering);
-
-const languagesFlat = (languages ?? [])
-  .map((l: any) => `${l.name}${l.level ? ` (${l.level})` : ""}`)
-  .join("; ");
+const groupedMemberships = memberships.reduce((acc, g) => {
+  const title = g.title || "General Membership";
+  acc[title] = acc[title] || [];
+  acc[title].push(g);
+  return acc;
+}, {} as Record<string, typeof memberships>);
 ---
 
-<main id="ats-view">
+<main id="ats-view" style="font-family: sans-serif; line-height: 1.5; color: #000; max-width: 800px; margin: auto;">
   <header>
-    <h1>{profile.preferredName || profile.name}</h1>
-    <p class="ats-meta">
-      {profile.role} · {profile.credentials}<br />
-      Email: {profile.email} | {profile.contact?.map(c => `${c.label}: ${c.href}`).join(" | ")}
+    <h1 style="margin:0;">{profile.name}</h1>
+    <p style="margin: 0.5em 0;">
+      {profile.role} | {profile.email} | {profile.contact?.map(c => c.href).join(" | ")}
     </p>
   </header>
 
-  <section aria-labelledby="summary-heading">
-    <h2 id="summary-heading">Summary</h2>
-    {profile.summary?.map((p) => <p>{p}</p>)}
+  <section>
+    <h2>Summary</h2>
+    <p>{profile.summary?.join(" ")}</p>
   </section>
 
-  <section aria-labelledby="skills-heading">
-    <h2 id="skills-heading">Skills</h2>
-    <p>{profile.tags?.join(", ")}. Technical: {skillsFlat}.</p>
+  <section>
+    <h2>Skills</h2>
+    <p>{profile.tags?.join(", ")}, {skillsFlat}</p>
   </section>
 
-  <section aria-labelledby="experience-heading">
-    <h2 id="experience-heading">Experience</h2>
-    {experience.map((role) => (
-      <article id={`exp-${role.id}`}>
-        <h3>{role.role}</h3>
-        <p class="ats-meta">
-          {role.organisation || "Self-employed"} · {role.startDate} {role.current ? "to present" : role.endDate ? `to ${role.endDate}` : ""}
+  <section>
+    <h2>Experience</h2>
+    {sortedExp.map((role) => (
+      <div style="margin-bottom: 1em;">
+        <h3 style="margin:0; font-size: 1.1em;">{role.role} — {getOrg(role.organisation)}</h3>
+        <p style="margin:0; font-weight:bold;">
+          {role.city}, {role.country} | {formatDate(role.startDate)} – {role.current ? "Present" : formatDate(role.endDate)}
         </p>
-        {role.summary && <p>{role.summary}</p>}
-        {role.responsibilities?.length > 0 && (
-          <ul>
-            {role.responsibilities.map((item) => <li>{item}</li>)}
-          </ul>
-        )}
-      </article>
+        <ul style="margin:0;">
+          {role.responsibilities?.map((item) => <li>{item}</li>)}
+        </ul>
+      </div>
     ))}
   </section>
 
-  <section aria-labelledby="education-heading">
-    <h2 id="education-heading">Education</h2>
-    <ul>
-      {education.map((item) => (
-        <li id={`edu-${item.id}`}>
-          <strong>{item.qualification}</strong> — {item.institution}
-          {item.field && `, ${item.field}`}
-          {item.startDate && ` (${item.startDate}${item.endDate ? ` – ${item.endDate}` : ""})`}
-        </li>
+  <section>
+    <h2>Education</h2>
+    <ul style="padding-left: 1.2em;">
+      {sortedEdu.map((i) => (
+        <li>{i.qualification}, {i.institution}, {i.city} ({formatDate(i.startDate)} – {i.current ? "Present" : formatDate(i.endDate)})</li>
       ))}
     </ul>
   </section>
 
-  <section aria-labelledby="certifications-heading">
-    <h2 id="certifications-heading">Certifications</h2>
-    <p>{certsFlat}</p>
+  <section>
+    <h2>Certifications</h2>
+    {Object.entries(groupedCerts).map(([issuer, certs]) => (
+      <div>
+        <h3 style="font-size: 1em; margin: 0.5em 0;">{issuer}</h3>
+        <ul style="padding-left: 1.2em; margin: 0 0 0.5em 0;">{certs.map(c => <li>{c.name} ({c.type})</li>)}</ul>
+      </div>
+    ))}
   </section>
 
-  <section aria-labelledby="memberships-heading">
-    <h2 id="memberships-heading">Memberships</h2>
-    <p>{membershipsFlat}</p>
+  <section>
+    <h2>Memberships</h2>
+    {Object.entries(groupedMemberships).map(([title, groups]) => (
+      <div>
+        <h3 style="font-size: 1em; margin: 0.5em 0; text-decoration: underline;">{title}</h3>
+        <ul style="padding-left: 1.2em; margin: 0 0 0.5em 0;">
+          {groups.flatMap(g => g.items.map(i => <li>{i.organisation} — {i.role}</li>))}
+        </ul>
+      </div>
+    ))}
   </section>
 
-  <section aria-labelledby="languages-heading">
-    <h2 id="languages-heading">Languages</h2>
-    <p>{languagesFlat}</p>
+  <section>
+    <h2>Volunteering</h2>
+    <ul style="padding-left: 1.2em;">
+      {sortedVol.map((v) => <li>{v.role} at {v.organisation} ({v.city}, {v.country})</li>)}
+    </ul>
   </section>
 
-  <section aria-labelledby="volunteering-heading">
-    <h2 id="volunteering-heading">Volunteering</h2>
-    <p>{volunteeringFlat}</p>
+  <section>
+    <h2>Languages</h2>
+    <p>{languages.map((l: any) => `${l.name} (${l.level})`).join(", ")}</p>
   </section>
 
-  <section aria-labelledby="awards-heading">
-    <h2 id="awards-heading">Awards</h2>
-    <p>{awards.map(a => `${a.title} ${a.issuer ? `— ${a.issuer}` : ""} (${a.year})`).join("; ")}</p>
+  <section>
+    <h2>Awards</h2>
+    <ul style="padding-left: 1.2em;">
+      {awards.map(a => <li>{a.title} — {a.issuer} ({a.year})</li>)}
+    </ul>
   </section>
 </main>

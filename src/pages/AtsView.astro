@@ -2,138 +2,86 @@
 import * as api from "@/lib/api";
 import { aggregateSkills, type SkillSource } from "@/lib/skills";
 
-const {
-  getLanguages,
-  getProfile,
-  getExperience,
-  getEducation,
-  getAwards,
-  getCertifications,
-  getMemberships,
-  getVolunteering,
-} = api;
-
+// Fetch data
 const [
-  experienceData,
-  educationData,
-  certificationsData,
-  membershipsData,
-  awardsData,
-  volunteeringData,
-  languagesData,
+  experience,
+  education,
+  certifications,
+  memberships,
+  awards,
+  volunteering,
+  languages,
+  profile,
 ] = await Promise.all([
-  getExperience(),
-  getEducation(),
-  getCertifications(),
-  getMemberships(),
-  getAwards(),
-  getVolunteering(),
-  getLanguages(),
+  api.getExperience(),
+  api.getEducation(),
+  api.getCertifications(),
+  api.getMemberships(),
+  api.getAwards(),
+  api.getVolunteering(),
+  api.getLanguages(),
+  api.getProfile(),
 ]);
 
-const profile = await getProfile();
-
-const experience = Array.isArray(experienceData) ? experienceData : [];
-const education = Array.isArray(educationData) ? educationData : [];
-const certifications = Array.isArray(certificationsData) ? certificationsData : [];
-const memberships = Array.isArray(membershipsData) ? membershipsData : [];
-const awards = Array.isArray(awardsData) ? awardsData : [];
-const volunteering = Array.isArray(volunteeringData) ? volunteeringData : [];
-const languages = Array.isArray(languagesData) ? languagesData : [];
-
+// Skills
 const skillSources: SkillSource[] = [
-  ...experience.map((role) => ({ tags: role.skills, ref: { label: role.role, href: `#exp-${role.id}` } })),
+  ...experience.map((role) => ({ 
+    tags: role.skills ?? [], 
+    ref: { label: role.role, href: `#exp-${role.id}` } 
+  })),
   ...education.map((item) => ({
-    tags: item.skills,
-    ref: { label: item.qualification || item.role, href: `#edu-${item.id}` },
+    tags: item.skills ?? [],
+    ref: { label: item.qualification || item.role || "Education", href: `#edu-${item.id}` },
   })),
 ];
 
 const skillsFlat = (await aggregateSkills(skillSources)).map((s) => s.label).join(", ");
 
-const certsFlat = certifications
-  .map((cert) => {
-    if (!cert || typeof cert !== "object") return "";
-    const name = "name" in cert && typeof cert.name === "string" ? cert.name : "";
-    const issuer = "issuer" in cert && typeof cert.issuer === "string" ? cert.issuer : "";
-    const type = "type" in cert && typeof cert.type === "string" ? cert.type : "";
-    return [name, issuer ? `— ${issuer}` : "", type ? `(${type})` : ""].filter(Boolean).join(" ");
-  })
+// Flattening Helpers (Safe Version)
+const certsFlat = (certifications ?? [])
+  .map((c: any) => [c.name, c.issuer ? `— ${c.issuer}` : "", c.type ? `(${c.type})` : ""].filter(Boolean).join(" "))
   .filter(Boolean)
   .join(". ");
 
-const membershipsFlat = memberships
-  .map((group) =>
-    group && typeof group === "object" && "items" in group && Array.isArray(group.items)
-      ? `${"title" in group && typeof group.title === "string" ? group.title : ""}: ${group.items
-          .map((item) => {
-            if (!item || typeof item !== "object") return "";
-            const organisation = "organisation" in item && typeof item.organisation === "string" ? item.organisation : "";
-            const role = "role" in item && typeof item.role === "string" ? item.role : "";
-            return [organisation, role].filter(Boolean).join(" — ");
-          })
-          .filter(Boolean)
-          .join(", ")}`
-      : "",
-  )
-  .filter(Boolean)
-  .join(". ");
+// Fixed groupFlat: Added defensive defaults
+const groupFlat = (data: any[]) => 
+  (data ?? [])
+    .map((g) => {
+      const items = Array.isArray(g.items) ? g.items : [];
+      const itemStrings = items
+        .map((i: any) => [i.organisation, i.role].filter(Boolean).join(" — "))
+        .filter(Boolean)
+        .join(", ");
+      return itemStrings ? `${g.title}: ${itemStrings}` : "";
+    })
+    .filter(Boolean)
+    .join(". ");
 
-const languagesFlat = languages
-  .map((l) => {
-    if (!l || typeof l !== "object") return "";
-    const name = "name" in l && typeof l.name === "string" ? l.name : "label" in l && typeof l.label === "string" ? l.label : "";
-    const level = "level" in l && typeof l.level === "string" ? l.level : "";
-    return `${name}${level ? ` (${level})` : ""}`.trim();
-  })
-  .filter(Boolean)
+const membershipsFlat = groupFlat(memberships);
+const volunteeringFlat = groupFlat(volunteering);
+
+const languagesFlat = (languages ?? [])
+  .map((l: any) => `${l.name}${l.level ? ` (${l.level})` : ""}`)
   .join("; ");
-
-const volunteeringFlat = volunteering
-  .map((group) =>
-    group && typeof group === "object" && "items" in group && Array.isArray(group.items)
-      ? `${"title" in group && typeof group.title === "string" ? group.title : ""}: ${group.items
-          .map((item) => {
-            if (!item || typeof item !== "object") return "";
-            const organisation = "organisation" in item && typeof item.organisation === "string" ? item.organisation : "";
-            const role = "role" in item && typeof item.role === "string" ? item.role : "";
-            return [organisation, role].filter(Boolean).join(" — ");
-          })
-          .filter(Boolean)
-          .join(", ")}`
-      : "",
-  )
-  .filter(Boolean)
-  .join(". ");
-
-function formatAward(award: (typeof awards)[number]): string {
-  if (typeof award === "string") return award;
-  return [award.title, award.issuer ? `— ${award.issuer}` : "", award.year ? `(${award.year})` : ""].filter(Boolean).join(" ");
-}
-
-function dateRange(startDate?: string | null, endDate?: string | null, current?: boolean) {
-  if (!startDate) return "";
-  return endDate ? `${startDate} to ${endDate}` : current ? `${startDate} to present` : startDate;
-}
 ---
 
 <main id="ats-view">
   <header>
-    <h1>{profile.name}</h1>
+    <h1>{profile.preferredName || profile.name}</h1>
     <p class="ats-meta">
-      Director of Green Orbit Digital · {profile.credentials}<br />
-      Email: rjmlaird@gmail.com | LinkedIn: linkedin.com/in/rjmlaird87 | GitHub: github.com/rjmlaird | ORCID: 0000-0002-5992-684X
+      {profile.role} · {profile.credentials}<br />
+      Email: {profile.email} | {profile.contact?.map(c => `${c.label}: ${c.href}`).join(" | ")}
     </p>
   </header>
 
   <section aria-labelledby="summary-heading">
     <h2 id="summary-heading">Summary</h2>
-    {Array.isArray(profile.summary) ? profile.summary.map((p) => <p>{p}</p>) : null}
+    {profile.summary?.map((p) => <p>{p}</p>)}
   </section>
 
   <section aria-labelledby="skills-heading">
     <h2 id="skills-heading">Skills</h2>
-    <p>{Array.isArray(profile.tags) ? profile.tags.join(", ") : ""}. Technical: {skillsFlat}.</p>
+    <p>{profile.tags?.join(", ")}. Technical: {skillsFlat}.</p>
   </section>
 
   <section aria-labelledby="experience-heading">
@@ -142,24 +90,10 @@ function dateRange(startDate?: string | null, endDate?: string | null, current?:
       <article id={`exp-${role.id}`}>
         <h3>{role.role}</h3>
         <p class="ats-meta">
-          {role.organisation ?? "Self-employed"}
-          {role.startDate ? (
-            <>
-              {" "}
-              · <time datetime={role.startDate}>{role.startDate}</time>
-              {role.endDate ? (
-                <>
-                  {" "}
-                  to <time datetime={role.endDate}>{role.endDate}</time>
-                </>
-              ) : role.current ? (
-                " to present"
-              ) : null}
-            </>
-          ) : null}
+          {role.organisation || "Self-employed"} · {role.startDate} {role.current ? "to present" : role.endDate ? `to ${role.endDate}` : ""}
         </p>
-        {role.summary ? <p>{role.summary}</p> : null}
-        {Array.isArray(role.responsibilities) && role.responsibilities.length > 0 && (
+        {role.summary && <p>{role.summary}</p>}
+        {role.responsibilities?.length > 0 && (
           <ul>
             {role.responsibilities.map((item) => <li>{item}</li>)}
           </ul>
@@ -174,14 +108,8 @@ function dateRange(startDate?: string | null, endDate?: string | null, current?:
       {education.map((item) => (
         <li id={`edu-${item.id}`}>
           <strong>{item.qualification}</strong> — {item.institution}
-          {item.field ? `, ${item.field}` : ""}
-          {item.startDate ? (
-            <>
-              {" "}
-              (<time datetime={item.startDate}>{item.startDate}</time>
-              {item.endDate ? <> – <time datetime={item.endDate}>{item.endDate}</time></> : null})
-            </>
-          ) : null}
+          {item.field && `, ${item.field}`}
+          {item.startDate && ` (${item.startDate}${item.endDate ? ` – ${item.endDate}` : ""})`}
         </li>
       ))}
     </ul>
@@ -209,6 +137,6 @@ function dateRange(startDate?: string | null, endDate?: string | null, current?:
 
   <section aria-labelledby="awards-heading">
     <h2 id="awards-heading">Awards</h2>
-    <p>{awards.map(formatAward).join("; ")}</p>
+    <p>{awards.map(a => `${a.title} ${a.issuer ? `— ${a.issuer}` : ""} (${a.year})`).join("; ")}</p>
   </section>
 </main>

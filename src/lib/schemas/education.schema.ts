@@ -14,6 +14,7 @@ export const educationSourceSchema = z.object({
   country: z.string(),
   summary: z.string().default(""),
   responsibilities: z.array(z.string()).default([]),
+  keyActivities: z.array(z.string()).default([]), // Added this field
   achievements: z.array(z.string()).default([]),
   skills: z.array(z.string()).default([]),
   projects: z.array(z.string()).default([]),
@@ -45,6 +46,7 @@ export const educationItemSchema = educationSourceSchema.transform((item) => ({
   country: item.country,
   summary: item.summary,
   responsibilities: item.responsibilities,
+  keyActivities: item.keyActivities, // Transformed field
   achievements: item.achievements,
   skills: item.skills,
   projects: item.projects,

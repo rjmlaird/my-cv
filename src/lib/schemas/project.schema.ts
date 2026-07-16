@@ -6,20 +6,22 @@ const baseSchema = z.object({
   slug: z.string(),
   title: z.string(),
   description: z.string(),
-  date: z.string().datetime(), // Matches ISO strings like "2026-07-01T00:00:00.000Z"
+  // Use .datetime() without arguments to resolve the deprecation warning
+  date: z.string().datetime(),
   tags: z.array(z.string()).default([]),
   content: z.string().optional(),
 });
 
 // Schema for external links
+// Use .url() without arguments
 export const projectLinksSchema = z.object({
-  github: z.string().url().optional(),
-  live: z.string().url().optional(),
-  demo: z.string().url().optional(),
-  docs: z.string().url().optional(),
-  video: z.string().url().optional(),
-  store: z.string().url().optional(),
-  api: z.string().url().optional(),
+  github: z.url().optional(),
+  live: z.url().optional(),
+  demo: z.url().optional(),
+  docs: z.url().optional(),
+  video: z.url().optional(),
+  store: z.url().optional(),
+  api: z.url().optional(),
 });
 
 // Main project schema

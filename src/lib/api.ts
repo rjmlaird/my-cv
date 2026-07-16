@@ -1,14 +1,14 @@
 import { z } from "zod";
 
 // --- Schemas ---
-import { awardItemSchema, type AwardItem } from "@/lib/schemas/award.schema";
-import { certificationItemSchema, type CertificationItem } from "@/lib/schemas/certification.schema";
-import { educationItemSchema, type EducationItem } from "@/lib/schemas/education.schema";
-import { experienceItemSchema, type ExperienceItem } from "@/lib/schemas/experience.schema";
-import { languageItemSchema, type LanguageItem } from "@/lib/schemas/languages.schema";
-import { organisationItemSchema, type OrganisationItem } from "@/lib/schemas/organisation.schema";
-import { volunteeringItemSchema, type VolunteeringItem } from "@/lib/schemas/volunteering.schema";
-import { projectSchema, type ProjectItem } from "@/lib/schemas/project.schema";
+import { awardItemSchema } from "@/lib/schemas/award.schema";
+import { certificationItemSchema } from "@/lib/schemas/certification.schema";
+import { educationItemSchema } from "@/lib/schemas/education.schema";
+import { experienceItemSchema } from "@/lib/schemas/experience.schema";
+import { languageItemSchema } from "@/lib/schemas/languages.schema";
+import { organisationItemSchema } from "@/lib/schemas/organisation.schema";
+import { volunteeringItemSchema } from "@/lib/schemas/volunteering.schema";
+import { projectSchema } from "@/lib/schemas/project.schema";
 
 // --- Constants ---
 const API_BASE = "https://api.rjmlaird.co.uk/api";
@@ -54,14 +54,14 @@ export const profileSchema = z.object({
   headline: z.string().optional(),
   biography: z.array(z.string()).default([]),
   location: z.string().optional(),
-  email: z.string().email().optional(),
-  website: z.string().url().optional(),
+  email: z.email().optional(), // Ensure Zod version matches
+  website: z.url().optional(),
   avatar: z.string().optional(),
   role: z.string().optional(),
   credentials: z.string().optional(),
   summary: z.array(z.string()).default([]),
   tags: z.array(z.string()).default([]),
-  portfolioLinks: z.array(z.object({ label: z.string(), href: z.string().url() })).default([]),
+  portfolioLinks: z.array(z.object({ label: z.string(), href: z.url() })).default([]),
   contact: z.array(z.object({ label: z.string(), href: z.string() })).default([]),
 });
 
@@ -95,7 +95,7 @@ export async function getVolunteering() { return z.array(volunteeringItemSchema)
 export async function getProfile() { return profileSchema.parse(await fetchJson<unknown>("profile")); }
 export async function getProjects() { return z.array(projectSchema).parse(await fetchJson<unknown>("portfolio/projects")); }
 
-export async function getCertifications(): Promise<CertificationItem[]> {
+export async function getCertifications() {
   const data = await fetchJson<unknown>("certifications");
   const root = (data && typeof data === "object" && "certifications" in data) ? (data as any).certifications : data;
   return z.array(certificationItemSchema).parse(asArray<unknown>(root));
@@ -106,14 +106,14 @@ export async function getMemberships(): Promise<MembershipGroup[]> {
   return membershipsResponseSchema.parse(data).memberships;
 }
 
-export async function getAwards(): Promise<AwardItem[]> {
+export async function getAwards() {
   const data = await fetchJson<unknown>("awards");
   const root = (data && typeof data === "object" && "awards" in data) ? (data as any).awards : data;
   return z.array(awardItemSchema).parse(asArray<unknown>(root));
 }
 
 // --- API Export ---
-export const api = {
+const api = {
   getDocuments,
   getExperience,
   getEducation,

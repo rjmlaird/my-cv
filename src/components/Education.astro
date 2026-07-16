@@ -7,7 +7,6 @@ import type { EducationItem } from "@/lib/schemas/education.schema";
 const education = (await getEducation()) ?? [];
 const allProjects = (await getProjects()) ?? [];
 
-// Create a map for quick lookup: slug -> title
 const projectMap = new Map(allProjects.map((p) => [p.slug, p.title]));
 
 const formatDate = (value?: string | null) => {
@@ -21,23 +20,23 @@ const formatDate = (value?: string | null) => {
   }).format(new Date(Number(year), Number(month) - 1, 1));
 };
 
-// 2. Define 'rows' here, inside the frontmatter
 const rows = await Promise.all(
   education.map(async (item: EducationItem) => ({
     item,
-    skills: await resolveSkillTags(item.skills),
+    skills: await resolveSkillTags(item.skills ?? []),
   })),
 );
 
+// Helper to check for content existence safely
 const hasMoreDetail = (item: EducationItem) =>
   Boolean(
-    item.keyActivities?.length ||
-      item.achievements?.length ||
-      item.articles?.length ||
-      item.talks?.length ||
-      item.relatedAwards?.length ||
-      item.relatedCertifications?.length ||
-      item.projects?.length, // Added check for projects
+    (item as any).keyActivities?.length ||
+    item.achievements?.length ||
+    item.articles?.length ||
+    item.talks?.length ||
+    item.relatedAwards?.length ||
+    item.relatedCertifications?.length ||
+    item.projects?.length,
   );
 ---
 
@@ -49,8 +48,6 @@ const hasMoreDetail = (item: EducationItem) =>
     const title = item.qualification || item.role || "Education";
     const startDate = formatDate(item.startDate);
     const endDate = item.current ? "Present" : formatDate(item.endDate);
-    
-    // Normalized location: City, Country
     const location = [item.city, item.country].filter(Boolean).join(", ");
 
     return (
@@ -88,33 +85,36 @@ const hasMoreDetail = (item: EducationItem) =>
             <summary>More detail</summary>
             
             {item.projects?.length ? (
-                <>
-                  <h4 class="role-subheading">Projects</h4>
-                  <ul class="role-list">
-                    {item.projects.map((slug) => {
-                      const title = projectMap.get(slug) || slug;
-                      return (
-                        <li>
-                          <a href={`https://rjmlaird.co.uk/projects/${slug}`} target="_blank" rel="noopener noreferrer">
-                            {title}
-                          </a>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </>
-              ) : null}
-
-            {item.keyActivities?.length ? (
               <>
-                <h4 class="role-subheading">Key Activities</h4>
-                <ul class="role-list">{item.keyActivities.map((r) => <li>{r}</li>)}</ul>
+                <h4 class="role-subheading">Projects</h4>
+                <ul class="role-list">
+                  {item.projects.map((slug) => {
+                    const title = projectMap.get(slug) || slug;
+                    return (
+                      <li>
+                        <a href={`https://rjmlaird.co.uk/projects/${slug}`} target="_blank" rel="noopener noreferrer">
+                          {title}
+                        </a>
+                      </li>
+                    );
+                  })}
+                </ul>
               </>
             ) : null}
+
+            {(item as any).keyActivities?.length ? (
+              <>
+                <h4 class="role-subheading">Key Activities</h4>
+                <ul class="role-list">
+                  {(item as any).keyActivities.map((r: string) => <li>{r}</li>)}
+                </ul>
+              </>
+            ) : null}
+
             {item.achievements?.length ? (
               <>
                 <h4 class="role-subheading">Achievements</h4>
-                <ul class="role-list">{item.achievements.map((a) => <li>{a}</li>)}</ul>
+                <ul class="role-list">{item.achievements.map((a: string) => <li>{a}</li>)}</ul>
               </>
             ) : null}
           </details>

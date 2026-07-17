@@ -1,25 +1,34 @@
 ---
 import type { VolunteeringItem } from "@/lib/schemas/volunteering.schema";
 
-// Receive data from props instead of fetching here
 interface Props {
   volunteering: VolunteeringItem[];
-  allProjects?: any[]; // Keep this if you need project lookup
+  allProjects?: any[];
+  allAwards?: any[];
+  allCertifications?: any[];
 }
 
-const { volunteering = [], allProjects = [] } = Astro.props;
+const { 
+  volunteering = [], 
+  allProjects = [], 
+  allAwards = [], 
+  allCertifications = [] 
+} = Astro.props;
 
-const entries = Array.isArray(volunteering) ? volunteering : [];
-const projectMap = new Map(allProjects.map((p: any) => [p.slug, p.title]));
+// Sort by order
+const entries = Array.isArray(volunteering) 
+  ? [...volunteering].sort((a, b) => (a.order ?? 0) - (b.order ?? 0)) 
+  : [];
+
+const projectMap = new Map(allProjects.map((p: any) => [p.slug, p]));
+const awardMap = new Map(allAwards.map((a: any) => [a.id, a]));
 
 const hasMoreDetail = (item: VolunteeringItem) =>
-  Boolean(
-    item.projects?.length ||
-      item.articles?.length ||
-      item.talks?.length ||
-      item.relatedAwards?.length || // Ensure this matches your schema
-      item.relatedCertifications?.length
-  );
+  (item.projects?.length ?? 0) > 0 ||
+  (item.articles?.length ?? 0) > 0 ||
+  (item.talks?.length ?? 0) > 0 ||
+  (item.relatedAwards?.length ?? 0) > 0 ||
+  (item.relatedCertifications?.length ?? 0) > 0;
 ---
 
 <section id="volunteering" aria-labelledby="volunteering-heading">
@@ -27,93 +36,77 @@ const hasMoreDetail = (item: VolunteeringItem) =>
   <h2 id="volunteering-heading">Volunteering</h2>
 
   <div class="timeline">
-    {entries.map((item) => {
-      const location = [item.city, item.country].filter(Boolean).join(", ");
-      const hasDates = Boolean(item.startDate || item.endDate);
-
-      return (
-        <article class="role-item">
-          <div class="role-header">
-            <div>
-              {item.role ? <span class="role-title">{item.role}</span> : null}
-              {item.organisation ? (
-                <>
-                  {" · "}
-                  <span class="role-org">{item.organisation}</span>
-                </>
-              ) : null}
-              {location ? (
-                <>
-                  {" · "}
-                  <span class="role-location">{location}</span>
-                </>
+    {entries.length > 0 ? (
+      entries.map((item) => {
+        const location = [item.city, item.country].filter(Boolean).join(", ");
+        
+        return (
+          <article class="role-item" id={`vol-${item.id}`}>
+            {/* Header always renders */}
+            <div class="role-header">
+              <div>
+                <span class="role-title">{item.role}</span>
+                {item.organisation ? <> · <span class="role-org">{item.organisation}</span></> : null}
+                {location ? <> · <span class="role-location">{location}</span></> : null}
+              </div>
+              {(item.startDate || item.endDate) ? (
+                <time class="role-dates">
+                  {item.startDate}
+                  {item.startDate && item.endDate ? " — " : ""}
+                  {item.current ? "Present" : item.endDate}
+                </time>
               ) : null}
             </div>
 
-            {hasDates ? (
-              <time class="role-dates">
-                {item.startDate}
-                {item.startDate && item.endDate ? " — " : ""}
-                {item.current ? "Present" : item.endDate}
-              </time>
+            {/* Render summary only if it exists and is not empty */}
+            {item.summary && item.summary.trim().length > 0 && <p>{item.summary}</p>}
+
+            {/* Details dropdown only renders if there is related content */}
+            {hasMoreDetail(item) ? (
+              <details class="more-detail">
+                <summary>More detail</summary>
+                
+                {item.relatedAwards && item.relatedAwards.length > 0 && (
+                  <>
+                    <h4 class="role-subheading">Awards</h4>
+                    <ul class="role-list">
+                      {item.relatedAwards.map((id) => {
+                        const a = awardMap.get(id);
+                        return a ? (
+                          <li>
+                            <strong>{a.title}</strong>
+                            {a.issuer ? <> · {a.issuer}</> : null}
+                          </li>
+                        ) : null;
+                      })}
+                    </ul>
+                  </>
+                )}
+
+                {item.projects && item.projects.length > 0 && (
+                  <>
+                    <h4 class="role-subheading">Projects</h4>
+                    <ul class="role-list">
+                      {item.projects.map((slug) => {
+                        const p = projectMap.get(slug);
+                        return (
+                          <li>
+                            <a href={`https://rjmlaird.co.uk/projects/${slug}`} target="_blank" rel="noopener noreferrer">
+                              {p?.title ?? slug}
+                            </a>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </>
+                )}
+              </details>
             ) : null}
-          </div>
-
-          {item.summary ? <p>{item.summary}</p> : null}
-
-          {hasMoreDetail(item) ? (
-            <details class="more-detail">
-              <summary>More detail</summary>
-              
-              {item.projects?.length ? (
-                <>
-                  <h4 class="role-subheading">Projects</h4>
-                  <ul class="role-list">
-                    {item.projects.map((slug) => {
-                      const title = projectMap.get(slug) || slug;
-                      return (
-                        <li>
-                          <a href={`https://rjmlaird.co.uk/projects/${slug}`} target="_blank" rel="noopener noreferrer">
-                            {title}
-                          </a>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </>
-              ) : null}
-
-              {item.articles?.length ? (
-                <>
-                  <h4 class="role-subheading">Articles</h4>
-                  <ul class="role-list">{item.articles.map((a) => <li>{a}</li>)}</ul>
-                </>
-              ) : null}
-
-              {item.talks?.length ? (
-                <>
-                  <h4 class="role-subheading">Talks</h4>
-                  <ul class="role-list">{item.talks.map((t) => <li>{t}</li>)}</ul>
-                </>
-              ) : null}
-
-              {item.relatedAwards?.length ? (
-                <>
-                  <h4 class="role-subheading">Related awards</h4>
-                  <ul class="role-list">{item.relatedAwards.map((a) => <li>{a}</li>)}</ul>
-                </>
-              ) : null}
-
-              {item.relatedCertifications?.length ? (
-                <>
-                  <h4 class="role-subheading">Related certifications</h4>
-                  <ul class="role-list">{item.relatedCertifications.map((c) => <li>{c}</li>)}</ul>
-                </>
-              ) : null}
-            </details>
-          ) : null}
-        </article>
-      );
-    })}
+          </article>
+        );
+      })
+    ) : (
+      <p>No volunteering records found.</p>
+    )}
   </div>
 </section>

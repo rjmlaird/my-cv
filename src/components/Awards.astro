@@ -8,66 +8,9 @@ const rawAwards = await getAwards();
 const rawExperience = await getExperience();
 const rawEducation = await getEducation();
 
-const awards: AwardItem[] = Array.isArray(rawAwards)
-  ? rawAwards.map((item) => awardItemSchema.parse(item))
-  : [];
-
-const experiences: ExperienceItem[] = Array.isArray(rawExperience)
-  ? rawExperience.map((item) => experienceItemSchema.parse(item))
-  : [];
-
-const educations: EducationItem[] = Array.isArray(rawEducation)
-  ? rawEducation.map((item) => educationItemSchema.parse(item))
-  : [];
-
-const cleanText = (value: unknown) =>
-  value === null || value === undefined ? "" : String(value).trim();
-
-const formatLine = (...parts: Array<string | number | undefined | null>) =>
-  parts
-    .filter((part) => part !== undefined && part !== null && String(part).trim() !== "")
-    .join(" • ");
-
-const listText = (items?: string[]) =>
-  Array.isArray(items) && items.length > 0 ? items.join(", ") : "";
-
-const getPrimaryContext = (award: AwardItem) =>
-  award.event ||
-  award.session_title ||
-  award.project ||
-  award.programme ||
-  award.research_area ||
-  award.instrument ||
-  award.location ||
-  award.value ||
-  "";
-
-const getSecondaryContext = (award: AwardItem) => {
-  if (award.type) return cleanText(award.type).replace(/_/g, " ");
-  if (award.role) return formatLine("Role", award.role);
-  if (award.client) return formatLine("Client", award.client);
-  if (award.category) return formatLine("Category", award.category);
-  if (award.duration) return formatLine("Duration", award.duration);
-  return "";
-};
-
-const getDetails = (award: AwardItem) => {
-  const details: string[] = [];
-
-  if (award.session_title) details.push(`Session: ${award.session_title}`);
-  if (award.project) details.push(`Project: ${award.project}`);
-  if (award.category) details.push(`Category: ${award.category}`);
-  if (award.client) details.push(`Client: ${award.client}`);
-  if (award.programme) details.push(`Programme: ${award.programme}`);
-  if (award.value) details.push(`Value: ${award.value}`);
-  if (award.instrument) details.push(`Instrument: ${award.instrument}`);
-  if (award.duration) details.push(`Duration: ${award.duration}`);
-  if (award.research_area) details.push(`Research area: ${award.research_area}`);
-  if (listText(award.funded_by)) details.push(`Funded by: ${listText(award.funded_by)}`);
-  if (listText(award.items)) details.push(`Included: ${listText(award.items)}`);
-
-  return details;
-};
+const awards: AwardItem[] = Array.isArray(rawAwards) ? rawAwards.map((item) => awardItemSchema.parse(item)) : [];
+const experiences: ExperienceItem[] = Array.isArray(rawExperience) ? rawExperience.map((item) => experienceItemSchema.parse(item)) : [];
+const educations: EducationItem[] = Array.isArray(rawEducation) ? rawEducation.map((item) => educationItemSchema.parse(item)) : [];
 
 const getExperienceMatches = (award: AwardItem) => {
   const ids = new Set((award.relatedExperience ?? []).map((id) => String(id).trim()));
@@ -80,12 +23,17 @@ const getEducationMatches = (award: AwardItem) => {
 };
 
 const getExperienceLabel = (item: ExperienceItem) => item.role || item.id;
-const getExperienceOrg = (item: ExperienceItem) => item.organisation || "";
+const getExperienceOrg = (item: ExperienceItem) => {
+  const org = item.organisation;
+  if (typeof org === 'string') return org;
+  return (org && typeof org === 'object' && 'name' in org) ? org.name : "";
+};
 
-const getEducationLabel = (item: EducationItem) =>
-  item.qualification || item.role || item.institution || item.id;
-
+const getEducationLabel = (item: EducationItem) => item.qualification || item.role || item.institution || item.id;
 const getEducationOrg = (item: EducationItem) => item.institution || "";
+
+const hasMoreDetail = (award: AwardItem) => 
+  (award.session_title || award.project || award.category || award.client || award.programme || award.value || award.instrument || award.duration || award.research_area || award.funded_by?.length || award.items?.length || getExperienceMatches(award).length > 0 || getEducationMatches(award).length > 0);
 ---
 
 <section id="awards" aria-labelledby="awards-heading">
@@ -94,9 +42,6 @@ const getEducationOrg = (item: EducationItem) => item.institution || "";
 
   <div class="award-list">
     {awards.map((award) => {
-      const primaryContext = getPrimaryContext(award);
-      const secondaryContext = getSecondaryContext(award);
-      const details = getDetails(award);
       const relatedExperience = getExperienceMatches(award);
       const relatedEducation = getEducationMatches(award);
 
@@ -110,44 +55,52 @@ const getEducationOrg = (item: EducationItem) => item.institution || "";
             </div>
           </div>
 
-          {primaryContext ? <p class="award-primary">{primaryContext}</p> : null}
-          {secondaryContext ? <p class="award-secondary">{secondaryContext}</p> : null}
-          {award.description ? <p class="award-desc">{award.description}</p> : null}
+          {hasMoreDetail(award) ? (
+            <details class="more-detail">
+              <summary>More detail</summary>
 
-          {details.length > 0 ? (
-            <ul class="award-details" aria-label={`${award.title} details`}>
-              {details.map((detail) => (
-                <li>{detail}</li>
-              ))}
-            </ul>
-          ) : null}
-
-          {relatedExperience.length > 0 ? (
-            <div class="award-related">
-              <p class="award-meta-heading">Related experience</p>
-              <ul class="award-related-list">
-                {relatedExperience.map((item) => (
-                  <li>
-                    <strong>{getExperienceLabel(item)}</strong>
-                    {getExperienceOrg(item) ? <> · {getExperienceOrg(item)}</> : null}
-                  </li>
-                ))}
+              {/* Award Specific Details */}
+              <ul class="role-list">
+                {award.session_title && <li>Session: {award.session_title}</li>}
+                {award.project && <li>Project: {award.project}</li>}
+                {award.category && <li>Category: {award.category}</li>}
+                {award.client && <li>Client: {award.client}</li>}
+                {award.programme && <li>Programme: {award.programme}</li>}
+                {award.value && <li>Value: {award.value}</li>}
+                {award.instrument && <li>Instrument: {award.instrument}</li>}
+                {award.duration && <li>Duration: {award.duration}</li>}
+                {award.research_area && <li>Research area: {award.research_area}</li>}
+                {award.funded_by?.length ? <li>Funded by: {award.funded_by.join(", ")}</li> : null}
               </ul>
-            </div>
-          ) : null}
 
-          {relatedEducation.length > 0 ? (
-            <div class="award-related">
-              <p class="award-meta-heading">Related education</p>
-              <ul class="award-related-list">
-                {relatedEducation.map((item) => (
-                  <li>
-                    <strong>{getEducationLabel(item)}</strong>
-                    {getEducationOrg(item) ? <> · {getEducationOrg(item)}</> : null}
-                  </li>
-                ))}
-              </ul>
-            </div>
+              {relatedExperience.length > 0 && (
+                <>
+                  <h4 class="role-subheading">Related experience</h4>
+                  <ul class="role-list">
+                    {relatedExperience.map((item) => (
+                      <li>
+                        <strong>{getExperienceLabel(item)}</strong>
+                        {getExperienceOrg(item) ? <> · {getExperienceOrg(item)}</> : null}
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              )}
+
+              {relatedEducation.length > 0 && (
+                <>
+                  <h4 class="role-subheading">Related education</h4>
+                  <ul class="role-list">
+                    {relatedEducation.map((item) => (
+                      <li>
+                        <strong>{getEducationLabel(item)}</strong>
+                        {getEducationOrg(item) ? <> · {getEducationOrg(item)}</> : null}
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              )}
+            </details>
           ) : null}
         </article>
       );

@@ -31,6 +31,7 @@ const [
   socials,
   tools, 
   volunteering,
+  projects,
 ] = await Promise.all([
   api.getProfile().catch((e) => { console.error("[CRITICAL] Profile fetch failed:", e); return null; }),
   api.getExperience().catch(() => []),
@@ -42,14 +43,8 @@ const [
   api.getSocials().catch(() => []),
   api.getTools().catch(() => ({ categories: [] })),
   api.getVolunteering().catch(() => []),
+  api.getProjects().catch(() => []),
 ]);
-
-// Debugging check: Run this to confirm if data reached the page
-console.log("--- Index.astro Data Check ---");
-console.log("Profile loaded:", !!profile);
-if (profile) {
-  console.log("Biography length:", profile.biography?.length ?? 0);
-}
 
 // Prepare Skill Data
 const skillSources: SkillSource[] = [
@@ -81,7 +76,6 @@ const structuredData = buildStructuredData({
 <Layout structuredData={structuredData}>
   <Nav />
   
-  <!-- Profile is passed here. Hero must be set up to receive this as a prop. -->
   <Hero profile={profile} />
   
   <main id="main-content" aria-label="CV content">
@@ -94,7 +88,12 @@ const structuredData = buildStructuredData({
     <Awards awards={awards} />
     <Skills skills={skillLabels} />
     <Tools data={tools} />
-    <Volunteering volunteering={volunteering} />
+    <Volunteering 
+      volunteering={volunteering} 
+      allProjects={projects} 
+      allAwards={awards} 
+      allCertifications={certifications} 
+    />
     <Contact profile={profile} socials={socials} />
   </main>
 

@@ -29,7 +29,7 @@ async function fetchJson<T>(url: string, isFullUrl = false): Promise<T | null> {
   }
 }
 
-// --- Data Fetchers ---
+// --- Data Fetchers with Detailed Error Logging ---
 
 export async function getDocuments() {
   const data = await fetchJson<unknown>(MANIFEST_URL, true);
@@ -39,42 +39,49 @@ export async function getDocuments() {
 export async function getExperience() { 
   const data = await fetchJson<unknown>("experience");
   const result = z.array(experienceItemSchema).safeParse(data);
+  if (!result.success) console.error("[API] Experience validation failed:", result.error.issues);
   return result.success ? result.data : [];
 }
 
 export async function getEducation() { 
   const data = await fetchJson<unknown>("education");
   const result = z.array(educationItemSchema).safeParse(data);
+  if (!result.success) console.error("[API] Education validation failed:", result.error.issues);
   return result.success ? result.data : [];
 }
 
 export async function getLanguages() { 
   const data = await fetchJson<unknown>("languages");
   const result = z.array(languageItemSchema).safeParse(data);
+  if (!result.success) console.error("[API] Languages validation failed:", result.error.issues);
   return result.success ? result.data : [];
 }
 
 export async function getOrganisations() { 
   const data = await fetchJson<unknown>("organisations");
   const result = z.array(organisationItemSchema).safeParse(data);
+  if (!result.success) console.error("[API] Organisations validation failed:", result.error.issues);
   return result.success ? result.data : [];
 }
 
 export async function getVolunteering() { 
   const data = await fetchJson<unknown>("volunteering");
   const result = z.array(volunteeringItemSchema).safeParse(data);
+  if (!result.success) console.error("[API] Volunteering validation failed:", result.error.issues);
   return result.success ? result.data : [];
 }
 
 export async function getProjects() { 
   const data = await fetchJson<unknown>("portfolio/projects");
   const result = z.array(projectSchema).safeParse(data);
+  if (!result.success) console.error("[API] Projects validation failed:", result.error.issues);
   return result.success ? result.data : [];
 }
 
 export async function getSocials() { 
   const data = await fetchJson<unknown>("socials");
   const result = z.array(socialSchema).safeParse(data);
+  if (!result.success) console.error("[API] Socials validation failed:", result.error.issues);
   return result.success ? result.data : [];
 }
 
@@ -82,9 +89,7 @@ export async function getProfile(): Promise<Profile | null> {
   const data = await fetchJson<unknown>("profile");
   if (!data) return null;
   const result = profileSchema.safeParse(data);
-  if (!result.success) {
-    console.error("[API] Profile validation failed:", result.error.issues);
-  }
+  if (!result.success) console.error("[API] Profile validation failed:", result.error.issues);
   return result.success ? result.data : null;
 }
 
@@ -92,12 +97,14 @@ export async function getCertifications() {
   const data = await fetchJson<unknown>("certifications");
   const root = (data && typeof data === "object" && "certifications" in data) ? (data as any).certifications : data;
   const result = z.array(certificationItemSchema).safeParse(root);
+  if (!result.success) console.error("[API] Certifications validation failed:", result.error.issues);
   return result.success ? result.data : [];
 }
 
 export async function getMemberships() {
   const data = await fetchJson<unknown>("memberships");
   const result = membershipsSchema.safeParse(data);
+  if (!result.success) console.error("[API] Memberships validation failed:", result.error.issues);
   return result.success ? (result.data as any).memberships : [];
 }
 
@@ -105,6 +112,7 @@ export async function getAwards() {
   const data = await fetchJson<unknown>("awards");
   const root = (data && typeof data === "object" && "awards" in data) ? (data as any).awards : data;
   const result = z.array(awardItemSchema).safeParse(root);
+  if (!result.success) console.error("[API] Awards validation failed:", result.error.issues);
   return result.success ? result.data : [];
 }
 
@@ -112,9 +120,7 @@ export async function getTools() {
   const data = await fetchJson<unknown>("tools");
   if (!data) return { categories: [] };
   const result = ToolDataSchema.safeParse(data);
-  if (!result.success) {
-    console.error("[API] Tools validation failed:", result.error.issues);
-  }
+  if (!result.success) console.error("[API] Tools validation failed:", result.error.issues);
   return result.success ? result.data : { categories: [] };
 }
 

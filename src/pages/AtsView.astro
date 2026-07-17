@@ -1,8 +1,8 @@
 ---
 // Optimized for machine parsing (ATS/Screen Readers)
 import api from "@/lib/api";
-import { aggregateSkills, type SkillSource, type AggregatedSkill } from "@/lib/skills";
-import { formatDateRange, joinParts } from "@/lib/format";
+import { aggregateSkills, type SkillSource } from "@/lib/skills";
+import { joinParts } from "@/lib/format";
 
 // Data fetching
 const [profile, experience, education, certifications, membershipGroups, awards, languages, volunteering, socials] = await Promise.all([
@@ -15,14 +15,13 @@ const formatATSDate = (d: string | null | undefined) => d ? new Date(d).toISOStr
 const sortDesc = <T extends { startDate?: string | null }>(arr: T[]) => 
   [...arr].sort((a, b) => new Date(b.startDate ?? 0).getTime() - new Date(a.startDate ?? 0).getTime());
 
-// Robust Location Resolver
 const getLoc = (item: any) => joinParts([item.city || item.location?.city, item.country || item.location?.country], ", ");
 
 const sortedExp = sortDesc(experience);
 const sortedEdu = sortDesc(education);
 const sortedVol = sortDesc(volunteering);
 
-const groupedCerts = certifications.reduce((acc: any, c) => {
+const groupedCerts = certifications.reduce((acc: Record<string, any[]>, c) => {
   if (!c.issuer) return acc;
   acc[c.issuer] = acc[c.issuer] || [];
   acc[c.issuer].push(c);
@@ -35,6 +34,9 @@ const skillSources: SkillSource[] = [
 ];
 const allSkills = await aggregateSkills(skillSources);
 const skillsFlat = allSkills.map((s: any) => s.label).join(", ");
+
+// Safely extract summary to avoid TS errors
+const summary = profile?.summary ?? [];
 ---
 
 <main id="ats-view" style="font-family: sans-serif; line-height: 1.5; color: #000; max-width: 800px; margin: auto;">
@@ -43,10 +45,10 @@ const skillsFlat = allSkills.map((s: any) => s.label).join(", ");
     <p><strong>{profile?.role}</strong></p>
   </header>
 
-  {profile?.summary?.length > 0 && (
+  {summary.length > 0 && (
     <section>
       <h2>Professional Summary</h2>
-      {profile.summary.map(p => <p>{p}</p>)}
+      {summary.map(p => <p>{p}</p>)}
     </section>
   )}
 
@@ -66,10 +68,10 @@ const skillsFlat = allSkills.map((s: any) => s.label).join(", ");
           <p><strong>{getLoc(exp)}</strong> | {formatATSDate(exp.startDate)} to {exp.current ? "Present" : formatATSDate(exp.endDate)}</p>
           {exp.summary && <p>{exp.summary}</p>}
           <ul>
-            {exp.responsibilities.map(r => <li>{r}</li>)}
-            {exp.achievements.map(a => <li>Achievement: {a}</li>)}
+            {exp.responsibilities?.map((r: string) => <li>{r}</li>)}
+            {exp.achievements?.map((a: string) => <li>Achievement: {a}</li>)}
           </ul>
-          {exp.technologies.length > 0 && <p><strong>Stack:</strong> {exp.technologies.join(", ")}</p>}
+          {exp.technologies?.length > 0 && <p><strong>Stack:</strong> {exp.technologies.join(", ")}</p>}
         </article>
       ))}
     </section>
@@ -90,7 +92,7 @@ const skillsFlat = allSkills.map((s: any) => s.label).join(", ");
   {Object.keys(groupedCerts).length > 0 && (
     <section>
       <h2>Certifications</h2>
-      {Object.entries(groupedCerts).map(([issuer, certs]: any) => (
+      {Object.entries(groupedCerts).map(([issuer, certs]: [string, any]) => (
         <div style="margin-bottom: 0.5em;">
           <strong>{issuer}</strong>
           <ul>
@@ -114,7 +116,7 @@ const skillsFlat = allSkills.map((s: any) => s.label).join(", ");
 
   <section>
     <h2>Contact</h2>
-    <p>Email: {profile?.email}</p>
-    <p>Location: {profile?.location}</p>
+    <p>Email: {profile?.email ?? "N/A"}</p>
+    <p>Location: {profile?.location ?? "N/A"}</p>
   </section>
 </main>

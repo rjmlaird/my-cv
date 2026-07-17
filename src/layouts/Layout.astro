@@ -4,15 +4,50 @@ import '@/styles/global.css';
 export interface Props {
   title?: string;
   description?: string;
+  /** JSON-LD graph built from live API data (see src/lib/structuredData.ts). Falls back to a static Person if omitted. */
+  structuredData?: Record<string, unknown>;
 }
 
 const {
   title = 'Ryan Laird — CV | Director, Green Orbit Digital',
   description = 'Ryan Laird — Chartered Marketer (CMktr), Director of Green Orbit Digital, sustainable marketing specialist for the space sector. Full CV: experience, education, skills, certifications.',
+  structuredData,
 } = Astro.props;
 
 const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? 'https://cv.rjmlaird.co.uk');
 const ogImageURL = new URL('/og-image.png', Astro.site ?? 'https://cv.rjmlaird.co.uk');
+
+const fallbackStructuredData = {
+  "@context": "https://schema.org",
+  "@type": "Person",
+  name: "Ryan Laird",
+  jobTitle: "Director, Green Orbit Digital",
+  description: "Chartered Marketer specialising in sustainable marketing for the space sector.",
+  url: "https://cv.rjmlaird.co.uk/",
+  image: ogImageURL.toString(),
+  sameAs: [
+    "https://linkedin.com/in/rjmlaird87",
+    "https://github.com/rjmlaird",
+    "https://x.com/rjmlaird",
+    "https://orcid.org/0000-0002-5992-684X",
+  ],
+  worksFor: {
+    "@type": "Organization",
+    name: "Green Orbit Digital",
+    url: "https://greenorbit.space",
+  },
+  alumniOf: [
+    { "@type": "CollegeOrUniversity", name: "University of Leicester" },
+    { "@type": "CollegeOrUniversity", name: "University of Kent" },
+    { "@type": "CollegeOrUniversity", name: "International Space University" },
+  ],
+  email: "mailto:rjmlaird@gmail.com",
+  address: {
+    "@type": "PostalAddress",
+    addressLocality: "Leicester",
+    addressCountry: "GB",
+  },
+};
 ---
 
 <!DOCTYPE html>
@@ -23,10 +58,10 @@ const ogImageURL = new URL('/og-image.png', Astro.site ?? 'https://cv.rjmlaird.c
     <title>{title}</title>
     <meta name="description" content={description} />
     <meta name="author" content="Ryan Laird" />
-    <meta name="robots" content="index, follow" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
     <meta
       name="keywords"
-      content="Ryan Laird, CV, Curriculum Vitae, Green Orbit Digital, sustainable marketing, space sector, Chartered Marketer, Leicester, UKspace"
+      content="Ryan Laird, CV, Curriculum Vitae, Resume, Green Orbit Digital, sustainable marketing, space sector marketing, science communication, Chartered Marketer, CMktr, Leicester, UKspace"
     />
 
     <link rel="canonical" href={canonicalURL} />
@@ -41,6 +76,9 @@ const ogImageURL = new URL('/og-image.png', Astro.site ?? 'https://cv.rjmlaird.c
     <meta property="og:type" content="profile" />
     <meta property="og:url" content={canonicalURL} />
     <meta property="og:image" content={ogImageURL} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:locale" content="en_GB" />
     <meta property="profile:first_name" content="Ryan" />
     <meta property="profile:last_name" content="Laird" />
 
@@ -57,37 +95,7 @@ const ogImageURL = new URL('/og-image.png', Astro.site ?? 'https://cv.rjmlaird.c
     <script
       type="application/ld+json"
       is:inline
-      set:html={JSON.stringify({
-        "@context": "https://schema.org",
-        "@type": "Person",
-        name: "Ryan Laird",
-        jobTitle: "Director, Green Orbit Digital",
-        description: "Chartered Marketer specialising in sustainable marketing for the space sector.",
-        url: "https://cv.rjmlaird.co.uk/",
-        image: ogImageURL.toString(),
-        sameAs: [
-          "https://linkedin.com/in/rjmlaird87",
-          "https://github.com/rjmlaird",
-          "https://x.com/rjmlaird",
-          "https://orcid.org/0000-0002-5992-684X",
-        ],
-        worksFor: {
-          "@type": "Organization",
-          name: "Green Orbit Digital",
-          url: "https://greenorbit.space",
-        },
-        alumniOf: [
-          { "@type": "CollegeOrUniversity", name: "University of Leicester" },
-          { "@type": "CollegeOrUniversity", name: "University of Kent" },
-          { "@type": "CollegeOrUniversity", name: "International Space University" },
-        ],
-        email: "mailto:rjmlaird@gmail.com",
-        address: {
-          "@type": "PostalAddress",
-          addressLocality: "Leicester",
-          addressCountry: "GB",
-        },
-      })} />
+      set:html={JSON.stringify(structuredData ?? fallbackStructuredData)} />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -97,7 +105,7 @@ const ogImageURL = new URL('/og-image.png', Astro.site ?? 'https://cv.rjmlaird.c
     />
   </head>
   <body>
-    <a class="skip-link" href="#about">Skip to content</a>
+    <a class="skip-link" href="#main-content">Skip to content</a>
     <slot />
   </body>
 </html>

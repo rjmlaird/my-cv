@@ -14,13 +14,63 @@ import Volunteering from "@/components/Volunteering.astro";
 import Contact from "@/components/Contact.astro";
 import Footer from "@/components/Footer.astro";
 import AtsView from "./AtsView.astro";
+import api from "@/lib/api";
+import { aggregateSkills, type SkillSource } from "@/lib/skills";
+import { buildStructuredData } from "@/lib/structuredData";
+
+// Single fetch of everything the page needs — reused for both the
+// visible sections (via their own components) and the JSON-LD graph,
+// so structured data never drifts from what's actually on the page.
+const [
+  profile,
+  experience,
+  education,
+  certifications,
+  membershipGroups,
+  awards,
+  languages,
+  socials,
+] = await Promise.all([
+  api.getProfile(),
+  api.getExperience(),
+  api.getEducation(),
+  api.getCertifications(),
+  api.getMemberships(),
+  api.getAwards(),
+  api.getLanguages(),
+  api.getSocials(),
+]);
+
+const skillSources: SkillSource[] = [
+  ...experience.map((r) => ({ tags: r.skills ?? [], ref: { label: r.role, href: "" } })),
+  ...education.map((e) => ({ tags: e.skills ?? [], ref: { label: e.qualification || "", href: "" } })),
+];
+const aggregatedSkills = skillSources.length > 0 ? await aggregateSkills(skillSources) : [];
+const skillLabels = aggregatedSkills.map((s) => s.label);
+
+const siteUrl = (Astro.site ?? new URL("https://cv.rjmlaird.co.uk")).origin;
+const ogImageUrl = new URL("/og-image.png", siteUrl).toString();
+
+const structuredData = buildStructuredData({
+  siteUrl,
+  ogImageUrl,
+  profile,
+  experience,
+  education,
+  certifications,
+  memberships: Array.isArray(membershipGroups) ? membershipGroups : [],
+  awards,
+  languages,
+  socials,
+  skillLabels,
+});
 ---
 
-<Layout>
+<Layout structuredData={structuredData}>
   <Nav />
   <Hero />
 
-  <main id="about">
+  <main id="main-content" aria-label="CV content">
     <Experience />
     <Education />
     <Research />

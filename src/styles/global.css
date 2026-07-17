@@ -662,7 +662,7 @@ body.ats-mode {
   background: #fff;
 }
 
-body.ats-mode header.site-nav,
+body.ats-mode .site-header,
 body.ats-mode .hero,
 body.ats-mode main,
 body.ats-mode footer,
@@ -714,7 +714,7 @@ body.ats-mode #ats-view {
 }
 
 @media print {
-  header.site-nav,
+  .site-header,
   .orbit-decor,
   .btn,
   .contact-cta form {

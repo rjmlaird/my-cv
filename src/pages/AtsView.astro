@@ -1,43 +1,63 @@
 ---
+// Plain-text, ATS-optimised rendering of the full CV.
+//
+// This is not a teaser: ATS parsers and screen readers that hit this
+// view expect the same information density as the visual page, just
+// without decorative markup. It's toggled via the "ATS view" button
+// in Nav.astro (body.ats-mode) and is also what prints/exports to PDF.
 import api from "@/lib/api";
 import { aggregateSkills, type SkillSource, type AggregatedSkill } from "@/lib/skills";
 import type { CertificationItem } from "@/lib/schemas/certification.schema";
 import type { MembershipGroup } from "@/lib/schemas/membership.schema";
+import type { ExperienceItem } from "@/lib/schemas/experience.schema";
+import type { EducationItem } from "@/lib/schemas/education.schema";
+import { formatDateRange, joinParts } from "@/lib/format";
 
-// Fetch all data with default empty arrays to prevent failures
 const [
+  profile,
   experience = [],
   education = [],
   certifications = [],
-  memberships = [],
+  membershipGroups = [],
+  awards = [],
+  languages = [],
+  volunteering = [],
+  socials = [],
 ] = await Promise.all([
+  api.getProfile(),
   api.getExperience(),
   api.getEducation(),
   api.getCertifications(),
   api.getMemberships(),
+  api.getAwards(),
+  api.getLanguages(),
+  api.getVolunteering(),
+  api.getSocials(),
 ]);
 
-const _sortByDate = <T extends { startDate?: string | null }>(arr: T[]) => 
-  [...(arr ?? [])].sort((a, b) => 
-    new Date(b.startDate ?? 0).getTime() - new Date(a.startDate ?? 0).getTime()
+const sortByDate = <T extends { startDate?: string | null }>(arr: T[]) =>
+  [...(arr ?? [])].sort(
+    (a, b) => new Date(b.startDate ?? 0).getTime() - new Date(a.startDate ?? 0).getTime(),
   );
 
-const sortedExperience = _sortByDate(experience);
-const sortedEducation = _sortByDate(education);
+const sortedExperience = sortByDate(experience);
+const sortedEducation = sortByDate(education);
+const sortedVolunteering = sortByDate(volunteering);
 
-// Skill aggregation with safety checks
+const orgName = (org: ExperienceItem["organisation"]) =>
+  (typeof org === "string" ? org : org?.name) || "Self-employed";
+
+const expLocation = (role: ExperienceItem) =>
+  joinParts([role.city || role.location?.city, role.country || role.location?.country]);
+
+// Flat, deduplicated skill list — the ATS-relevant keyword payload.
 const skillSources: SkillSource[] = [
-  ...experience.map((r: any) => ({ tags: r.skills ?? [], ref: { label: r.role, href: "" } })),
-  ...education.map((e: any) => ({ tags: e.skills ?? [], ref: { label: e.qualification || "", href: "" } })),
+  ...experience.map((r) => ({ tags: r.skills ?? [], ref: { label: r.role, href: "" } })),
+  ...education.map((e) => ({ tags: e.skills ?? [], ref: { label: e.qualification || "", href: "" } })),
 ];
-
 const allSkills = skillSources.length > 0 ? await aggregateSkills(skillSources) : [];
-const skillsFlat = (allSkills as AggregatedSkill[])
-  .filter((s: any) => (s.references?.length ?? 0) > 1)
-  .map((s: any) => s.label)
-  .join(", ");
+const skillsFlat = (allSkills as AggregatedSkill[]).map((s: any) => s.label).join(", ");
 
-// Grouping with safety checks
 const groupedCerts = certifications.reduce((acc: Record<string, CertificationItem[]>, c: CertificationItem) => {
   if (!c.issuer) return acc;
   acc[c.issuer] = acc[c.issuer] || [];
@@ -45,17 +65,45 @@ const groupedCerts = certifications.reduce((acc: Record<string, CertificationIte
   return acc;
 }, {} as Record<string, CertificationItem[]>);
 
-const groupedMemberships = memberships.reduce((acc: Record<string, MembershipGroup[]>, g: MembershipGroup) => {
-  const title = g.title || "General Membership";
-  acc[title] = acc[title] || [];
-  acc[title].push(g);
-  return acc;
-}, {} as Record<string, MembershipGroup[]>);
+const groups: MembershipGroup[] = Array.isArray(membershipGroups) ? membershipGroups : [];
+
+const awardLine = (a: (typeof awards)[number]) =>
+  joinParts([a.title, Array.isArray(a.issuer) ? a.issuer.join(", ") : a.issuer, a.year ? String(a.year) : undefined], " — ");
+
+const researchProfiles = socials.filter((s) => s.type === "academic");
+
+const contactLine = joinParts([
+  profile?.email,
+  profile?.location,
+  ...(profile?.contact ?? []).map((c) => c.href.replace(/^mailto:|^tel:/, "")),
+]);
 ---
 
-<main>
+<main id="ats-view">
+  <header class="ats-entry">
+    <h1>{profile?.name ?? "Ryan Laird"}</h1>
+    {profile?.role && <p class="ats-meta">{profile.role}</p>}
+    {profile?.credentials && <p class="ats-meta">{profile.credentials}</p>}
+    {contactLine && <p class="ats-meta">{contactLine}</p>}
+    <p class="ats-meta">
+      {[
+        "rjmlaird@gmail.com",
+        "linkedin.com/in/rjmlaird87",
+        "github.com/rjmlaird",
+        "cv.rjmlaird.co.uk",
+      ].join(" · ")}
+    </p>
+  </header>
+
+  {(profile?.summary?.length ?? 0) > 0 && (
+    <section class="ats-entry">
+      <h2>Summary</h2>
+      {profile!.summary.map((p: string) => <p>{p}</p>)}
+    </section>
+  )}
+
   {skillsFlat && (
-    <section>
+    <section class="ats-entry">
       <h2>Skills</h2>
       <p>{skillsFlat}</p>
     </section>
@@ -64,18 +112,58 @@ const groupedMemberships = memberships.reduce((acc: Record<string, MembershipGro
   {sortedExperience.length > 0 && (
     <section>
       <h2>Experience</h2>
-      <ul>
-        {sortedExperience.map((exp: any) => <li>{exp.role} at {exp.organisation}</li>)}
-      </ul>
+      {sortedExperience.map((exp: ExperienceItem) => (
+        <div class="ats-entry">
+          <p>
+            <strong>{exp.role}</strong> — {orgName(exp.organisation)}
+            {exp.employmentType ? ` (${exp.employmentType})` : ""}
+          </p>
+          <p class="ats-meta">
+            {joinParts([formatDateRange(exp.startDate, exp.endDate, exp.current), expLocation(exp)], " · ")}
+          </p>
+          {exp.summary && <p>{exp.summary}</p>}
+          {exp.responsibilities.length > 0 && (
+            <ul>
+              {exp.responsibilities.map((r) => <li>{r}</li>)}
+            </ul>
+          )}
+          {exp.achievements.length > 0 && (
+            <ul>
+              {exp.achievements.map((a) => <li>{a}</li>)}
+            </ul>
+          )}
+          {exp.technologies.length > 0 && <p class="ats-meta">Technologies: {exp.technologies.join(", ")}</p>}
+        </div>
+      ))}
     </section>
   )}
 
   {sortedEducation.length > 0 && (
     <section>
       <h2>Education</h2>
-      <ul>
-        {sortedEducation.map((edu: any) => <li>{edu.qualification}</li>)}
-      </ul>
+      {sortedEducation.map((edu: EducationItem) => (
+        <div class="ats-entry">
+          <p>
+            <strong>{edu.qualification}</strong>{edu.field ? ` — ${edu.field}` : ""}
+          </p>
+          <p class="ats-meta">
+            {joinParts([edu.institution, formatDateRange(edu.startDate, edu.endDate, edu.current), joinParts([edu.city, edu.country])], " · ")}
+          </p>
+          {edu.summary && <p>{edu.summary}</p>}
+          {edu.achievements.length > 0 && (
+            <ul>
+              {edu.achievements.map((a) => <li>{a}</li>)}
+            </ul>
+          )}
+        </div>
+      ))}
+    </section>
+  )}
+
+  {researchProfiles.length > 0 && (
+    <section class="ats-entry">
+      <h2>Research</h2>
+      <p>Peer-reviewed work and citations: {researchProfiles.map((p) => p.url).join(", ")}</p>
     </section>
   )}
 
@@ -83,27 +171,69 @@ const groupedMemberships = memberships.reduce((acc: Record<string, MembershipGro
     <section>
       <h2>Certifications</h2>
       {Object.entries(groupedCerts).map(([issuer, certs]) => (
-        <div>
+        <div class="ats-entry">
           <h3>{issuer}</h3>
           <ul>
-            {certs.map((c) => <li>{c.name}</li>)}
+            {certs.map((c) => (
+              <li>
+                {c.name}
+                {c.level ? ` (${c.level})` : ""}
+                {c.issueDate ? ` — issued ${c.issueDate}` : ""}
+                {c.expiryDate ? `, expires ${c.expiryDate}` : ""}
+              </li>
+            ))}
           </ul>
         </div>
       ))}
     </section>
   )}
 
-  {Object.keys(groupedMemberships).length > 0 && (
+  {groups.length > 0 && (
     <section>
       <h2>Memberships</h2>
-      {Object.entries(groupedMemberships).map(([title, groups]) => (
-        <div>
-          <h3>{title}</h3>
+      {groups.map((g: MembershipGroup) => (
+        <div class="ats-entry">
+          <h3>{g.title}</h3>
           <ul>
-            {(groups as MembershipGroup[]).flatMap((g: MembershipGroup) => 
-              g.items.map((i: any) => <li>{i.organisation}</li>)
-            )}
+            {g.items.map((i) => (
+              <li>
+                {i.organisation}{i.role ? ` — ${i.role}` : ""}{i.type ? ` (${i.type})` : ""}
+              </li>
+            ))}
           </ul>
+        </div>
+      ))}
+    </section>
+  )}
+
+  {languages.length > 0 && (
+    <section class="ats-entry">
+      <h2>Languages</h2>
+      <p>{languages.map((l) => `${l.name} (${l.level})`).join(", ")}</p>
+    </section>
+  )}
+
+  {awards.length > 0 && (
+    <section class="ats-entry">
+      <h2>Awards</h2>
+      <ul>
+        {awards.map((a) => <li>{awardLine(a)}</li>)}
+      </ul>
+    </section>
+  )}
+
+  {sortedVolunteering.length > 0 && (
+    <section>
+      <h2>Volunteering</h2>
+      {sortedVolunteering.map((v) => (
+        <div class="ats-entry">
+          <p>
+            <strong>{v.role}</strong> — {v.organisation}
+          </p>
+          <p class="ats-meta">
+            {joinParts([formatDateRange(v.startDate, v.endDate, v.current), joinParts([v.city, v.country])], " · ")}
+          </p>
+          {v.summary && <p>{v.summary}</p>}
         </div>
       ))}
     </section>

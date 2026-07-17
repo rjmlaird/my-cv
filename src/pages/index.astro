@@ -19,19 +19,19 @@ import api from "@/lib/api";
 import { aggregateSkills, type SkillSource } from "@/lib/skills";
 import { buildStructuredData } from "@/lib/structuredData";
 
-// Fetch all data with individual error handling
+// Fetch all data
 const [
   profile,
-  experience,
-  education,
-  certifications,
-  membershipGroups,
-  awards,
-  languages,
-  socials,
-  tools, 
-  volunteering,
-  projects,
+  experience = [],
+  education = [],
+  certifications = [],
+  membershipGroups = [],
+  awards = [],
+  languages = [],
+  socials = [],
+  tools = { categories: [] },
+  volunteering = [],
+  projects = [],
 ] = await Promise.all([
   api.getProfile().catch((e) => { console.error("[CRITICAL] Profile fetch failed:", e); return null; }),
   api.getExperience().catch(() => []),

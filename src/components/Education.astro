@@ -1,143 +1,125 @@
 ---
-import type { VolunteeringItem } from "@/lib/schemas/volunteering.schema";
+import { getEducation, getProjects } from "@/lib/api";
+import { resolveSkillTags } from "@/lib/skills";
+import type { EducationItem } from "@/lib/schemas/education.schema";
 
-interface Props {
-  volunteering: VolunteeringItem[];
-  allProjects?: any[];
-  allAwards?: any[];
-  allCertifications?: any[];
-}
+// 1. Fetch and process data
+const education = (await getEducation()) ?? [];
+const allProjects = (await getProjects()) ?? [];
 
-const { 
-  volunteering = [], 
-  allProjects = [], 
-  allAwards = [], 
-  allCertifications = [] 
-} = Astro.props;
+const projectMap = new Map(allProjects.map((p) => [p.slug, p.title]));
 
-const entries = Array.isArray(volunteering) ? volunteering : [];
+const formatDate = (value?: string | null) => {
+  if (!value) return "";
+  const [year, month] = value.split("-");
+  if (!year) return value;
+  if (!month) return year;
+  return new Intl.DateTimeFormat("en-GB", {
+    month: "short",
+    year: "numeric",
+  }).format(new Date(Number(year), Number(month) - 1, 1));
+};
 
-// Create maps for quick lookup of full objects
-const projectMap = new Map(allProjects.map((p: any) => [p.slug, p]));
-const awardMap = new Map(allAwards.map((a: any) => [a.id, a]));
-const certMap = new Map(allCertifications.map((c: any) => [c.id, c]));
+const rows = await Promise.all(
+  education.map(async (item: EducationItem) => ({
+    item,
+    skills: await resolveSkillTags(item.skills ?? []),
+  })),
+);
 
-const hasMoreDetail = (item: VolunteeringItem) =>
+// Helper to check for content existence safely
+const hasMoreDetail = (item: EducationItem) =>
   Boolean(
-    item.projects?.length ||
-      item.articles?.length ||
-      item.talks?.length ||
-      item.relatedAwards?.length ||
-      item.relatedCertifications?.length
+    (item as any).keyActivities?.length ||
+    item.achievements?.length ||
+    item.articles?.length ||
+    item.talks?.length ||
+    item.relatedAwards?.length ||
+    item.relatedCertifications?.length ||
+    item.projects?.length,
   );
 ---
 
-<section id="volunteering" aria-labelledby="volunteering-heading">
-  <p class="eyebrow">Community</p>
-  <h2 id="volunteering-heading">Volunteering</h2>
+<section id="education" aria-labelledby="education-heading">
+  <p class="eyebrow">Academic background</p>
+  <h2 id="education-heading">Education</h2>
 
-  <div class="timeline">
-    {entries.map((item) => {
-      const location = [item.city, item.country].filter(Boolean).join(", ");
-      const hasDates = Boolean(item.startDate || item.endDate);
+  {rows.map(({ item, skills }) => {
+    const title = item.qualification || item.role || "Education";
+    const startDate = formatDate(item.startDate);
+    const endDate = item.current ? "Present" : formatDate(item.endDate);
+    const location = [item.city, item.country].filter(Boolean).join(", ");
 
-      return (
-        <article class="role-item">
-          <div class="role-header">
-            <div>
-              {item.role ? <span class="role-title">{item.role}</span> : null}
-              {item.organisation ? (
-                <>
-                  {" · "}
-                  <span class="role-org">{item.organisation}</span>
-                </>
-              ) : null}
-              {location ? (
-                <>
-                  {" · "}
-                  <span class="role-location">{location}</span>
-                </>
-              ) : null}
-            </div>
-
-            {hasDates ? (
-              <time class="role-dates">
-                {item.startDate}
-                {item.startDate && item.endDate ? " — " : ""}
-                {item.current ? "Present" : item.endDate}
-              </time>
-            ) : null}
+    return (
+      <article id={`edu-${item.id}`} class="role-item edu-item">
+        <div class="role-header">
+          <div>
+            <span class="role-title">{title}</span>
+            {item.institution ? <>{" · "}<span class="role-org">{item.institution}</span></> : null}
+            {location ? <>{" · "}<span class="role-location">{location}</span></> : null}
           </div>
 
-          {item.summary ? <p>{item.summary}</p> : null}
-
-          {hasMoreDetail(item) ? (
-            <details class="more-detail">
-              <summary>More detail</summary>
-              
-              {/* Projects */}
-              {item.projects?.length ? (
-                <>
-                  <h4 class="role-subheading">Projects</h4>
-                  <ul class="role-list">
-                    {item.projects.map((slug) => {
-                      const p = projectMap.get(slug);
-                      return (
-                        <li>
-                          <a href={`https://rjmlaird.co.uk/projects/${slug}`} target="_blank" rel="noopener noreferrer">
-                            {p?.title ?? slug}
-                          </a>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </>
-              ) : null}
-
-              {/* Awards */}
-              {item.relatedAwards?.length ? (
-                <>
-                  <h4 class="role-subheading">Related awards</h4>
-                  <ul class="role-list">
-                    {item.relatedAwards.map((id) => {
-                      const a = awardMap.get(id);
-                      return <li>{a?.name ?? id}</li>;
-                    })}
-                  </ul>
-                </>
-              ) : null}
-
-              {/* Certifications */}
-              {item.relatedCertifications?.length ? (
-                <>
-                  <h4 class="role-subheading">Related certifications</h4>
-                  <ul class="role-list">
-                    {item.relatedCertifications.map((id) => {
-                      const c = certMap.get(id);
-                      return <li>{c?.name ?? id}</li>;
-                    })}
-                  </ul>
-                </>
-              ) : null}
-              
-              {/* Articles & Talks remain as is if they are just strings */}
-              {item.articles?.length ? (
-                <>
-                  <h4 class="role-subheading">Articles</h4>
-                  <ul class="role-list">{item.articles.map((a) => <li>{a}</li>)}</ul>
-                </>
-              ) : null}
-
-              {item.talks?.length ? (
-                <>
-                  <h4 class="role-subheading">Talks</h4>
-                  <ul class="role-list">{item.talks.map((t) => <li>{t}</li>)}</ul>
-                </>
-              ) : null}
-            </details>
+          {(startDate || endDate) ? (
+            <time class="role-dates">
+              {startDate}
+              {startDate && endDate ? " — " : ""}
+              {endDate}
+            </time>
           ) : null}
-        </article>
-      );
-    })}
-  </div>
+        </div>
+
+        {item.summary ? <p class="education-summary">{item.summary}</p> : null}
+
+        {skills.length > 0 ? (
+          <ul class="pill-list" aria-label="Skills">
+            {skills.map((skill) => (
+              <li class="pill">
+                {skill.resolved ? <a href={skill.href}>{skill.label}</a> : skill.label}
+              </li>
+            ))}
+          </ul>
+        ) : null}
+
+        {hasMoreDetail(item) ? (
+          <details class="more-detail">
+            <summary>More detail</summary>
+            
+            {item.projects?.length ? (
+              <>
+                <h4 class="role-subheading">Projects</h4>
+                <ul class="role-list">
+                  {item.projects.map((slug) => {
+                    const title = projectMap.get(slug) || slug;
+                    return (
+                      <li>
+                        <a href={`https://rjmlaird.co.uk/projects/${slug}`} target="_blank" rel="noopener noreferrer">
+                          {title}
+                        </a>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </>
+            ) : null}
+
+            {(item as any).keyActivities?.length ? (
+              <>
+                <h4 class="role-subheading">Key Activities</h4>
+                <ul class="role-list">
+                  {(item as any).keyActivities.map((r: string) => <li>{r}</li>)}
+                </ul>
+              </>
+            ) : null}
+
+            {item.achievements?.length ? (
+              <>
+                <h4 class="role-subheading">Achievements</h4>
+                <ul class="role-list">{item.achievements.map((a: string) => <li>{a}</li>)}</ul>
+              </>
+            ) : null}
+          </details>
+        ) : null}
+      </article>
+    );
+  })}
 </section>

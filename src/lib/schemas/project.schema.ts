@@ -6,7 +6,7 @@ const baseSchema = z.object({
   slug: z.string(),
   title: z.string(),
   description: z.string(),
-  date: z.string().datetime({ offset: true }),
+  date: z.string().datetime(),
   tags: z.array(z.string()).default([]),
   content: z.string().optional(),
 });

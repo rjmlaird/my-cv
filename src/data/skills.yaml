@@ -1,286 +1,90 @@
 # --- Marketing & Growth ---
-
-- name: Campaign Management
-  category: Marketing & Growth
-  subcategory: Campaign Planning & Delivery
-  proficiency: Advanced
-  description: Overseeing end-to-end execution of marketing campaigns across multiple channels.
-  relatedSkills:
-    - campaign-planning
-    - marketing-strategy
-    - analytics
-    - lead-generation
-
-- name: Content Marketing
-  category: Marketing & Growth
-  subcategory: Content Marketing & Distribution
-  proficiency: Expert
-  description: Leveraging editorial assets to drive audience engagement and business growth.
-  relatedSkills:
-    - content-strategy
-    - seo-copywriting
-    - digital-marketing
-    - campaign-management
-
-- name: SEO
-  category: Marketing & Growth
-  subcategory: SEO & Content
-  proficiency: Advanced
-  description: Enhancing digital visibility and search engine performance through technical and content-led optimisation.
-  relatedSkills:
-    - seo-copywriting
-    - technical-seo
-    - content-marketing
-    - digital-marketing
+marketing_growth:
+  - B2B Marketing Strategy
+  - Campaign Management
+  - Content Marketing
+  - Digital Marketing
+  - Lead Generation Pipeline
+  - Market Outreach
+  - Positioning
+  - SEO
+  - Social Media Growth
 
 # --- Communications & Editorial ---
-
-- name: Technical Communications
-  category: Communications & Editorial
-  subcategory: Science & Technical Communication
-  proficiency: Expert
-  description: Communicating complex technical information to diverse stakeholders effectively.
-  relatedSkills:
-    - science-writing
-    - proposal-writing
-    - audience-adaptation
-    - documentation
-
-- name: Multimedia Storytelling
-  category: Communications & Editorial
-  subcategory: Storytelling & Narrative
-  proficiency: Expert
-  description: Weaving narratives across video, audio, text, and visual formats.
-  relatedSkills:
-    - science-storytelling
-    - scriptwriting
-    - digital-media
-    - content-development
-
-- name: Scriptwriting
-  category: Communications & Editorial
-  subcategory: Writing & Editing
-  proficiency: Advanced
-  description: Drafting scripts for video, audio, and educational media productions.
-  relatedSkills:
-    - multimedia-storytelling
-    - science-storytelling
-    - editorial-production
-    - content-writing
-
-- name: Public Policy Communications
-  category: Communications & Editorial
-  subcategory: Science & Technical Communication
-  proficiency: Expert
-  description: Translating complex research into policy-facing briefs and advocacy materials.
-  relatedSkills:
-    - strategic-communications
-    - stakeholder-management
-    - science-communication
-    - message-development
-
-- name: Web Content
-  category: Communications & Editorial
-  subcategory: Digital Publishing & Web Content
-  proficiency: Advanced
-  description: Designing and maintaining content specifically for web platforms.
-  relatedSkills:
-    - digital-publishing
-    - seo-writing
-    - digital-communications
-    - content-strategy
-
-- name: Content Syndication
-  category: Communications & Editorial
-  subcategory: Digital Publishing & Distribution
-  proficiency: Advanced
-  description: Republishing and distributing content across partner networks and platforms.
-  relatedSkills:
-    - digital-publishing
-    - content-marketing
-    - web-content
-    - digital-media
+communications_editorial:
+  - Audience Adaptation
+  - Content Syndication
+  - Digital Content Strategy
+  - Editorial Planning
+  - Multimedia Storytelling
+  - Press Releases
+  - Proposal Writing
+  - Public Policy Communication
+  - Science Writing
+  - Scriptwriting
+  - Strategic Communications
+  - Technical Communications
+  - Web Content
+  - Written Communication
 
 # --- Leadership & Collaboration ---
-
-- name: Programme Development
-  category: Leadership & Collaboration
-  subcategory: Programme & Project Management
-  proficiency: Expert
-  description: Designing and shaping long-term initiatives, programmes, and delivery plans.
-  relatedSkills:
-    - programme-coordination
-    - project-management
-    - workshop-facilitation
-    - event-management
-
-- name: International Collaboration
-  category: Leadership & Collaboration
-  subcategory: Collaboration & Teamwork
-  proficiency: Expert
-  description: Managing projects and partnerships across borders and cultural contexts.
-  relatedSkills:
-    - interdisciplinary-collaboration
-    - stakeholder-management
-    - partnership-development
-    - team-projects
-
-- name: Programme Coordination
-  category: Leadership & Collaboration
-  subcategory: Programme & Project Management
-  proficiency: Advanced
-  description: Managing logistical workflows, stakeholder timelines, and cross-team delivery.
-  relatedSkills:
-    - programme-development
-    - project-management
-    - stakeholder-management
-    - event-management
-
-- name: Team Projects
-  category: Leadership & Collaboration
-  subcategory: Collaboration & Teamwork
-  proficiency: Advanced
-  description: Executing work within dynamic, cross-functional team environments.
-  relatedSkills:
-    - interdisciplinary-collaboration
-    - agile-project-management
-    - programme-coordination
-    - communication
-
-- name: Systems Thinking
-  category: Leadership & Collaboration
-  subcategory: Strategy & Delivery
-  proficiency: Advanced
-  description: Analyzing complex problems by understanding the relationships between system components.
-  relatedSkills:
-    - analytical-thinking
-    - digital-transformation
-    - modelling
-    - problem-solving
-
-- name: Interdisciplinary Collaboration
-  category: Leadership & Collaboration
-  subcategory: Collaboration & Teamwork
-  proficiency: Expert
-  description: Synthesizing expertise from different fields to drive project innovation.
-  relatedSkills:
-    - collaborative-research
-    - team-projects
-    - systems-thinking
-    - partnership-development
+leadership_collaboration:
+  - Agile Project Management
+  - Event Strategy
+  - Interdisciplinary Collaboration
+  - International Collaboration
+  - Language Learning
+  - Mentoring
+  - Programme Coordination
+  - Programme Development
+  - Stakeholder Management
+  - Stakeholder Relations
+  - Systems Thinking
+  - Team Projects
+  - Workshop Facilitation
 
 # --- Research & Analysis ---
-
-- name: Mission Concepts
-  category: Research & Analysis
-  subcategory: Space Applications & Systems
-  proficiency: Advanced
-  description: Developing preliminary concepts and objectives for scientific or space-based missions.
-  relatedSkills:
-    - space-applications
-    - satellite-systems
-    - modelling
-    - research-preparation
-
-- name: Astronomical Data Analysis
-  category: Research & Analysis
-  subcategory: Astrophysics & Astronomy
-  proficiency: Expert
-  description: Processing and analyzing raw observational data from telescopes and instruments.
-  relatedSkills:
-    - spectral-analysis
-    - data-reduction
-    - image-processing
-    - astrophysics
-
-- name: Spectral Analysis
-  category: Research & Analysis
-  subcategory: Astrophysics & Astronomy
-  proficiency: Advanced
-  description: Analyzing the spectra of astronomical objects to determine composition and movement.
-  relatedSkills:
-    - astronomical-data-analysis
-    - astrophysics
-    - instrumentation
-    - data-interpretation
-
-- name: Thermal Infrared Analysis
-  category: Research & Analysis
-  subcategory: Astrophysics & Astronomy
-  proficiency: Advanced
-  description: Utilizing infrared data to study thermal properties of celestial bodies or environments.
-  relatedSkills:
-    - observational-astronomy
-    - spectral-analysis
-    - data-analysis
-    - instrumentation
-
-- name: Physics Fundamentals
-  category: Research & Analysis
-  subcategory: Physics & Modelling
-  proficiency: Expert
-  description: Core mastery of physical laws and theoretical frameworks.
-  relatedSkills:
-    - mathematics
-    - astrophysics
-    - modelling
-    - scientific-computing
+research_analysis:
+  - Analytical Thinking
+  - Astronomical Data Analysis
+  - Astrophysics
+  - Calibration
+  - Data Analysis
+  - Image Processing
+  - Instrumentation
+  - Mathematical Reasoning
+  - Mission Concepts
+  - Modelling
+  - Observational Astronomy
+  - Physics Fundamentals
+  - Problem Solving
+  - Research Preparation
+  - Science Communication
+  - Scientific Computing
+  - Scientific Literacy
+  - Spectral Analysis
+  - Thermal Infrared Analysis
 
 # --- Education & Training ---
+education_training:
+  - Assessment
+  - Classroom Assistance
+  - Education Support
+  - Educational Content Development
+  - Instructional Design
+  - Physics Education
+  - Physics Outreach
+  - Public Engagement
+  - Science Education
+  - Space Policy
+  - STEM Communication
+  - Teaching
+  - Youth Engagement
 
-- name: Youth Engagement
-  category: Education & Training
-  subcategory: Learning Support & Delivery
-  proficiency: Advanced
-  description: Designing and leading educational initiatives targeted at school-aged audiences.
-  relatedSkills:
-    - science-education
-    - outreach
-    - physics-outreach
-    - public-engagement
-
-- name: Science Education
-  category: Education & Training
-  subcategory: Science Education
-  proficiency: Expert
-  description: Developing and delivering pedagogy focused on scientific concepts and inquiry.
-  relatedSkills:
-    - physics-education
-    - teaching
-    - youth-engagement
-    - curriculum-design
-
-- name: Physics Education
-  category: Education & Training
-  subcategory: Science Education
-  proficiency: Advanced
-  description: Teaching core physics principles through practical and theoretical engagement.
-  relatedSkills:
-    - science-education
-    - teaching
-    - practical-science
-    - lesson-support
-
-# --- Space & Astronomy ---
-
-- name: Space Applications
-  category: Space & Astronomy
-  subcategory: Space Applications & Systems
-  proficiency: Advanced
-  description: Applying space-derived data and satellite technology to real-world problems.
-  relatedSkills:
-    - satellite-systems
-    - mission-concepts
-    - space-policy
-    - data-analysis
-
-- name: Satellite Systems
-  category: Space & Astronomy
-  subcategory: Space Applications & Systems
-  proficiency: Advanced
-  description: Technical understanding of satellite hardware, mission profiles, and orbital mechanics.
-  relatedSkills:
-    - space-applications
-    - mission-concepts
-    - instrumentation
-    - astrophysics
+# --- Technical & Digital ---
+technical_digital:
+  - Digital Transformation
+  - Satellite Systems
+  - Space Applications
+  - Sustainable Web Standards
+  - Technical SEO

@@ -10,6 +10,7 @@ import Languages from "@/components/Languages.astro";
 import Research from "@/components/Research.astro";
 import Awards from "@/components/Awards.astro";
 import Skills from "@/components/Skills.astro";
+import Tools from '@/components/Tools.astro';
 import Volunteering from "@/components/Volunteering.astro";
 import Contact from "@/components/Contact.astro";
 import Footer from "@/components/Footer.astro";
@@ -18,9 +19,7 @@ import api from "@/lib/api";
 import { aggregateSkills, type SkillSource } from "@/lib/skills";
 import { buildStructuredData } from "@/lib/structuredData";
 
-// Single fetch of everything the page needs — reused for both the
-// visible sections (via their own components) and the JSON-LD graph,
-// so structured data never drifts from what's actually on the page.
+// Fetch all data with individual error handling
 const [
   profile,
   experience,
@@ -30,17 +29,29 @@ const [
   awards,
   languages,
   socials,
+  tools, 
+  volunteering,
 ] = await Promise.all([
-  api.getProfile(),
-  api.getExperience(),
-  api.getEducation(),
-  api.getCertifications(),
-  api.getMemberships(),
-  api.getAwards(),
-  api.getLanguages(),
-  api.getSocials(),
+  api.getProfile().catch((e) => { console.error("[CRITICAL] Profile fetch failed:", e); return null; }),
+  api.getExperience().catch(() => []),
+  api.getEducation().catch(() => []),
+  api.getCertifications().catch(() => []),
+  api.getMemberships().catch(() => []),
+  api.getAwards().catch(() => []),
+  api.getLanguages().catch(() => []),
+  api.getSocials().catch(() => []),
+  api.getTools().catch(() => ({ categories: [] })),
+  api.getVolunteering().catch(() => []),
 ]);
 
+// Debugging check: Run this to confirm if data reached the page
+console.log("--- Index.astro Data Check ---");
+console.log("Profile loaded:", !!profile);
+if (profile) {
+  console.log("Biography length:", profile.biography?.length ?? 0);
+}
+
+// Prepare Skill Data
 const skillSources: SkillSource[] = [
   ...experience.map((r) => ({ tags: r.skills ?? [], ref: { label: r.role, href: "" } })),
   ...education.map((e) => ({ tags: e.skills ?? [], ref: { label: e.qualification || "", href: "" } })),
@@ -48,6 +59,7 @@ const skillSources: SkillSource[] = [
 const aggregatedSkills = skillSources.length > 0 ? await aggregateSkills(skillSources) : [];
 const skillLabels = aggregatedSkills.map((s) => s.label);
 
+// Meta & Structured Data
 const siteUrl = (Astro.site ?? new URL("https://cv.rjmlaird.co.uk")).origin;
 const ogImageUrl = new URL("/og-image.png", siteUrl).toString();
 
@@ -68,19 +80,22 @@ const structuredData = buildStructuredData({
 
 <Layout structuredData={structuredData}>
   <Nav />
-  <Hero />
-
+  
+  <!-- Profile is passed here. Hero must be set up to receive this as a prop. -->
+  <Hero profile={profile} />
+  
   <main id="main-content" aria-label="CV content">
-    <Experience />
-    <Education />
-    <Research />
-    <Certifications />
-    <Memberships />
-    <Languages />
-    <Awards />
-    <Skills />
-    <Volunteering />
-    <Contact />
+    <Experience experience={experience} />
+    <Education education={education} />
+    <Research socials={socials} />
+    <Certifications certifications={certifications} />
+    <Memberships memberships={membershipGroups} />
+    <Languages languages={languages} />
+    <Awards awards={awards} />
+    <Skills skills={skillLabels} />
+    <Tools data={tools} />
+    <Volunteering volunteering={volunteering} />
+    <Contact profile={profile} socials={socials} />
   </main>
 
   <Footer />

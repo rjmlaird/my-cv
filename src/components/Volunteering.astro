@@ -1,20 +1,23 @@
 ---
-import { getVolunteering, getProjects } from "@/lib/api";
 import type { VolunteeringItem } from "@/lib/schemas/volunteering.schema";
 
-// 1. Fetch and process data
-const volunteering = (await getVolunteering()) ?? [];
-const allProjects = (await getProjects()) ?? [];
+// Receive data from props instead of fetching here
+interface Props {
+  volunteering: VolunteeringItem[];
+  allProjects?: any[]; // Keep this if you need project lookup
+}
+
+const { volunteering = [], allProjects = [] } = Astro.props;
 
 const entries = Array.isArray(volunteering) ? volunteering : [];
-const projectMap = new Map(allProjects.map((p) => [p.slug, p.title]));
+const projectMap = new Map(allProjects.map((p: any) => [p.slug, p.title]));
 
 const hasMoreDetail = (item: VolunteeringItem) =>
   Boolean(
     item.projects?.length ||
       item.articles?.length ||
       item.talks?.length ||
-      item.relatedAwards?.length ||
+      item.relatedAwards?.length || // Ensure this matches your schema
       item.relatedCertifications?.length
   );
 ---

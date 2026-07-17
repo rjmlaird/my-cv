@@ -14,13 +14,20 @@ export const volunteeringItemSchema = z.object({
   achievements: z.array(z.string()).default([]),
   skills: z.array(z.string()).default([]),
   projects: z.array(z.string()).default([]),
-  clients: z.array(z.string()).default([]),
+  
+  // Normalized support fields
   articles: z.array(z.string()).default([]),
   talks: z.array(z.string()).default([]),
+  
+  // Legacy/Extended support fields
+  clients: z.array(z.string()).default([]),
   technologies: z.array(z.string()).default([]),
   media: z.array(z.string()).default([]),
+  
   featured: z.boolean().default(false),
   order: z.number().int().default(0),
+  
+  // Relational mappings
   relatedOrg: z.array(z.string()).default([]),
   relatedEducation: z.array(z.string()).default([]),
   relatedMemberships: z.array(z.string()).default([]),

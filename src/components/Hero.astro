@@ -1,28 +1,32 @@
 ---
-import { getProfile, type Profile } from "@/lib/api";
+import type { Profile } from "@/lib/api";
 
-let profile: Profile | null = null;
-
-try {
-  profile = await getProfile();
-} catch (e) {
-  console.error("Failed to load profile", e);
-  profile = null;
+interface Props {
+  profile: Profile | null;
 }
 
-// Fallback logic
+const { profile } = Astro.props;
+
+// LOG: The source of truth
+console.log("Hero received profile:", profile);
+
+// Ensure we have access to the data, even if it's the 'summary' or 'biography' field
 const name = profile?.name ?? "Ryan Laird";
 const credentials = profile?.credentials ?? "";
-const summary: string[] = profile?.summary ?? [];
-const tags: string[] = profile?.tags ?? [];
+const summary = profile?.biography ?? profile?.summary ?? []; 
+const tags = profile?.tags ?? [];
+const portfolioLinks = profile?.portfolioLinks ?? [];
+const headline = profile?.headline ?? "";
+const location = profile?.location ?? "";
+const email = profile?.email ?? "";
 
-const roleHtml =
-  typeof profile?.role === "string"
-    ? profile.role.replace("Green Orbit Digital", "<strong>Green Orbit Digital</strong>")
-    : "";
+const roleHtml = typeof profile?.role === "string" 
+  ? profile.role.replace("Green Orbit Digital", "<strong>Green Orbit Digital</strong>") 
+  : "";
 ---
 
 <section class="hero" aria-labelledby="hero-heading">
+  <!-- Decorative SVG -->
   <svg class="orbit-decor" viewBox="0 0 150 150" aria-hidden="true" focusable="false">
     <circle cx="75" cy="75" r="70" fill="none" stroke="#2dd4bf" stroke-opacity="0.25" stroke-width="1" />
     <circle cx="75" cy="75" r="48" fill="none" stroke="#f2b544" stroke-opacity="0.2" stroke-width="1" stroke-dasharray="3 5" />
@@ -33,18 +37,50 @@ const roleHtml =
   <p class="eyebrow">Curriculum Vitae</p>
   <h1 id="hero-heading">{name}</h1>
 
+  {headline && <p class="headline"><strong>{headline}</strong></p>}
   {roleHtml && <p class="role" set:html={roleHtml} />}
   {credentials && <p class="credentials">{credentials}</p>}
 
-  {summary.length > 0 && (
-    <div class="hero-summary">
-      {summary.map((paragraph: string) => <p>{paragraph}</p>)}
-    </div>
+  {(location || email) && (
+    <p class="meta-contact">
+      {location} {location && email && " · "}
+      {email && <a href={`mailto:${email}`}>{email}</a>}
+    </p>
   )}
+
+  {portfolioLinks.length > 0 ? (
+    <div class="portfolio-links">
+      {portfolioLinks.map((link) => (
+        <a href={link.href} target="_blank" rel="noopener noreferrer">
+          {link.label}
+        </a>
+      ))}
+    </div>
+  ) : null}
+
+  {/* Display Summary */}
+  <div class="hero-summary">
+    {summary.length > 0 
+      ? summary.map((p) => <p class="summary-p">{p}</p>)
+      : <p class="debug-text"><em>No biography or summary data available.</em></p>
+    }
+  </div>
 
   {tags.length > 0 && (
     <div class="tag-row" aria-label="Core competencies">
-      {tags.map((tag: string) => <span class="tag">{tag}</span>)}
+      {tags.map((tag) => <span class="tag">{tag}</span>)}
     </div>
   )}
 </section>
+
+<style>
+  .hero { margin-bottom: 3rem; }
+  .eyebrow { text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; color: var(--muted); }
+  .portfolio-links { margin: 1rem 0; }
+  .portfolio-links a { margin-right: 1rem; text-decoration: underline; }
+  .hero-summary { display: block; margin-top: 1rem; }
+  .summary-p { margin-bottom: 1rem; line-height: 1.6; }
+  .tag-row { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem; }
+  .tag { padding: 0.25rem 0.75rem; border-radius: 999px; background: color-mix(in srgb, currentColor 10%, transparent); font-size: 0.85rem; }
+  .debug-text { color: red; font-size: 0.8rem; }
+</style>

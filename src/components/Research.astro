@@ -1,6 +1,5 @@
 ---
 import api from "@/lib/api";
-import { Icon } from "astro-icon/components";
 
 interface SocialProfile {
   name: string;
@@ -8,35 +7,99 @@ interface SocialProfile {
   type: string;
   icon: string;
   label: string;
+  color: string;
 }
 
-// Fetch socials and filter by "academic"
 const allSocials = (await api.getSocials()) ?? [];
 const academicProfiles: SocialProfile[] = allSocials.filter(
   (s: SocialProfile) => s.type === "academic"
 );
+
+// Map of keys that need specialized logo names for Shields.io
+const LOGO_MAP: Record<string, string> = {
+  "webofscience": "clarivate",
+  "googlescholar": "google-scholar",
+  "academia": "academia",
+  "researchgate": "researchgate"
+};
+
+function badgeUrl(p: SocialProfile): string {
+  const label = encodeURIComponent(p.name);
+  const color = p.color.replace("#", "");
+  const logo = LOGO_MAP[p.icon] ?? p.icon;
+  
+  return `https://img.shields.io/badge/-${label}-${color}?style=flat-square&logo=${encodeURIComponent(logo)}&logoColor=white`;
+}
 ---
 
 <section id="research" aria-labelledby="research-heading">
   <p class="eyebrow">Publications</p>
-  <h2 id="research-heading">Research</h2>
   
-  {academicProfiles.length > 0 && (
-    <div class="intro-text">
-      <p>I am actively engaged in ongoing research. You can explore my full portfolio of peer-reviewed work and citations here:</p>
-      <div class="social-icons" style="display: flex; gap: 1rem; margin-top: 1rem;">
-        {academicProfiles.map((p: SocialProfile) => (
-          <a 
-            href={p.url} 
-            target="_blank" 
-            rel="noopener noreferrer" 
-            aria-label={p.label} 
-            title={p.name}
-          >
-            <Icon name={p.icon} size={24} />
-          </a>
-        ))}
-      </div>
-    </div>
-  )}
+  <h2 id="research-heading">
+    <a href="#research">Research</a>
+  </h2>
+
+  <p class="section-intro">
+    I am actively engaged in ongoing research. You can explore my full portfolio of peer-reviewed work and citations here:
+  </p>
+
+  <div class="stack-badges">
+    {academicProfiles.map((p) => (
+      <a href={p.url} target="_blank" rel="noopener noreferrer" aria-label={p.label}>
+        <img 
+          src={badgeUrl(p)} 
+          alt={p.name} 
+          title={p.name}
+          loading="lazy" 
+        />
+      </a>
+    ))}
+  </div>
 </section>
+
+<style>
+  .eyebrow {
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+    margin-bottom: 0.5rem;
+  }
+
+  h2 {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+  }
+
+  h2 a {
+    text-decoration: none;
+    color: inherit;
+  }
+
+  h2 a:hover {
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 6px;
+  }
+
+  .section-intro {
+    max-width: 60ch;
+    margin-bottom: 2rem;
+    color: var(--muted);
+  }
+
+  .stack-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  img {
+    height: 24px;
+    transition: transform 0.2s;
+  }
+
+  img:hover {
+    transform: scale(1.05);
+  }
+</style>

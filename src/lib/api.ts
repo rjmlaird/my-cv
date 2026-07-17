@@ -9,8 +9,8 @@ import { volunteeringItemSchema } from "@/lib/schemas/volunteering.schema";
 import { projectSchema } from "@/lib/schemas/project.schema";
 import { profileSchema } from "@/lib/schemas/profile.schema";
 import { socialSchema } from "@/lib/schemas/social.schema";
-// Fixed import based on compiler suggestion
 import { membershipsSchema } from "@/lib/schemas/membership.schema";
+import { ToolDataSchema } from "@/lib/schemas/tool.schema";
 
 export type Profile = z.infer<typeof profileSchema>;
 
@@ -29,51 +29,89 @@ async function fetchJson<T>(url: string, isFullUrl = false): Promise<T | null> {
   }
 }
 
-async function safeParse<T>(url: string, schema: z.ZodType<T[]>): Promise<T[]> {
-  const data = await fetchJson<unknown>(url);
-  if (!data) return [];
-  const result = schema.safeParse(data);
-  return result.success ? result.data : [];
-}
-
 // --- Data Fetchers ---
+
 export async function getDocuments() {
   const data = await fetchJson<unknown>(MANIFEST_URL, true);
   return Array.isArray(data) ? data : [];
 }
 
-export async function getExperience() { return safeParse("experience", z.array(experienceItemSchema)); }
-export async function getEducation() { return safeParse("education", z.array(educationItemSchema)); }
-export async function getLanguages() { return safeParse("languages", z.array(languageItemSchema)); }
-export async function getOrganisations() { return safeParse("organisations", z.array(organisationItemSchema)); }
-export async function getVolunteering() { return safeParse("volunteering", z.array(volunteeringItemSchema)); }
-export async function getProjects() { return safeParse("portfolio/projects", z.array(projectSchema)); }
-export async function getSocials() { return safeParse("contact/socials", z.array(socialSchema)); }
+export async function getExperience() { 
+  const data = await fetchJson<unknown>("experience");
+  const result = z.array(experienceItemSchema).safeParse(data);
+  return result.success ? result.data : [];
+}
 
-export async function getProfile(): Promise<Profile> {
+export async function getEducation() { 
+  const data = await fetchJson<unknown>("education");
+  const result = z.array(educationItemSchema).safeParse(data);
+  return result.success ? result.data : [];
+}
+
+export async function getLanguages() { 
+  const data = await fetchJson<unknown>("languages");
+  const result = z.array(languageItemSchema).safeParse(data);
+  return result.success ? result.data : [];
+}
+
+export async function getOrganisations() { 
+  const data = await fetchJson<unknown>("organisations");
+  const result = z.array(organisationItemSchema).safeParse(data);
+  return result.success ? result.data : [];
+}
+
+export async function getVolunteering() { 
+  const data = await fetchJson<unknown>("volunteering");
+  const result = z.array(volunteeringItemSchema).safeParse(data);
+  return result.success ? result.data : [];
+}
+
+export async function getProjects() { 
+  const data = await fetchJson<unknown>("portfolio/projects");
+  const result = z.array(projectSchema).safeParse(data);
+  return result.success ? result.data : [];
+}
+
+export async function getSocials() { 
+  const data = await fetchJson<unknown>("socials");
+  const result = z.array(socialSchema).safeParse(data);
+  return result.success ? result.data : [];
+}
+
+export async function getProfile(): Promise<Profile | null> {
   const data = await fetchJson<unknown>("profile");
-  const result = data ? profileSchema.safeParse(data) : null;
-  return result?.success ? result.data : {} as Profile;
+  if (!data) return null;
+  const result = profileSchema.safeParse(data);
+  if (!result.success) console.error("[API] Profile validation failed:", result.error.format());
+  return result.success ? result.data : null;
 }
 
 export async function getCertifications() {
   const data = await fetchJson<unknown>("certifications");
   const root = (data && typeof data === "object" && "certifications" in data) ? (data as any).certifications : data;
-  return Array.isArray(root) ? z.array(certificationItemSchema).parse(root) : [];
+  const result = z.array(certificationItemSchema).safeParse(root);
+  return result.success ? result.data : [];
 }
 
 export async function getMemberships() {
   const data = await fetchJson<unknown>("memberships");
-  const result = data ? membershipsSchema.safeParse(data) : null;
-  // If the schema is an object wrapping an array, access the property. 
-  // If the schema is already the array, just return result.data
-  return result?.success ? (result.data as any).memberships : [];
+  const result = membershipsSchema.safeParse(data);
+  return result.success ? (result.data as any).memberships : [];
 }
 
 export async function getAwards() {
   const data = await fetchJson<unknown>("awards");
   const root = (data && typeof data === "object" && "awards" in data) ? (data as any).awards : data;
-  return Array.isArray(root) ? z.array(awardItemSchema).parse(root) : [];
+  const result = z.array(awardItemSchema).safeParse(root);
+  return result.success ? result.data : [];
+}
+
+export async function getTools() {
+  const data = await fetchJson<unknown>("tools");
+  if (!data) return { categories: [] };
+  const result = ToolDataSchema.safeParse(data);
+  if (!result.success) console.error("[API] Tools validation failed:", result.error.format());
+  return result.success ? result.data : { categories: [] };
 }
 
 const api = {
@@ -89,6 +127,7 @@ const api = {
   getVolunteering,
   getProjects,
   getSocials,
+  getTools,
 };
 
 export default api;

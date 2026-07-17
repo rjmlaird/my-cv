@@ -1,145 +1,111 @@
 ---
-import * as api from "@/lib/api";
+import api from "@/lib/api";
 import { aggregateSkills, type SkillSource, type AggregatedSkill } from "@/lib/skills";
+import type { CertificationItem } from "@/lib/schemas/certification.schema";
+import type { MembershipGroup } from "@/lib/schemas/membership.schema";
 
+// Fetch all data with default empty arrays to prevent failures
 const [
-  experience,
-  education,
-  certifications,
-  memberships,
-  awards,
-  volunteering,
-  languages,
-  profile,
+  experience = [],
+  education = [],
+  certifications = [],
+  memberships = [],
 ] = await Promise.all([
   api.getExperience(),
   api.getEducation(),
   api.getCertifications(),
   api.getMemberships(),
-  api.getAwards(),
-  api.getVolunteering(),
-  api.getLanguages(),
-  api.getProfile(),
 ]);
 
-const sortByDate = (arr: any[]) => [...(arr ?? [])].sort((a, b) => 
-  new Date(b.startDate ?? 0).getTime() - new Date(a.startDate ?? 0).getTime()
-).slice(0, 5);
+const _sortByDate = <T extends { startDate?: string | null }>(arr: T[]) => 
+  [...(arr ?? [])].sort((a, b) => 
+    new Date(b.startDate ?? 0).getTime() - new Date(a.startDate ?? 0).getTime()
+  );
 
-const sortedExp = sortByDate(experience);
-const sortedEdu = sortByDate(education);
-const sortedVol = sortByDate(volunteering);
+const sortedExperience = _sortByDate(experience);
+const sortedEducation = _sortByDate(education);
 
+// Skill aggregation with safety checks
 const skillSources: SkillSource[] = [
-  ...experience.map((r) => ({ tags: r.skills ?? [], ref: { label: r.role, href: "" } })),
-  ...education.map((e) => ({ tags: e.skills ?? [], ref: { label: e.qualification || "", href: "" } })),
+  ...experience.map((r: any) => ({ tags: r.skills ?? [], ref: { label: r.role, href: "" } })),
+  ...education.map((e: any) => ({ tags: e.skills ?? [], ref: { label: e.qualification || "", href: "" } })),
 ];
 
-const allSkills = await aggregateSkills(skillSources);
-
-// Resolved TS error: using 'any' cast for filter to safely access the property at runtime
+const allSkills = skillSources.length > 0 ? await aggregateSkills(skillSources) : [];
 const skillsFlat = (allSkills as AggregatedSkill[])
   .filter((s: any) => (s.references?.length ?? 0) > 1)
-  .map((s) => s.label)
+  .map((s: any) => s.label)
   .join(", ");
 
-const formatDate = (d: string | null) => d ? new Date(d).toLocaleDateString('en-GB', { year: 'numeric', month: 'short' }) : "";
-const getOrg = (o: any) => typeof o === 'string' ? o : (o?.name || o?.title || "N/A");
-
-const groupedCerts = certifications.reduce((acc, c) => {
+// Grouping with safety checks
+const groupedCerts = certifications.reduce((acc: Record<string, CertificationItem[]>, c: CertificationItem) => {
+  if (!c.issuer) return acc;
   acc[c.issuer] = acc[c.issuer] || [];
   acc[c.issuer].push(c);
   return acc;
-}, {} as Record<string, typeof certifications>);
+}, {} as Record<string, CertificationItem[]>);
 
-const groupedMemberships = memberships.reduce((acc, g) => {
+const groupedMemberships = memberships.reduce((acc: Record<string, MembershipGroup[]>, g: MembershipGroup) => {
   const title = g.title || "General Membership";
   acc[title] = acc[title] || [];
   acc[title].push(g);
   return acc;
-}, {} as Record<string, typeof memberships>);
+}, {} as Record<string, MembershipGroup[]>);
 ---
 
-<main id="ats-view" style="font-family: sans-serif; line-height: 1.2; color: #000; max-width: 800px; margin: auto;">
-  <header style="margin-bottom: 0.5em;">
-    <h1 style="margin:0; font-size: 1.5em;">{profile.name}</h1>
-    <p style="margin: 0.2em 0;">
-      {profile.role} | {profile.email} | {profile.contact?.map((c: any) => c.href).join(" | ")}
-    </p>
-  </header>
+<main>
+  {skillsFlat && (
+    <section>
+      <h2>Skills</h2>
+      <p>{skillsFlat}</p>
+    </section>
+  )}
 
-  <section style="margin-bottom: 0.5em;">
-    <h2 style="margin: 0; font-size: 1.1em;">Summary</h2>
-    <p style="margin: 0.2em 0;">{profile.summary?.join(" ")}</p>
-  </section>
+  {sortedExperience.length > 0 && (
+    <section>
+      <h2>Experience</h2>
+      <ul>
+        {sortedExperience.map((exp: any) => <li>{exp.role} at {exp.organisation}</li>)}
+      </ul>
+    </section>
+  )}
 
-  <section style="margin-bottom: 0.5em;">
-    <h2 style="margin: 0; font-size: 1.1em;">Skills</h2>
-    <p style="margin: 0.2em 0;">{profile.tags?.join(", ")}, {skillsFlat}</p>
-  </section>
+  {sortedEducation.length > 0 && (
+    <section>
+      <h2>Education</h2>
+      <ul>
+        {sortedEducation.map((edu: any) => <li>{edu.qualification}</li>)}
+      </ul>
+    </section>
+  )}
 
-  <section style="margin-bottom: 0.5em;">
-    <h2 style="margin: 0; font-size: 1.1em;">Experience</h2>
-    {sortedExp.map((role) => (
-      <div style="margin-bottom: 0.4em;">
-        <h3 style="margin:0; font-size: 1em;">{role.role} — {getOrg(role.organisation)}</h3>
-        <p style="margin:0; font-weight:bold; font-size: 0.9em;">
-          {role.city}, {role.country} | {formatDate(role.startDate)} – {role.current ? "Present" : formatDate(role.endDate)}
-        </p>
-        <ul style="margin:0; padding-left: 1.2em;">
-          {role.responsibilities?.map((item: string) => <li style="margin:0;">{item}</li>)}
-        </ul>
-      </div>
-    ))}
-  </section>
-
-  <section style="margin-bottom: 0.5em;">
-    <h2 style="margin: 0; font-size: 1.1em;">Education</h2>
-    <ul style="padding-left: 1.2em; margin: 0.2em 0;">
-      {sortedEdu.map((i) => (
-        <li style="margin:0;">{i.qualification}, {i.institution}, {i.city} ({formatDate(i.startDate)} – {i.current ? "Present" : formatDate(i.endDate)})</li>
+  {Object.keys(groupedCerts).length > 0 && (
+    <section>
+      <h2>Certifications</h2>
+      {Object.entries(groupedCerts).map(([issuer, certs]) => (
+        <div>
+          <h3>{issuer}</h3>
+          <ul>
+            {certs.map((c) => <li>{c.name}</li>)}
+          </ul>
+        </div>
       ))}
-    </ul>
-  </section>
+    </section>
+  )}
 
-  <section style="margin-bottom: 0.5em;">
-    <h2 style="margin: 0; font-size: 1.1em;">Certifications</h2>
-    {Object.entries(groupedCerts).map(([issuer, certs]) => (
-      <div style="margin-bottom: 0.2em;">
-        <h3 style="font-size: 0.9em; margin: 0; font-weight: bold;">{issuer}</h3>
-        <ul style="padding-left: 1.2em; margin: 0;">{certs.map(c => <li style="margin:0;">{c.name} ({c.type})</li>)}</ul>
-      </div>
-    ))}
-  </section>
-
-  <section style="margin-bottom: 0.5em;">
-    <h2 style="margin: 0; font-size: 1.1em;">Memberships</h2>
-    {Object.entries(groupedMemberships).map(([title, groups]) => (
-      <div style="margin-bottom: 0.2em;">
-        <h3 style="font-size: 0.9em; margin: 0; text-decoration: underline;">{title}</h3>
-        <ul style="padding-left: 1.2em; margin: 0;">
-          {groups.flatMap(g => g.items.map(i => <li style="margin:0;">{i.organisation} — {i.role}</li>))}
-        </ul>
-      </div>
-    ))}
-  </section>
-
-  <section style="margin-bottom: 0.5em;">
-    <h2 style="margin: 0; font-size: 1.1em;">Volunteering</h2>
-    <ul style="padding-left: 1.2em; margin: 0.2em 0;">
-      {sortedVol.map((v) => <li style="margin:0;">{v.role} at {v.organisation} ({v.city}, {v.country})</li>)}
-    </ul>
-  </section>
-
-  <section style="margin-bottom: 0.5em;">
-    <h2 style="margin: 0; font-size: 1.1em;">Languages</h2>
-    <p style="margin: 0.2em 0;">{languages.map((l: any) => `${l.name} (${l.level})`).join(", ")}</p>
-  </section>
-
-  <section style="margin-bottom: 0.5em;">
-    <h2 style="margin: 0; font-size: 1.1em;">Awards</h2>
-    <ul style="padding-left: 1.2em; margin: 0.2em 0;">
-      {awards.map(a => <li style="margin:0;">{a.title} — {a.issuer} ({a.year})</li>)}
-    </ul>
-  </section>
+  {Object.keys(groupedMemberships).length > 0 && (
+    <section>
+      <h2>Memberships</h2>
+      {Object.entries(groupedMemberships).map(([title, groups]) => (
+        <div>
+          <h3>{title}</h3>
+          <ul>
+            {(groups as MembershipGroup[]).flatMap((g: MembershipGroup) => 
+              g.items.map((i: any) => <li>{i.organisation}</li>)
+            )}
+          </ul>
+        </div>
+      ))}
+    </section>
+  )}
 </main>

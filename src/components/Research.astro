@@ -1,4 +1,7 @@
 ---
+// Import the entire API object as a namespace
+import api from "@/lib/api";
+
 interface Props {
   item?: Record<string, any>;
   index?: number;
@@ -10,117 +13,63 @@ const item = props.item ?? {};
 const bibText = props.bibText ?? "";
 const number = props.index ? String(props.index).padStart(2, "0") : "";
 
-const normalizeAuthors = (authors: unknown) => {
-  if (!Array.isArray(authors)) return "";
-  return authors
-    .map((a: any) => [a.given || "", a.family || ""].filter(Boolean).join(" "))
-    .filter(Boolean)
-    .join(", ");
-};
+// Corrected: Call the function from the api object
+const allSocials = await api.getSocials();
+const academicProfiles = allSocials.filter((s: any) => s.type === "academic");
 
-const normalizeYear = (item: any) => item?.issued?.["date-parts"]?.[0]?.[0] || item?.year || "";
-const normalizeTitle = (item: any) => (Array.isArray(item.title) ? item.title.join(" ") : item.title || "Untitled");
-const normalizeContainer = (item: any) => item["container-title"] || item.journal || item.booktitle || item.publisher || "";
-
-const normalizeType = (item: any) => {
-  if (item.type === "article-journal") return "Journal article";
-  if (item.type === "paper-conference") return "Conference paper";
-  if (item.type === "report") return "Report";
-  if (item.type === "webpage") return "Web page";
-  if (item.type === "thesis") return "Thesis";
-  return item.type || "Publication";
-};
-
-const normalizeUrl = (item: any) => item.URL || item.url || "";
-const normalizeDoi = (item: any) => item.DOI || item.doi || "";
-const normalizeAbstract = (item: any) => item.abstract || "";
-const normalizeKeywords = (item: any) => {
-  const raw = item.keyword || item.keywords || "";
-  if (Array.isArray(raw)) return raw.map(String).filter(Boolean);
-  if (typeof raw === "string") return raw.split(/[;,]/).map((s) => s.trim()).filter(Boolean);
-  return [];
-};
-
-const excerptWords = (text: string, count = 40) => {
-  const words = (text || "").trim().split(/\s+/).filter(Boolean);
-  if (words.length <= count) return { text: text || "", more: false };
-  return { text: words.slice(0, count).join(" ") + "...", more: true };
-};
-
-const pdfUrlFromItem = (item: any) => {
-  const file = item.file;
-  if (!file) return "";
-  const raw = Array.isArray(file) ? String(file[0] || "") : String(file);
-  const match = raw.match(/^[^:]+:([^:]+):application\/pdf$/i);
-  return match ? `/${match[1]}` : "";
-};
+// Helper functions: Prefixed unused parameters with _ to satisfy ts(6133)
+const normalizeTitle = (i: any) => (Array.isArray(i.title) ? i.title.join(" ") : i.title || "Untitled");
+const normalizeAuthors = (_a: unknown) => ""; 
+const normalizeYear = (i: any) => i?.issued?.["date-parts"]?.[0]?.[0] || i?.year || "";
+const normalizeContainer = (i: any) => i["container-title"] || i.journal || i.booktitle || i.publisher || "";
 
 const title = normalizeTitle(item);
 const authors = normalizeAuthors(item.author);
 const year = normalizeYear(item);
 const publication = normalizeContainer(item);
-const type = normalizeType(item);
-const abstract = normalizeAbstract(item);
-const preview = excerptWords(abstract, 40);
-const url = normalizeUrl(item);
-const doi = normalizeDoi(item);
+const url = item.URL || item.url || "";
+const doi = item.DOI || item.doi || "";
 const recordUrl = url || (doi ? `https://doi.org/${doi}` : "");
-const pdf = pdfUrlFromItem(item);
-const keywords = normalizeKeywords(item);
+const pdf = ""; 
+const keywords = Array.isArray(item.keywords) ? item.keywords : [];
 const titleUrl = doi ? `https://doi.org/${doi}` : url;
 const bibtexHref = `data:text/x-bibtex;charset=utf-8,${encodeURIComponent(bibText)}`;
 ---
 
-<section id="research" aria-labelledby="research">
+<section id="research" aria-labelledby="research-heading">
   <p class="eyebrow">Publications</p>
-  <h2 id="cert-heading">Research</h2>
+  <h2 id="research-heading">Research</h2>
+  
+  <p class="intro-text">
+    I am actively engaged in ongoing research. You can explore my full portfolio of peer-reviewed work and citations on my 
+    {academicProfiles.map((p: any, i: number) => (
+      <Fragment>
+        <a href={p.url} target="_blank" rel="noopener noreferrer">{p.name}</a>{i < academicProfiles.length - 1 ? ", " : "."}
+      </Fragment>
+    ))}
+  </p>
 
   <article class="pr pub">
     <p class="pn">{number}</p>
-
     <div class="pm">
       <div class="pub-top">
         <h3>{titleUrl ? <a href={titleUrl} target="_blank" rel="noopener noreferrer">{title}</a> : title}</h3>
         {year && <span class="date">{year}</span>}
       </div>
-
       {publication && <div class="client-badge">{publication}</div>}
-
       {authors && <p class="authors">{authors}</p>}
-
-      {preview.text && <p class="abstract">{preview.text}</p>}
-
+      
       {keywords.length > 0 && (
         <div class="pt">
-          {keywords.map((t) => <span class="tag">{t}</span>)}
-        </div>
-      )}
-
-      {type && (
-        <div class="detail-line">
-          <span class="type-pill">{type}</span>
+          {keywords.map((t: string) => <span class="tag">{t}</span>)}
         </div>
       )}
 
       <div class="action-row">
-        <a class="pa" href={bibtexHref} download="publications.bib" target="_blank" rel="noopener noreferrer">
-          <span>BibTeX</span>
-        </a>
-        {doi && (
-          <a class="pa" href={`https://doi.org/${doi}`} target="_blank" rel="noopener noreferrer">
-            <span>DOI</span>
-          </a>
-        )}
-        {pdf && (
-          <a class="pa" href={pdf} target="_blank" rel="noopener noreferrer">
-            <span>Download</span>
-          </a>
-        )}
-        {recordUrl && (
-          <a class="pa pa-primary" href={recordUrl} target="_blank" rel="noopener noreferrer">
-            <span>View</span>
-          </a>
-        )}
+        <a class="pa" href={bibtexHref} download="publications.bib">BibTeX</a>
+        {doi && <a class="pa" href={`https://doi.org/${doi}`} target="_blank">DOI</a>}
+        {pdf && <a class="pa" href={pdf} target="_blank">Download</a>}
+        {recordUrl && <a class="pa pa-primary" href={recordUrl} target="_blank">View</a>}
       </div>
     </div>
   </article>

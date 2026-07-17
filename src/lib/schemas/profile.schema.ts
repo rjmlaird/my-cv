@@ -9,7 +9,7 @@ export const profileSchema = z.object({
   headline: z.string().optional().nullable(),
   
   // Contact & Location
-  email: z.string().email().optional().nullable(),
+  email: z.email().optional().nullable(),
   location: z.string().optional().nullable(),
   
   // Content - These are the fields your Hero component expects
@@ -25,7 +25,7 @@ export const profileSchema = z.object({
   portfolioLinks: z.array(
     z.object({
       label: z.string(),
-      href: z.string().url(),
+      href: z.url(),
     })
   ).default([]),
 });

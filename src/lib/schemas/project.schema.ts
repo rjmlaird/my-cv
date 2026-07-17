@@ -6,8 +6,7 @@ const baseSchema = z.object({
   slug: z.string(),
   title: z.string(),
   description: z.string(),
-  // Use .datetime({}) to satisfy the linter/deprecation warning in recent Zod versions
-  date: z.string().datetime({ offset: true }), 
+  date: z.string().datetime({ offset: true }),
   tags: z.array(z.string()).default([]),
   content: z.string().optional(),
 });

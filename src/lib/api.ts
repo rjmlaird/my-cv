@@ -82,7 +82,9 @@ export async function getProfile(): Promise<Profile | null> {
   const data = await fetchJson<unknown>("profile");
   if (!data) return null;
   const result = profileSchema.safeParse(data);
-  if (!result.success) console.error("[API] Profile validation failed:", result.error.format());
+  if (!result.success) {
+    console.error("[API] Profile validation failed:", result.error.issues);
+  }
   return result.success ? result.data : null;
 }
 
@@ -110,7 +112,9 @@ export async function getTools() {
   const data = await fetchJson<unknown>("tools");
   if (!data) return { categories: [] };
   const result = ToolDataSchema.safeParse(data);
-  if (!result.success) console.error("[API] Tools validation failed:", result.error.format());
+  if (!result.success) {
+    console.error("[API] Tools validation failed:", result.error.issues);
+  }
   return result.success ? result.data : { categories: [] };
 }
 

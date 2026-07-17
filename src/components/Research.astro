@@ -7,7 +7,7 @@ interface SocialProfile {
   type: string;
   icon: string;
   label: string;
-  color: string;
+  color?: string; // Changed to optional to match API reality
 }
 
 const allSocials = (await api.getSocials()) ?? [];
@@ -25,7 +25,8 @@ const LOGO_MAP: Record<string, string> = {
 
 function badgeUrl(p: SocialProfile): string {
   const label = encodeURIComponent(p.name);
-  const color = p.color.replace("#", "");
+  // Fallback to a neutral grey if color is missing
+  const color = (p.color ?? "555555").replace("#", "");
   const logo = LOGO_MAP[p.icon] ?? p.icon;
   
   return `https://img.shields.io/badge/-${label}-${color}?style=flat-square&logo=${encodeURIComponent(logo)}&logoColor=white`;

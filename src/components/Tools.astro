@@ -8,9 +8,17 @@ interface Props {
 const { data } = Astro.props;
 const techStack = data ?? { categories: [] };
 
-function badgeUrl(item: { name: string; color: string; logo?: string; logoColor?: string }): string {
+// Updated interface to handle the potential null from the API
+function badgeUrl(item: { 
+  name: string; 
+  color: string; 
+  logo?: string | null; 
+  logoColor?: string | null 
+}): string {
   const label = encodeURIComponent(item.name);
   const color = item.color.replace("#", "");
+  
+  // Normalize logo and logoColor to string or undefined
   const logo = item.logo ? `&logo=${encodeURIComponent(item.logo)}` : "";
   const logoColor = `&logoColor=${item.logoColor ?? "white"}`;
   
@@ -21,7 +29,6 @@ function badgeUrl(item: { name: string; color: string; logo?: string; logoColor?
 <section id="tech" aria-labelledby="tech-heading">
   <p class="eyebrow">Tools & Technologies</p>
   
-  <!-- Added anchor link to h2 -->
   <h2 id="tech-heading">
     <a href="#tech-stack">Tech stack</a>
   </h2>
@@ -70,7 +77,6 @@ function badgeUrl(item: { name: string; color: string; logo?: string; logoColor?
     margin-bottom: 0.5rem;
   }
 
-  /* Reset link styles for the header link */
   h2 {
     font-size: 2rem;
     margin-bottom: 1rem;

@@ -3,7 +3,7 @@ import { z } from 'zod';
 // Schema for an individual tool
 export const ToolSchema = z.object({
   name: z.string().trim().min(1),
-  url: z.string().url(),
+  url: z.url(),
   logo: z.string().trim(),
   // Accepts 6-char hex, optionally with a leading '#'
   color: z.string().regex(/^#?([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/, {

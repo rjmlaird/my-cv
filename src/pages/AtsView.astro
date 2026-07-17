@@ -4,10 +4,13 @@ import api from "@/lib/api";
 import { aggregateSkills, type SkillSource } from "@/lib/skills";
 import { joinParts } from "@/lib/format";
 
-// Data fetching
-const [profile, experience, education, certifications, membershipGroups, awards, languages, volunteering, socials] = await Promise.all([
-  api.getProfile(), api.getExperience(), api.getEducation(), api.getCertifications(), 
-  api.getMemberships(), api.getAwards(), api.getLanguages(), api.getVolunteering(), api.getSocials(),
+// Data fetching - Removed unused variables
+const [profile, experience, education, certifications, volunteering] = await Promise.all([
+  api.getProfile(), 
+  api.getExperience(), 
+  api.getEducation(), 
+  api.getCertifications(), 
+  api.getVolunteering(),
 ]);
 
 // Helpers
@@ -35,7 +38,7 @@ const skillSources: SkillSource[] = [
 const allSkills = await aggregateSkills(skillSources);
 const skillsFlat = allSkills.map((s: any) => s.label).join(", ");
 
-// Safely extract summary to avoid TS errors
+// Safely extract summary
 const summary = profile?.summary ?? [];
 ---
 

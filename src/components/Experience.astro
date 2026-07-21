@@ -52,7 +52,7 @@ const hasMoreDetail = (role: ExperienceItem) =>
 
       return (
         <article
-          id={`exp-${role.id}`}
+          id={`${role.id}`}
           class={["role-item", role.current ? "" : "dim"].filter(Boolean).join(" ")}
         >
           <div class="role-header">

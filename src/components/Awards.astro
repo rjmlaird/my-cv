@@ -46,7 +46,7 @@ const hasMoreDetail = (award: AwardItem) =>
       const relatedEducation = getEducationMatches(award);
 
       return (
-        <article id={`award-${award.id}`} class="role-item award-item">
+        <article id={`${award.id}`} class="role-item award-item">
           <div class="role-header">
             <div>
               <span class="role-title">{award.title}</span>

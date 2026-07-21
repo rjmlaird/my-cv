@@ -41,7 +41,7 @@ const hasMoreDetail = (item: VolunteeringItem) =>
         const location = [item.city, item.country].filter(Boolean).join(", ");
         
         return (
-          <article class="role-item" id={`vol-${item.id}`}>
+          <article class="role-item" id={`${item.id}`}>
             {/* Header always renders */}
             <div class="role-header">
               <div>

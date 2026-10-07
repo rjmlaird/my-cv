@@ -2,8 +2,6 @@
 import { getExperience, getEducation } from "@/lib/api";
 import { aggregateSkills, groupSkillsByCategory, type SkillSource } from "@/lib/skills";
 
-const visibleCount = 6;
-
 let experience: Awaited<ReturnType<typeof getExperience>> = [];
 let education: Awaited<ReturnType<typeof getEducation>> = [];
 
@@ -42,174 +40,235 @@ const grouped = groupSkillsByCategory(aggregated);
 ---
 
 {aggregated.length > 0 && (
-  <section id="skills" aria-labelledby="skills-heading">
+  <section id="skills" aria-labelledby="skills-heading" data-skills>
     <p class="eyebrow">Capabilities, as applied</p>
     <h2 id="skills-heading">Skills</h2>
 
     <p class="section-intro">
-      Drawn from the roles and qualifications above. A skill appears only where it has been applied, and the count
-      shows how often.
+      Drawn from the roles and qualifications above. Select any skill to see where it was applied; the count shows how
+      many entries use it.
     </p>
 
     <div class="skills-grid">
-      {grouped.map(({ category, skills }) => {
-        const visibleSkills = skills.slice(0, visibleCount);
-        const hiddenSkills = skills.slice(visibleCount);
+      {grouped.map(({ category, skills }) => (
+        <article class="skill-group" data-skill-group>
+          <h3>{category}</h3>
 
-        return (
-          <article class="skill-group">
-            <h3>{category}</h3>
-
-            <ul class="skill-tags" aria-label={`${category} skills`}>
-              {visibleSkills.map((skill) => (
-                <li
-                  id={`skill-${skill.slug}`}
-                  class={`skill-tag ${skill.resolved ? "skill-tag--resolved" : "skill-tag--unresolved"}`}
+          <ul class="skill-tags" aria-label={`${category} skills`}>
+            {skills.map((skill) => (
+              <li
+                id={`skill-${skill.slug}`}
+                class={`skill-tag ${skill.resolved ? "skill-tag--resolved" : "skill-tag--unresolved"}`}
+              >
+                <button
+                  type="button"
+                  class="skill-btn"
+                  aria-expanded="false"
+                  aria-controls={`skill-panel-${skill.slug}`}
+                  data-skill={skill.slug}
                 >
-                  <details class="skill-detail">
-                    <summary>
-                      {skill.label}
-                      {skill.count > 1 && <span class="skill-count">×{skill.count}</span>}
-                    </summary>
+                  <span>{skill.label}</span>
+                  {skill.count > 1 && <span class="skill-count" aria-label={`used ${skill.count} times`}>×{skill.count}</span>}
+                </button>
+              </li>
+            ))}
+          </ul>
 
-                    {skill.description && <p>{skill.description}</p>}
-                    {skill.proficiency && <p class="skill-proficiency">{skill.proficiency}</p>}
-
-                    <details class="more-detail skill-detail--nested">
-                      <summary>More detail</summary>
-
-                      <ul class="skill-usage">
-                        {skill.usedIn.map((ref) => (
-                          <li><a href={ref.href}>{ref.label}</a></li>
-                        ))}
-                      </ul>
-                    </details>
-                  </details>
-                </li>
-              ))}
-            </ul>
-
-            {hiddenSkills.length > 0 ? (
-              <details class="more-detail skill-group__more">
-                <summary>More detail</summary>
-
-                <ul class="skill-tags" aria-label={`${category} additional skills`}>
-                  {hiddenSkills.map((skill) => (
-                    <li
-                      id={`skill-${skill.slug}`}
-                      class={`skill-tag ${skill.resolved ? "skill-tag--resolved" : "skill-tag--unresolved"}`}
-                    >
-                      <details class="skill-detail">
-                        <summary>
-                          {skill.label}
-                          {skill.count > 1 && <span class="skill-count">×{skill.count}</span>}
-                        </summary>
-
-                        {skill.description && <p>{skill.description}</p>}
-                        {skill.proficiency && <p class="skill-proficiency">{skill.proficiency}</p>}
-
-                        <details class="more-detail skill-detail--nested">
-                          <summary>More detail</summary>
-
-                          <ul class="skill-usage">
-                            {skill.usedIn.map((ref) => (
-                              <li><a href={ref.href}>{ref.label}</a></li>
-                            ))}
-                          </ul>
-                        </details>
-                      </details>
-                    </li>
+          {/* Panels are plain content: visible without JavaScript, collapsed to one-at-a-time with it. */}
+          <div class="skill-panels">
+            {skills.map((skill) => (
+              <section class="skill-panel" id={`skill-panel-${skill.slug}`} aria-label={skill.label} data-panel={skill.slug}>
+                <h4>{skill.label}</h4>
+                {skill.description && <p>{skill.description}</p>}
+                {skill.proficiency && <p class="skill-proficiency">{skill.proficiency}</p>}
+                <p class="skill-used">
+                  Applied in {skill.usedIn.length} {skill.usedIn.length === 1 ? "entry" : "entries"}
+                </p>
+                <ul class="skill-usage">
+                  {skill.usedIn.map((ref) => (
+                    <li><a href={ref.href}>{ref.label}</a></li>
                   ))}
                 </ul>
-              </details>
-            ) : null}
-          </article>
-        );
-      })}
+                <button type="button" class="skill-close" data-close>Close</button>
+              </section>
+            ))}
+          </div>
+        </article>
+      ))}
     </div>
   </section>
 )}
 
+<script>
+  document.querySelectorAll<HTMLElement>("[data-skill-group]").forEach((group) => {
+    const buttons = [...group.querySelectorAll<HTMLButtonElement>("[data-skill]")];
+    const panels = [...group.querySelectorAll<HTMLElement>("[data-panel]")];
+
+    const show = (slug: string | null) => {
+      buttons.forEach((b) => b.setAttribute("aria-expanded", String(b.dataset.skill === slug)));
+      panels.forEach((p) => p.classList.toggle("is-open", p.dataset.panel === slug));
+    };
+
+    buttons.forEach((b) =>
+      b.addEventListener("click", () => show(b.getAttribute("aria-expanded") === "true" ? null : (b.dataset.skill ?? null))),
+    );
+    panels.forEach((p) =>
+      p.querySelector("[data-close]")?.addEventListener("click", () => {
+        const slug = p.dataset.panel;
+        show(null);
+        buttons.find((b) => b.dataset.skill === slug)?.focus();
+      }),
+    );
+    group.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") show(null);
+    });
+
+    // Deep links such as /#skill-seo open that skill.
+    const openFromHash = () => {
+      const slug = location.hash.startsWith("#skill-") ? location.hash.slice(7) : null;
+      if (slug && buttons.some((b) => b.dataset.skill === slug)) show(slug);
+    };
+    openFromHash();
+    window.addEventListener("hashchange", openFromHash);
+  });
+</script>
+
 <style>
   .section-intro {
-    max-width: 60ch;
+    max-width: 65ch;
   }
 
-  .skill-detail {
-    border-top: none;
-    padding-top: 0;
-    margin-top: 0;
+  .skills-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+    gap: 1.75rem 1.5rem;
+    align-items: start;
   }
 
-  .skill-detail summary {
-    font: inherit;
+  .skill-tag {
+    padding: 0;
+    scroll-margin-top: 5rem;
   }
 
-  .more-detail summary {
-    display: flex;
+  .skill-btn {
+    display: inline-flex;
     align-items: center;
-    gap: 0.4em;
-    text-transform: none;
-    letter-spacing: normal;
-    font-family: var(--font-body);
-    font-size: inherit;
+    gap: 0.45em;
+    min-height: 40px;
+    padding: 0.35em 0.8em;
+    border: 0;
+    border-radius: inherit;
+    background: transparent;
     color: inherit;
+    font: inherit;
+    font-size: 0.85rem;
+    text-align: left;
     cursor: pointer;
   }
-
-  .more-detail summary::before {
-    content: "+";
+  .skill-btn:hover {
+    color: var(--teal);
   }
-
-  .more-detail[open] > summary::before {
-    content: "−";
+  .skill-btn:focus-visible,
+  .skill-close:focus-visible {
+    outline: 2px solid var(--teal);
+    outline-offset: 2px;
+  }
+  .skill-tag:has(.skill-btn[aria-expanded="true"]) {
+    border-color: var(--teal);
+    background: color-mix(in srgb, var(--teal) 12%, transparent);
+    color: var(--text);
   }
 
   .skill-count {
-    color: var(--muted-dim);
     font-family: var(--font-mono);
     font-size: 0.7rem;
+    color: var(--muted-dim);
   }
 
-  .skill-detail p {
-    margin: 0.4em 0 0;
-    max-width: 32ch;
-    font-size: 0.8rem;
+  .skill-panels {
+    margin-top: 0.75rem;
+  }
+  /* With scripting available only the chosen panel shows; without it every panel is visible content. */
+  @media (scripting: enabled) {
+    .skill-panel:not(.is-open) {
+      display: none;
+    }
+  }
+  .skill-panel {
+    margin-top: 0.75rem;
+    padding: 0.75rem 0.9rem;
+    border: 1px solid var(--border-strong);
+    border-left: 3px solid var(--teal);
+    border-radius: 6px;
+    background: color-mix(in srgb, var(--teal) 5%, transparent);
+  }
+  .skill-panel h4 {
+    margin: 0 0 0.3rem;
+    font-family: var(--font-display);
+    font-size: 0.95rem;
+    color: var(--text);
+  }
+  .skill-panel p {
+    margin: 0.3em 0 0;
+    font-size: 0.85rem;
     color: var(--muted);
   }
-
-  /* Two classes beats `.skill-detail p`, so no !important is needed. */
-  .skill-detail .skill-proficiency {
+  .skill-panel .skill-proficiency {
     font-family: var(--font-mono);
-    text-transform: uppercase;
+    font-size: 0.7rem;
     letter-spacing: 0.04em;
-    font-size: 0.68rem;
+    text-transform: uppercase;
     color: var(--teal);
   }
-
-  .skill-detail--nested {
-    margin-top: 0.5rem;
+  .skill-panel .skill-used {
+    margin-top: 0.6em;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--muted-dim);
   }
-
   .skill-usage {
-    margin: 0.5em 0 0;
-    padding-left: 1em;
     display: grid;
-    gap: 0.25em;
+    gap: 0.3em;
+    margin: 0.4em 0 0;
+    padding-left: 1.1em;
     list-style: disc;
-    font-size: 0.78rem;
+    font-size: 0.85rem;
   }
-
   .skill-usage a {
-    color: var(--muted);
+    color: var(--text);
     text-decoration-color: var(--border-strong);
+    overflow-wrap: anywhere;
   }
-
   .skill-usage a:hover {
     color: var(--teal);
   }
-
-  .skill-group__more {
-    margin-top: 0.75rem;
+  .skill-close {
+    margin-top: 0.7rem;
+    min-height: 36px;
+    padding: 0 0.9rem;
+    border: 1px solid var(--border-strong);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--muted);
+    font: inherit;
+    font-size: 0.78rem;
+    cursor: pointer;
+  }
+  .skill-close:hover {
+    border-color: var(--teal);
+    color: var(--teal);
+  }
+  @media (scripting: none) {
+    .skill-close {
+      display: none;
+    }
+  }
+  @media print {
+    .skill-panel {
+      display: block !important;
+    }
+    .skill-close {
+      display: none;
+    }
   }
 </style>

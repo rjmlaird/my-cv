@@ -30,6 +30,23 @@ October 2026 overhaul.
 - ESLint (flat config) and Prettier set up; `lint`, `format`, `check:dist`, `verify` scripts added.
 - CI: lint, build and dist checks; rebuild on `repository_dispatch` and nightly.
 
+### Layout and navigation pass
+- **Header:** now `position: sticky` instead of `fixed`, so it no longer covers the hero or the "Ryan Laird" heading.
+  Anchor jumps clear it via `scroll-margin-top`.
+- **Nav:** hamburger below 1180px (accessible: `aria-expanded`, Escape and outside-click close, closes on link, panel
+  scrolls if taller than the screen); inline links at 1180px and up, with nothing clipped at any width tested
+  (360, 390, 768, 1180, 1280, 1600). ATS view and Download / Print live in the mobile menu and in the hero.
+- **Hero:** introduction runs the full width of the content column; "Get in touch", "ATS version" and
+  "Download / Print" are real 44px buttons; the portfolio links are buttons too ("Elsewhere"), stacking on phones.
+  The role string is now HTML-escaped before the employer name is emphasised. Fixed biography/summary fallback
+  (`biography` defaults to `[]`, so `??` never fell through to `summary`).
+- **Skills:** every skill is a button that opens its own panel (description, proficiency, where it was applied, with
+  links to those entries). The old six-per-category cut-off and nested "More detail" are gone. One panel per group is
+  open at a time; deep links like `/#skill-seo` open that skill; without JavaScript all panels are visible content.
+- **ATS view:** conventional section order (summary, core skills by category, experience, education, certifications,
+  memberships, awards, volunteering, languages), contact line, dates right-aligned, one plain font, real bullets,
+  `<time>` elements, print rules (A4, 14mm margins, no orphaned headings). Styles moved out of `global.css`.
+
 ### Validation fixes (Phase 5)
 - "Download / Print" button: white on orange was 1.97:1 contrast; now dark on orange. Lighthouse accessibility 95 → 100.
 - `/ats/` page: buttons were styled only inside `Nav.astro`, so the secondary button rendered white-on-white; the global

@@ -44,6 +44,5 @@ Local results from the pre-deploy run are at the bottom. Everything above them n
 
 ## Known and not changed
 
-- At about 1300px wide the fixed header is taller than the hero's top padding, so the name is partly covered on load, and
-  the nav wraps and cuts off the last links (Skills to Contact). The CSS is identical to your original; it's a design call.
+- Header covering the name and the clipped nav links were fixed in the layout pass (see CHANGES.md).
 - `global.css` is still one 1.2k-line file.

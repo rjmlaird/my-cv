@@ -1,56 +1,46 @@
 import type { Profile } from "@/lib/api";
 import type { ExperienceItem } from "@/lib/schemas/experience.schema";
-import type { EducationItem } from "@/lib/schemas/education.schema";
-import type { CertificationItem } from "@/lib/schemas/certification.schema";
-import type { MembershipGroup } from "@/lib/schemas/membership.schema";
-import type { AwardItem } from "@/lib/schemas/award.schema";
-import type { LanguageItem } from "@/lib/schemas/languages.schema";
 import type { Social } from "@/lib/schemas/social.schema";
-import { toISODate } from "@/lib/format";
+import { buildSameAs } from "@/lib/sameAs";
+import {
+  CANONICAL_SITE_URL,
+  CANONICAL_WEBSITE_ID,
+  CORE_PROFILE_URLS,
+  CV_FIRST_PUBLISHED,
+  CV_WEBPAGE_ID,
+  CV_WEBSITE_ID,
+  PERSON_ID,
+  PRIMARY_EMPLOYER,
+  SITE_URL,
+} from "@/config/site";
 
 export interface StructuredDataInput {
-  siteUrl: string;
-  ogImageUrl: string;
   profile: Profile | null;
   experience: ExperienceItem[];
-  education: EducationItem[];
-  certifications: CertificationItem[];
-  memberships: MembershipGroup[];
-  awards: AwardItem[];
-  languages: LanguageItem[];
   socials: Social[];
-  skillLabels: string[];
+  /** Absolute URL of the 1200x630 social preview image. */
+  ogImageUrl: string;
+  /** Absolute URL of a square portrait, if one is available. Omitted from the Person if not. */
+  avatarUrl?: string;
+  /** ISO 8601 timestamp for ProfilePage `dateModified` (the build time). */
+  dateModified: string;
 }
 
-const orgName = (org: ExperienceItem["organisation"]): string | undefined =>
-  typeof org === "string" ? org : org?.name ?? undefined;
-
-const dedupe = (values: Array<string | undefined>): string[] =>
-  Array.from(new Set(values.filter((v): v is string => Boolean(v && v.trim()))));
-
 /**
- * Builds a single schema.org @graph — Person, WebSite and ProfilePage,
- * cross-linked by @id — sourced from the live CV API rather than
- * hardcoded, so it stays in sync with the visible page content.
+ * Builds the CV page's schema.org @graph.
+ *
+ * Identity model: rjmlaird.co.uk owns the canonical Person (full detail:
+ * occupation history, credentials, awards, memberships, languages, knowsAbout).
+ * This page emits a SLIM Person stub that shares the canonical @id, plus the
+ * CV's own WebSite and ProfilePage, linked back to the main site. The stub is
+ * deliberate: Google evaluates each page's JSON-LD on its own and does not
+ * reliably resolve @ids across domains, so a ProfilePage needs a Person node
+ * present on the page. It carries only what's needed, with no duplicated detail.
+ *
+ * The contact email is intentionally NOT emitted (it stays visible on the page).
  */
 export function buildStructuredData(input: StructuredDataInput) {
-  const {
-    siteUrl,
-    ogImageUrl,
-    profile,
-    experience,
-    education,
-    certifications,
-    memberships,
-    awards,
-    languages,
-    socials,
-    skillLabels,
-  } = input;
-
-  const personId = `${siteUrl}/#person`;
-  const websiteId = `${siteUrl}/#website`;
-  const webpageId = `${siteUrl}/#webpage`;
+  const { profile, experience, socials, ogImageUrl, avatarUrl, dateModified } = input;
 
   const name = profile?.name ?? "Ryan Laird";
   const description =
@@ -58,114 +48,62 @@ export function buildStructuredData(input: StructuredDataInput) {
     profile?.summary?.[0] ??
     "Chartered Marketer specialising in sustainable marketing for the space sector.";
 
-  // Current (or most recent) role drives jobTitle + worksFor.
-  const sortedExperience = [...experience].sort(
-    (a, b) => new Date(b.startDate ?? 0).getTime() - new Date(a.startDate ?? 0).getTime(),
+  const currentRole =
+    experience.find((r) => r.current) ??
+    [...experience].sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime())[0];
+  const jobTitle = profile?.role ?? currentRole?.role ?? `Director, ${PRIMARY_EMPLOYER.name}`;
+
+  const sameAs = buildSameAs(
+    [...socials.map((s) => s.url), ...CORE_PROFILE_URLS, CANONICAL_SITE_URL, SITE_URL],
+    [], // Person.url is the canonical site; keeping it (and this CV) in sameAs is deliberate reciprocity.
   );
-  const currentRole = sortedExperience.find((r) => r.current) ?? sortedExperience[0];
-  const jobTitle = profile?.role ?? currentRole?.role ?? "Director, Green Orbit Digital";
-  const currentOrgName = orgName(currentRole?.organisation) ?? "Green Orbit Digital";
-
-  // schema.org's `worksFor` accepts multiple values — lead with the
-  // current employer, followed by past employers, so the full work
-  // graph is visible without overstating who Ryan currently works for.
-  const employerNames = dedupe([currentOrgName, ...experience.map((r) => orgName(r.organisation))]);
-  const worksFor = employerNames.map((n) => ({
-    "@type": "Organization",
-    name: n,
-    ...(n === "Green Orbit Digital" ? { url: "https://greenorbit.space" } : {}),
-  }));
-
-  const alumniOf = education
-    .filter((e) => e.institution)
-    .map((e) => ({
-      "@type": "CollegeOrUniversity",
-      name: e.institution,
-      ...(e.field ? { department: e.field } : {}),
-    }));
-
-  const memberOf = dedupe(
-    memberships.flatMap((group) => group.items.map((i) => i.organisation)),
-  ).map((n) => ({ "@type": "Organization", name: n }));
-
-  const hasCredential = certifications.map((c) => ({
-    "@type": "EducationalOccupationalCredential",
-    name: c.name,
-    ...(c.level ? { credentialCategory: c.level } : {}),
-    ...(c.issuer ? { recognizedBy: { "@type": "Organization", name: c.issuer } } : {}),
-    ...(c.issueDate ? { dateCreated: toISODate(c.issueDate) } : {}),
-    ...(c.expiryDate ? { expires: toISODate(c.expiryDate) } : {}),
-    ...(c.badgeUrl ? { url: c.badgeUrl } : {}),
-  }));
-
-  const awardNames = dedupe(
-    awards.map((a) =>
-      [a.title, Array.isArray(a.issuer) ? a.issuer.join(", ") : a.issuer, a.year ? String(a.year) : undefined]
-        .filter(Boolean)
-        .join(" — "),
-    ),
-  );
-
-  const knowsLanguage = languages.map((l) => ({
-    "@type": "Language",
-    name: l.name,
-  }));
-
-  const sameAs = dedupe([
-    ...socials.map((s) => s.url),
-    "https://linkedin.com/in/rjmlaird87",
-    "https://github.com/rjmlaird",
-    "https://x.com/rjmlaird",
-    "https://orcid.org/0000-0002-5992-684X",
-  ]);
-
-  const knowsAbout = dedupe([...(profile?.tags ?? []), ...skillLabels]).slice(0, 40);
 
   const person = {
     "@type": "Person",
-    "@id": personId,
+    "@id": PERSON_ID,
     name,
     ...(profile?.preferredName ? { alternateName: profile.preferredName } : {}),
+    url: `${CANONICAL_SITE_URL}/`,
     jobTitle,
-    description,
-    url: `${siteUrl}/`,
-    image: ogImageUrl,
-    email: profile?.email ? `mailto:${profile.email}` : "mailto:rjmlaird@gmail.com",
+    ...(avatarUrl ? { image: avatarUrl } : {}),
+    // Current employer only. Past roles (hasOccupation) live on the canonical Person.
+    worksFor: { "@type": "Organization", name: PRIMARY_EMPLOYER.name, url: PRIMARY_EMPLOYER.url },
     address: {
       "@type": "PostalAddress",
-      addressLocality: profile?.location ?? "Leicester",
+      ...(profile?.location ? { addressLocality: profile.location.split(",")[0].trim() } : {}),
       addressCountry: "GB",
     },
     sameAs,
-    worksFor,
-    ...(alumniOf.length ? { alumniOf } : {}),
-    ...(memberOf.length ? { memberOf } : {}),
-    ...(hasCredential.length ? { hasCredential } : {}),
-    ...(awardNames.length ? { award: awardNames } : {}),
-    ...(knowsLanguage.length ? { knowsLanguage } : {}),
-    ...(knowsAbout.length ? { knowsAbout } : {}),
   };
 
   const website = {
     "@type": "WebSite",
-    "@id": websiteId,
-    url: `${siteUrl}/`,
+    "@id": CV_WEBSITE_ID,
+    url: `${SITE_URL}/`,
     name: "Ryan Laird — CV",
     inLanguage: "en-GB",
-    publisher: { "@id": personId },
+    isPartOf: { "@id": CANONICAL_WEBSITE_ID },
+    publisher: { "@id": PERSON_ID },
   };
 
   const webpage = {
     "@type": "ProfilePage",
-    "@id": webpageId,
-    url: `${siteUrl}/`,
+    "@id": CV_WEBPAGE_ID,
+    url: `${SITE_URL}/`,
     name: `${name} — CV`,
     description,
     inLanguage: "en-GB",
-    isPartOf: { "@id": websiteId },
-    about: { "@id": personId },
-    mainEntity: { "@id": personId },
-    primaryImageOfPage: ogImageUrl,
+    dateCreated: CV_FIRST_PUBLISHED ?? dateModified,
+    dateModified,
+    isPartOf: { "@id": CV_WEBSITE_ID },
+    about: { "@id": PERSON_ID },
+    mainEntity: { "@id": PERSON_ID },
+    primaryImageOfPage: {
+      "@type": "ImageObject",
+      url: ogImageUrl,
+      width: 1200,
+      height: 630,
+    },
   };
 
   return {

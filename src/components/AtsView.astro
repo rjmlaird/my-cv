@@ -1,6 +1,7 @@
 ---
-// Optimized for machine parsing (ATS/Screen Readers)
+// Optimized for machine parsing (ATS/Screen Readers). Rendered by src/pages/ats.astro.
 import api from "@/lib/api";
+import type { CertificationItem } from "@/lib/schemas/certification.schema";
 import { aggregateSkills, type SkillSource } from "@/lib/skills";
 import { joinParts } from "@/lib/format";
 
@@ -18,13 +19,21 @@ const formatATSDate = (d: string | null | undefined) => d ? new Date(d).toISOStr
 const sortDesc = <T extends { startDate?: string | null }>(arr: T[]) => 
   [...arr].sort((a, b) => new Date(b.startDate ?? 0).getTime() - new Date(a.startDate ?? 0).getTime());
 
-const getLoc = (item: any) => joinParts([item.city || item.location?.city, item.country || item.location?.country], ", ");
+type Located = {
+  city?: string | null;
+  country?: string | null;
+  location?: { city?: string | null; country?: string | null } | string | null;
+};
+const getLoc = (item: Located) => {
+  const loc = typeof item.location === "object" && item.location ? item.location : undefined;
+  return joinParts([item.city || loc?.city, item.country || loc?.country], ", ");
+};
 
 const sortedExp = sortDesc(experience);
 const sortedEdu = sortDesc(education);
 const sortedVol = sortDesc(volunteering);
 
-const groupedCerts = certifications.reduce((acc: Record<string, any[]>, c) => {
+const groupedCerts = certifications.reduce((acc: Record<string, CertificationItem[]>, c) => {
   if (!c.issuer) return acc;
   acc[c.issuer] = acc[c.issuer] || [];
   acc[c.issuer].push(c);
@@ -36,13 +45,13 @@ const skillSources: SkillSource[] = [
   ...education.map(e => ({ tags: e.skills ?? [], ref: { label: e.qualification || "", href: "" } })),
 ];
 const allSkills = await aggregateSkills(skillSources);
-const skillsFlat = allSkills.map((s: any) => s.label).join(", ");
+const skillsFlat = allSkills.map((s) => s.label).join(", ");
 
 // Safely extract summary
 const summary = profile?.summary ?? [];
 ---
 
-<main id="ats-view" style="font-family: sans-serif; line-height: 1.5; color: #000; max-width: 800px; margin: auto;">
+<main id="main-content" class="ats-view">
   <header>
     <h1>{profile?.name ?? "Ryan Laird"}</h1>
     <p><strong>{profile?.role}</strong></p>
@@ -95,11 +104,11 @@ const summary = profile?.summary ?? [];
   {Object.keys(groupedCerts).length > 0 && (
     <section>
       <h2>Certifications</h2>
-      {Object.entries(groupedCerts).map(([issuer, certs]: [string, any]) => (
+      {Object.entries(groupedCerts).map(([issuer, certs]) => (
         <div style="margin-bottom: 0.5em;">
           <strong>{issuer}</strong>
           <ul>
-            {certs.map((c: any) => <li>{c.name} {c.level ? `(${c.level})` : ""}</li>)}
+            {certs.map((c) => <li>{c.name} {c.level ? `(${c.level})` : ""}</li>)}
           </ul>
         </div>
       ))}

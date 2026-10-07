@@ -1,0 +1,24 @@
+---
+// Plain-text, single-column CV for ATS parsers and clean printing.
+// Deliberately noindex and excluded from the sitemap: the visual CV at "/" is the canonical page.
+import Layout from "@/layouts/Layout.astro";
+import AtsView from "@/components/AtsView.astro";
+---
+
+<Layout
+  title="Ryan Laird — CV (plain-text / ATS version)"
+  description="Plain-text, single-column version of Ryan Laird's CV, formatted for applicant tracking systems and printing."
+  noindex
+  canonicalPath="/"
+>
+  <a class="skip-link" href="#main-content">Skip to content</a>
+  <nav class="ats-actions" aria-label="CV view options">
+    <a class="btn" href="/">← Visual CV</a>
+    <button class="btn secondary" id="print-btn" type="button">Print / save as PDF</button>
+  </nav>
+  <AtsView />
+</Layout>
+
+<script>
+  document.getElementById("print-btn")?.addEventListener("click", () => window.print());
+</script>

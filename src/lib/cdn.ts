@@ -15,10 +15,8 @@ async function initializeMap(): Promise<void> {
   if (!initializationPromise) {
     initializationPromise = (async () => {
       const documents: ManifestEntry[] = await getDocuments();
-      console.log("[CDN Debug] Documents fetched:", documents); // ADD THIS
       if (Array.isArray(documents)) {
         docMap = new Map(documents.map((d) => [d.id, d.key]));
-        console.log("[CDN Debug] docMap keys:", Array.from(docMap.keys())); // ADD THIS
       } else {
         docMap = new Map();
       }
@@ -29,17 +27,13 @@ async function initializeMap(): Promise<void> {
 
 export async function getCdnUrl(cdnId?: string | null): Promise<string | undefined> {
   if (!cdnId) return undefined;
-  
+
   await initializeMap();
 
   const key = docMap?.get(cdnId);
-  
-  // LOGGING: Check if the ID exists in the map
   if (!key) {
-    console.warn(`[CDN Debug] No match found for cdnId: "${cdnId}"`);
-  } else {
-    console.log(`[CDN Debug] Success! Match for "${cdnId}" -> "${key}"`);
+    console.warn(`[CDN] No match found for cdnId: "${cdnId}"`);
+    return undefined;
   }
-  
-  return key ? `${CDN_BASE_URL}/${key}` : undefined;
+  return `${CDN_BASE_URL}/${key}`;
 }

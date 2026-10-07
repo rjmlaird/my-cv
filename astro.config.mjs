@@ -7,5 +7,9 @@ export default defineConfig({
   site: 'https://cv.rjmlaird.co.uk',
   output: 'static',
   compressHTML: true,
-  integrations: [sitemap(),icon()],
+  integrations: [
+    // /ats/ is a noindex alternate view; keep it out of the sitemap.
+    sitemap({ filter: (page) => !new URL(page).pathname.startsWith('/ats') }),
+    icon(),
+  ],
 });

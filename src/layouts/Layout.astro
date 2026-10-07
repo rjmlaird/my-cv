@@ -1,78 +1,50 @@
 ---
+// Self-hosted variable fonts (no third-party request). Browsers fetch only the unicode subsets a page uses.
+import '@fontsource-variable/space-grotesk';
+import '@fontsource-variable/inter';
+import '@fontsource-variable/jetbrains-mono';
 import '@/styles/global.css';
 
 export interface Props {
   title?: string;
   description?: string;
-  /** JSON-LD graph built from live API data (see src/lib/structuredData.ts). Falls back to a static Person if omitted. */
+  /** JSON-LD graph built from live API data (see src/lib/structuredData.ts). No static fallback entity is ever emitted. */
   structuredData?: Record<string, unknown>;
+  /** Keep this page out of search indexes (it is still followable). */
+  noindex?: boolean;
+  /** Override the canonical path, e.g. "/" for a noindex alternate view. */
+  canonicalPath?: string;
 }
 
 const {
   title = 'Ryan Laird — CV | Director, Green Orbit Digital',
   description = 'Ryan Laird — Chartered Marketer (CMktr), Director of Green Orbit Digital, sustainable marketing specialist for the space sector. Full CV: experience, education, skills, certifications.',
   structuredData,
+  noindex = false,
+  canonicalPath,
 } = Astro.props;
 
-const canonicalURL = new URL(Astro.url.pathname, Astro.site ?? 'https://cv.rjmlaird.co.uk');
+const canonicalURL = new URL(canonicalPath ?? Astro.url.pathname, Astro.site ?? 'https://cv.rjmlaird.co.uk');
 const ogImageURL = new URL('/og-image.png', Astro.site ?? 'https://cv.rjmlaird.co.uk');
 
-const fallbackStructuredData = {
-  "@context": "https://schema.org",
-  "@type": "Person",
-  name: "Ryan Laird",
-  jobTitle: "Director, Green Orbit Digital",
-  description: "Chartered Marketer specialising in sustainable marketing for the space sector.",
-  url: "https://cv.rjmlaird.co.uk/",
-  image: ogImageURL.toString(),
-  sameAs: [
-    "https://linkedin.com/in/rjmlaird87",
-    "https://github.com/rjmlaird",
-    "https://x.com/rjmlaird",
-    "https://orcid.org/0000-0002-5992-684X",
-  ],
-  worksFor: {
-    "@type": "Organization",
-    name: "Green Orbit Digital",
-    url: "https://greenorbit.space",
-  },
-  alumniOf: [
-    { "@type": "CollegeOrUniversity", name: "University of Leicester" },
-    { "@type": "CollegeOrUniversity", name: "University of Kent" },
-    { "@type": "CollegeOrUniversity", name: "International Space University" },
-  ],
-  email: "mailto:rjmlaird@gmail.com",
-  address: {
-    "@type": "PostalAddress",
-    addressLocality: "Leicester",
-    addressCountry: "GB",
-  },
-};
 ---
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en-GB">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
     <title>{title}</title>
     <meta name="description" content={description} />
     <meta name="author" content="Ryan Laird" />
-    <meta name="robots" content="index, follow, max-image-preview:large" />
-    <meta
-      name="keywords"
-      content="Ryan Laird, CV, Curriculum Vitae, Resume, Green Orbit Digital, sustainable marketing, space sector marketing, science communication, Chartered Marketer, CMktr, Leicester, UKspace"
-    />
+    <meta name="robots" content={noindex ? "noindex, follow" : "index, follow, max-image-preview:large"} />
 
     <link rel="canonical" href={canonicalURL} />
 
     <!-- Open Graph -->
     <meta property="og:site_name" content="Ryan Laird — CV" />
-    <meta property="og:title" content="Ryan Laird — CV | Green Orbit Digital" />
-    <meta
-      property="og:description"
-      content="Director and Founder of Green Orbit Digital, specialising in sustainable marketing for the space sector."
-    />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
     <meta property="og:type" content="profile" />
     <meta property="og:url" content={canonicalURL} />
     <meta property="og:image" content={ogImageURL} />
@@ -84,7 +56,7 @@ const fallbackStructuredData = {
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Ryan Laird — CV | Green Orbit Digital" />
+    <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={ogImageURL} />
     <meta name="twitter:site" content="@rjmlaird" />
@@ -92,17 +64,9 @@ const fallbackStructuredData = {
     <meta name="theme-color" content="#0a0f1a" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 
-    <script
-      type="application/ld+json"
-      is:inline
-      set:html={JSON.stringify(structuredData ?? fallbackStructuredData)} />
-
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
-      rel="stylesheet"
-    />
+    {structuredData && (
+      <script type="application/ld+json" is:inline set:html={JSON.stringify(structuredData)} />
+    )}
   </head>
   <body>
     <a class="skip-link" href="#main-content">Skip to content</a>

@@ -1,115 +1,126 @@
 # Ryan Laird — CV
 
-Source for [cv.rjmlaird.co.uk](https://cv.rjmlaird.co.uk), built with [Astro](https://astro.build).
+Source for [cv.rjmlaird.co.uk](https://cv.rjmlaird.co.uk). Astro 7, static output, content fetched at build time
+from `api.rjmlaird.co.uk` and validated with Zod.
 
-## Stack
+## Identity and structured data
 
-- **Astro** (static output, no client-side framework needed)
-- Content is fetched at build time from `api.rjmlaird.co.uk` and validated
-  with Zod schemas (`src/lib/schemas/`) — see "Content" below
-- One local **content collection** (`src/content/skills/`) for the skills
-  taxonomy, defined in `src/content.config.ts`
-- Plain CSS with design tokens (no Tailwind/build-step CSS framework — see `src/styles/global.css`)
-- Fonts: Space Grotesk (display), Inter (body), JetBrains Mono (data/labels)
+**rjmlaird.co.uk owns the canonical `Person`** (`https://rjmlaird.co.uk/#person`). This site does not define a competing
+entity. `src/lib/structuredData.ts` emits one `@graph` containing:
+
+| Node          | `@id`                               | Notes                                                                  |
+| ------------- | ----------------------------------- | ---------------------------------------------------------------------- |
+| `WebSite`     | `https://cv.rjmlaird.co.uk/#website` | `isPartOf` the main site's `#website`; `publisher` is the canonical Person |
+| `ProfilePage` | `https://cv.rjmlaird.co.uk/#webpage` | `mainEntity`/`about` → canonical Person; `dateCreated`, `dateModified`  |
+| `Person`      | `https://rjmlaird.co.uk/#person`     | **Slim stub** (name, url, jobTitle, image, current `worksFor`, `sameAs`) |
+
+The stub is deliberate: Google evaluates each page's JSON-LD on its own and does not reliably resolve `@id`s across
+domains, so the ProfilePage needs a Person node on the page. Full detail (occupation history, credentials, awards,
+memberships, languages, `knowsAbout`) belongs on the main site, built from the API's `/v1/schema/person` endpoint.
+
+Rules that are enforced by `pnpm check:dist`:
+
+- no email address in JSON-LD (it stays visible on the page)
+- `worksFor` is the current employer only
+- `sameAs` is https-only, deduped, and excludes messaging links (`wa.me`, `signal.me`, `t.me`)
+- the CV is self-canonical; it is not canonicalised to the main site
+
+All identity constants live in `src/config/site.ts`. Change them there, nowhere else. `CV_FIRST_PUBLISHED` should be set
+to the real publish date; until it is, `dateCreated` falls back to the build date.
 
 ## Structure
 
 ```
 src/
-├── content.config.ts     # Defines the local `skills` content collection
-├── content/
-│   └── skills/            # One markdown file per skill (name, category,
-│                           # description, etc.) — the canonical skills
-│                           # taxonomy, referenced by slug from the API's
-│                           # experience/education/project `skills` arrays
+├── config/site.ts          # Origins, canonical @ids, current employer, contact email
+├── data/
+│   ├── nav.ts              # Section nav links
+│   └── skills.yaml         # Skills taxonomy (see "Skills" below)
 ├── lib/
-│   ├── api.ts             # Fetches + validates every collection from the API
-│   ├── skills.ts           # Resolves raw skill/project tag strings against
-│   │                        # the skills collection and the projects list
+│   ├── api.ts              # Fetch + validate every collection; memoised; fail-fast
+│   ├── cdn.ts              # Resolves CDN document ids to URLs
+│   ├── sameAs.ts           # Normalise / filter / dedupe profile URLs
+│   ├── skills.ts           # Taxonomy loader + tag aggregation
+│   ├── structuredData.ts   # JSON-LD graph (see above)
+│   ├── format.ts           # Date/text helpers
 │   └── schemas/            # One Zod schema per API collection
-├── layouts/
-│   └── Layout.astro       # <head>, fonts, SEO meta, JSON-LD schema, global CSS
-├── components/
-│   ├── Nav.astro            # Sticky nav + ATS view toggle + print button
-│   ├── Hero.astro
-│   ├── Experience.astro
-│   ├── Education.astro
-│   ├── Projects.astro       # Cross-referenced from Experience/Education
-│   ├── Skills.astro
-│   ├── Certifications.astro
-│   ├── Memberships.astro
-│   ├── Languages.astro
-│   ├── Research.astro
-│   ├── Teaching.astro
-│   ├── Awards.astro
-│   ├── Causes.astro
-│   ├── Volunteering.astro
-│   ├── Contact.astro
-│   ├── Footer.astro
-│   └── AtsView.astro       # Plain-text single-column version, built from the
-│                            # same API data, shown via the ATS toggle and
-│                            # @media print
-├── styles/
-│   └── global.css          # All design tokens + component styles
-└── pages/
-    └── index.astro          # Assembles everything above
+├── layouts/Layout.astro    # <head>, meta, JSON-LD, fonts, global CSS
+├── components/             # One component per CV section, plus Nav and AtsView
+├── pages/
+│   ├── index.astro         # The visual CV
+│   └── ats.astro           # Plain-text CV for ATS parsers (noindex)
+└── styles/global.css       # Design tokens and styles
+scripts/check-dist.mjs      # Post-build checks
 ```
 
-## Content
+Fonts (Space Grotesk, Inter, JetBrains Mono) are self-hosted via `@fontsource-variable/*`. There is no request to
+Google Fonts.
 
-Almost everything on the page comes from `api.rjmlaird.co.uk` at build time
-(see `src/lib/api.ts` for the full list of collections and endpoints). The
-one exception is the **skills taxonomy**, which lives locally as a content
-collection in `src/content/skills/*.md` so each skill gets a stable slug,
-category, and optional description without needing an API round-trip.
+## Content and the API
 
-**The Skills section is not manually curated.** It's built by scanning the
-`skills` array on every experience, education, and project entry returned by
-the API, deduping and counting the tags (`src/lib/skills.ts`,
-`aggregateSkills`/`groupSkillsByCategory`) — a skill only appears if
-something on the CV is actually tagged with it. The local skills collection
-only supplies enrichment (category, description) when a tag matches a known
-slug/name; it never adds a skill to the section on its own.
+Almost everything comes from `api.rjmlaird.co.uk` at build time (`src/lib/api.ts`). Each endpoint is requested once per
+build and shared by every component, so sections can't disagree.
 
-To tag a role, education entry, or project with a skill, add its slug (the
-markdown filename, e.g. `sustainable-marketing`) to that item's `skills`
-array in the API response. The field is optional — omit it and it just
-doesn't contribute a tag. Unrecognised tags (a name that doesn't match a
-slug in `src/content/skills/`) still show up in the Skills section (grouped
-under "Other"), just without a description, so the site never breaks while
-tags are being backfilled.
+**The build fails** if `profile`, `experience` or `education` can't be fetched or don't validate. A blank CV is never
+deployed. Other collections degrade to empty sections with a logged warning.
 
-The same cross-referencing applies to `projects`: add a project's `slug`
-(or its exact title) to an experience/education entry's `projects` array and
-it renders as a link into the Projects section, once that project exists in
-the API's `/projects` collection.
+| Variable          | Effect                                                                           |
+| ----------------- | -------------------------------------------------------------------------------- |
+| `ALLOW_PARTIAL=1` | Let the build continue when critical data is missing (local work only)           |
+| `CV_API_BASE`     | Override the API base URL, e.g. `http://127.0.0.1:4599/api` to build against a mock |
+
+## Skills
+
+The Skills section is built from the `skills` tags on experience and education entries (`aggregateSkills`), not
+curated by hand. `src/data/skills.yaml` supplies categories and canonical names only; it never adds a skill on its own.
+Tags that match nothing in the taxonomy still appear, under "Other".
+
+`skills.yaml` accepts either a map of `category_key: [skill names]` (current) or an array of
+`{ name, category, description, proficiency, relatedSkills }` entries. Any other shape fails the build. New category
+keys need a label in `CATEGORY_LABELS` in `src/lib/skills.ts`; unknown keys fall back to a Title Case of the key.
+
+## ATS / print
+
+- `/ats/` is a plain, single-column version for applicant tracking systems and clean PDFs. It is `noindex`,
+  canonicalised to `/`, and excluded from the sitemap.
+- "Download / Print" on the main page prints the visual layout.
 
 ## Commands
 
-Run these from the project root, in a terminal:
+| Command             | Action                                                              |
+| ------------------- | ------------------------------------------------------------------- |
+| `pnpm install`      | Install dependencies (pnpm only; version pinned in `packageManager`) |
+| `pnpm dev`          | Dev server at `localhost:4321`                                      |
+| `pnpm build`        | `astro check` then production build to `./dist/`                    |
+| `pnpm preview`      | Preview the production build                                        |
+| `pnpm typecheck`    | Type-check only                                                     |
+| `pnpm lint`         | ESLint (`eslint.config.mjs`)                                        |
+| `pnpm format`       | Prettier (writes; run as its own commit)                            |
+| `pnpm check:dist`   | Post-build checks on `./dist`                                       |
+| `pnpm verify`       | Typecheck, lint, build, then dist checks                            |
+| `pnpm check:live`   | After deploy: check CV and main site agree on the Person (needs network) |
 
-| Command             | Action                                       |
-|----------------------|-----------------------------------------------|
-| `pnpm install`        | Install dependencies                          |
-| `pnpm dev`             | Start local dev server at `localhost:4321`    |
-| `pnpm build`           | Build production site to `./dist/`            |
-| `pnpm preview`         | Preview the production build locally          |
-| `pnpm typecheck`       | Type-check `.astro`/`.ts` files and the content collection |
+Node version is in `.nvmrc` (24). TypeScript is pinned to 5.9 because `astro check` doesn't work with TypeScript 7 yet.
 
 ## Deploying
 
-`pnpm build` outputs a fully static site to `dist/` — deploy it to Netlify,
-Vercel, Cloudflare Pages, GitHub Pages, or any static host. Update `site` in
-`astro.config.mjs` if the domain changes.
+`.github/workflows/deploy-cv.yml` builds and deploys to GitHub Pages on:
 
-## ATS / print view
+- push to `master`
+- `repository_dispatch` with type `content-updated`. Fire it from the API repo when CV data changes:
+  `gh api repos/rjmlaird/my-cv/dispatches -f event_type=content-updated`
+- a nightly schedule (04:17 UTC) as a backstop
+- manual `workflow_dispatch`
 
-The "ATS view" button (and printing the page via Cmd/Ctrl+P) switches to a
-plain black-on-white, single-column layout with proper heading hierarchy —
-built for resume parsers and for producing a clean PDF.
+CI runs lint, build and `check:dist`; a failure stops the deploy. Update `SITE_URL` in `src/config/site.ts` **and**
+`site` in `astro.config.mjs` if the domain ever changes.
 
-## SEO
+## After deploying
 
-`Layout.astro` sets canonical URLs, Open Graph + Twitter card meta, and
-`Person` JSON-LD structured data. Add a 1200×630 `og-image.png` to `public/`
-to complete the social preview image (referenced but not yet included).
+See `POST-DEPLOY-CHECKLIST.md` for the live checks (Rich Results Test, Search Console, `pnpm check:live`).
+
+## SEO notes
+
+- Canonical URL, Open Graph and Twitter meta are generated from the page `title` and `description` props.
+- `<meta name="keywords">` is intentionally absent (search engines ignore it).
+- The sitemap deliberately has no `lastmod`: nightly rebuilds would bump it daily with no real content change.

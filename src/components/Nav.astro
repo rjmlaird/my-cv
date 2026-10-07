@@ -23,9 +23,7 @@ import { navLinks } from "@/data/nav";
     </div>
 
     <div class="nav-actions">
-      <button class="btn" id="ats-toggle" type="button" aria-pressed="false">
-        ATS view
-      </button>
+      <a class="btn" href="/ats/">ATS view</a>
       <button class="btn secondary" id="print-btn" type="button">
         Download / Print
       </button>
@@ -56,16 +54,8 @@ import { navLinks } from "@/data/nav";
     navList?.classList.toggle('open');
   });
 
-  // ATS & Print logic
-  const atsToggle = document.getElementById("ats-toggle");
+  // Print
   const printBtn = document.getElementById("print-btn");
-
-  atsToggle?.addEventListener("click", () => {
-    const isAts = document.body.classList.toggle("ats-mode");
-    atsToggle.setAttribute("aria-pressed", String(isAts));
-    atsToggle.textContent = isAts ? "Visual view" : "ATS view";
-    if (isAts) window.scrollTo({ top: 0, behavior: "smooth" });
-  });
 
   printBtn?.addEventListener("click", () => window.print());
 </script>
@@ -141,6 +131,8 @@ import { navLinks } from "@/data/nav";
   .btn {
     display: inline-flex;
     align-items: center;
+    text-decoration: none;
+    color: inherit;
     min-height: 44px;
     padding: 0.65rem 1rem;
     border-radius: 999px;
@@ -149,7 +141,8 @@ import { navLinks } from "@/data/nav";
     cursor: pointer;
   }
 
-  .btn.secondary { background: orange; color: #fff; border-color: orange; }
+  /* Dark text on orange: 10:1 contrast (white on orange was 1.97:1). */
+  .btn.secondary { background: orange; color: #0a0f1a; border-color: orange; }
 
   @media (max-width: 900px) {
     #menu-toggle { display: block; }

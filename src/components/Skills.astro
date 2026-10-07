@@ -47,7 +47,8 @@ const grouped = groupSkillsByCategory(aggregated);
     <h2 id="skills-heading">Skills</h2>
 
     <p class="section-intro">
-      Intro
+      Drawn from the roles and qualifications above. A skill appears only where it has been applied, and the count
+      shows how often.
     </p>
 
     <div class="skills-grid">
@@ -177,12 +178,13 @@ const grouped = groupSkillsByCategory(aggregated);
     color: var(--muted);
   }
 
-  .skill-proficiency {
+  /* Two classes beats `.skill-detail p`, so no !important is needed. */
+  .skill-detail .skill-proficiency {
     font-family: var(--font-mono);
     text-transform: uppercase;
     letter-spacing: 0.04em;
-    font-size: 0.68rem !important;
-    color: var(--teal) !important;
+    font-size: 0.68rem;
+    color: var(--teal);
   }
 
   .skill-detail--nested {

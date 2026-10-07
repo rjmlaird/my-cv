@@ -14,10 +14,10 @@ import Tools from '@/components/Tools.astro';
 import Volunteering from "@/components/Volunteering.astro";
 import Contact from "@/components/Contact.astro";
 import Footer from "@/components/Footer.astro";
-import AtsView from "./AtsView.astro";
 import api from "@/lib/api";
-import { aggregateSkills, type SkillSource } from "@/lib/skills";
 import { buildStructuredData } from "@/lib/structuredData";
+import { getCdnUrl } from "@/lib/cdn";
+import { SITE_URL } from "@/config/site";
 
 // Fetch all data
 const [
@@ -33,9 +33,11 @@ const [
   volunteering = [],
   projects = [],
 ] = await Promise.all([
-  api.getProfile().catch((e) => { console.error("[CRITICAL] Profile fetch failed:", e); return null; }),
-  api.getExperience().catch(() => []),
-  api.getEducation().catch(() => []),
+  // Critical data: these throw (failing the build) rather than shipping a blank CV.
+  // See `critical()` in src/lib/api.ts. Set ALLOW_PARTIAL=1 to override locally.
+  api.getProfile(),
+  api.getExperience(),
+  api.getEducation(),
   api.getCertifications().catch(() => []),
   api.getMemberships().catch(() => []),
   api.getAwards().catch(() => []),
@@ -46,30 +48,17 @@ const [
   api.getProjects().catch(() => []),
 ]);
 
-// Prepare Skill Data
-const skillSources: SkillSource[] = [
-  ...experience.map((r) => ({ tags: r.skills ?? [], ref: { label: r.role, href: "" } })),
-  ...education.map((e) => ({ tags: e.skills ?? [], ref: { label: e.qualification || "", href: "" } })),
-];
-const aggregatedSkills = skillSources.length > 0 ? await aggregateSkills(skillSources) : [];
-const skillLabels = aggregatedSkills.map((s) => s.label);
-
 // Meta & Structured Data
-const siteUrl = (Astro.site ?? new URL("https://cv.rjmlaird.co.uk")).origin;
-const ogImageUrl = new URL("/og-image.png", siteUrl).toString();
+const ogImageUrl = new URL("/og-image.png", SITE_URL).toString();
+const avatarUrl = profile?.avatar?.startsWith("http") ? profile.avatar : await getCdnUrl(profile?.avatar);
 
 const structuredData = buildStructuredData({
-  siteUrl,
-  ogImageUrl,
   profile,
   experience,
-  education,
-  certifications,
-  memberships: Array.isArray(membershipGroups) ? membershipGroups : [],
-  awards,
-  languages,
   socials,
-  skillLabels,
+  ogImageUrl,
+  avatarUrl,
+  dateModified: new Date().toISOString(),
 });
 ---
 
@@ -86,17 +75,15 @@ const structuredData = buildStructuredData({
     <Memberships memberships={membershipGroups} />
     <Languages languages={languages} />
     <Awards awards={awards} />
-    <Skills skills={skillLabels} />
+    <Skills />
     <Tools data={tools} />
     <Volunteering 
       volunteering={volunteering} 
       allProjects={projects} 
       allAwards={awards} 
-      allCertifications={certifications} 
     />
     <Contact profile={profile} socials={socials} />
   </main>
 
   <Footer />
-  <AtsView />
 </Layout>

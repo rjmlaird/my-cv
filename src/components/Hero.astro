@@ -7,9 +7,6 @@ interface Props {
 
 const { profile } = Astro.props;
 
-// LOG: The source of truth
-console.log("Hero received profile:", profile);
-
 // Ensure we have access to the data, even if it's the 'summary' or 'biography' field
 const name = profile?.name ?? "Ryan Laird";
 const credentials = profile?.credentials ?? "";

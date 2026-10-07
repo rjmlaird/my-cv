@@ -13,7 +13,39 @@ const skillEntrySchema = z.object({
   relatedSkills: z.array(z.string()).default([]),
 });
 
-const skillTaxonomySchema = z.array(skillEntrySchema);
+/**
+ * skills.yaml accepts two shapes:
+ *  1. a map of category key -> list of skill names (current format):
+ *       marketing_growth: [SEO, Positioning]
+ *  2. an array of rich entries ({ name, category, description, ... }).
+ * Anything else is a hard error: a silently empty taxonomy is how every skill
+ * ended up "unresolved" before.
+ */
+const skillTaxonomySchema = z.union([
+  z.array(skillEntrySchema),
+  z.record(z.string(), z.array(z.string())),
+]);
+
+/** Display labels for category keys. Unknown keys fall back to a Title Case of the key. */
+const CATEGORY_LABELS: Record<string, string> = {
+  marketing_growth: "Marketing & Growth",
+  communications_editorial: "Communications & Editorial",
+  leadership_collaboration: "Leadership & Collaboration",
+  research_analysis: "Research & Analysis",
+  education_training: "Education & Training",
+  technical_digital: "Technical & Digital",
+};
+
+function categoryLabel(key: string): string {
+  return (
+    CATEGORY_LABELS[key] ??
+    key
+      .split(/[_\s-]+/)
+      .filter(Boolean)
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(" ")
+  );
+}
 
 export type SkillTaxonomyEntry = z.infer<typeof skillEntrySchema> & { id: string };
 
@@ -34,14 +66,30 @@ async function loadSkillsYaml(): Promise<SkillTaxonomyEntry[]> {
 
   const filePath = path.join(process.cwd(), "src/data/skills.yaml");
   const raw = await readFile(filePath, "utf8");
-  const parsed = parse(raw) as unknown;
-  const result = skillTaxonomySchema.parse(Array.isArray(parsed) ? parsed : []);
+  const parsed = skillTaxonomySchema.safeParse(parse(raw));
+  if (!parsed.success) {
+    throw new Error(
+      `[skills] src/data/skills.yaml is not a valid taxonomy (expected a category->skills map or an array of entries): ${parsed.error.message}`,
+    );
+  }
 
-  cachedSkills = result.map((entry) => ({
-    ...entry,
-    id: entry.id ?? slugify(entry.name),
-    relatedSkills: entry.relatedSkills ?? [],
-  }));
+  const entries: z.infer<typeof skillEntrySchema>[] = Array.isArray(parsed.data)
+    ? parsed.data
+    : Object.entries(parsed.data).flatMap(([key, names]) =>
+        names.map((name) => ({ name, category: categoryLabel(key), relatedSkills: [] as string[] })),
+      );
+
+  if (entries.length === 0) {
+    throw new Error("[skills] src/data/skills.yaml contains no skills.");
+  }
+
+  const seen = new Set<string>();
+  cachedSkills = entries.map((entry) => {
+    const id = entry.id ?? slugify(entry.name);
+    if (seen.has(id)) console.warn(`[skills] duplicate skill id "${id}" in skills.yaml; the later entry wins.`);
+    seen.add(id);
+    return { ...entry, id, relatedSkills: entry.relatedSkills ?? [] };
+  });
 
   return cachedSkills;
 }

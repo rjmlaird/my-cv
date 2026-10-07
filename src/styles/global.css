@@ -47,9 +47,9 @@
   --content-max: 3200px;
   --maxw: 1200px;
   --gutter: max(2.5rem, calc((100% - var(--content-max)) / 2));
-  --font-display: "Space Grotesk", sans-serif;
-  --font-body: "Inter", sans-serif;
-  --font-mono: "JetBrains Mono", monospace;
+  --font-display: "Space Grotesk Variable", "Space Grotesk", system-ui, sans-serif;
+  --font-body: "Inter Variable", "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono Variable", "JetBrains Mono", ui-monospace, monospace;
   color-scheme: dark;
 }
 
@@ -1120,39 +1120,62 @@ footer a:hover, footer a:focus-visible {
    ATS PLAIN-TEXT VIEW & PRINT STYLES
    ========================================================================== */
 
-#ats-view {
-  display: none;
+.ats-view {
   max-width: 760px;
   margin: 0 auto;
   padding: 3rem 1.5rem 5rem;
+  font-family: sans-serif;
+  line-height: 1.5;
   color: #111;
   background: #fff;
 }
 
-body.ats-mode {
+body:has(.ats-view) {
   background: #fff;
 }
 
-body.ats-mode .site-header,
-body.ats-mode header.site-nav,
-body.ats-mode .hero,
-body.ats-mode main,
-body.ats-mode footer,
-body.ats-mode .orbit-decor {
-  display: none;
+.ats-actions {
+  display: flex;
+  gap: 0.75rem;
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 1rem 1.5rem 0;
 }
 
-body.ats-mode #ats-view {
+/* `.btn` is otherwise styled only inside Nav.astro, so the ATS page needs its own. */
+.ats-actions .btn {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0.65rem 1rem;
+  border: 1px solid #111;
+  border-radius: 999px;
+  background: #fff;
+  color: #111;
+  font: inherit;
+  font-size: 0.9rem;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.ats-actions .btn.secondary {
+  background: #111;
+  color: #fff;
+}
+
+/* The bare global `header` rule is a flex row; reset it inside the ATS page. */
+.ats-view header {
   display: block;
-  color: #111;
+  padding: 0;
+  border: 0;
 }
 
-#ats-view h1 {
+.ats-view h1 {
   color: #111;
   font-size: 1.8rem;
 }
 
-#ats-view h2 {
+.ats-view h2 {
   margin: 1.6em 0 0.6em;
   padding-bottom: 0.3em;
   border-bottom: 1px solid #ccc;
@@ -1160,26 +1183,26 @@ body.ats-mode #ats-view {
   font-size: 1.15rem;
 }
 
-#ats-view p,
-#ats-view li {
+.ats-view p,
+.ats-view li {
   color: #222;
   font-size: 0.95rem;
 }
 
-#ats-view a {
+.ats-view a {
   color: #0a6b60;
 }
 
-#ats-view .ats-entry {
+.ats-view .ats-entry {
   margin-bottom: 1.1em;
 }
 
-#ats-view .ats-meta {
+.ats-view .ats-meta {
   color: #555;
   font-size: 0.85rem;
 }
 
-#ats-view ul {
+.ats-view ul {
   margin-bottom: 0.8em;
   padding-left: 1.3em;
   list-style: disc;
@@ -1199,18 +1222,8 @@ body.ats-mode #ats-view {
     color: #111;
   }
 
-  body:not(.ats-mode) #ats-view {
-    display: block;
-  }
-
-  body:not(.ats-mode) .hero,
-  body:not(.ats-mode) main {
-    display: none;
-  }
-
-  #ats-view {
-    display: block;
-    color: #111;
+  .ats-actions {
+    display: none !important;
   }
 
   details.more-detail,

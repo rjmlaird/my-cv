@@ -5,14 +5,12 @@ interface Props {
   volunteering: VolunteeringItem[];
   allProjects?: any[];
   allAwards?: any[];
-  allCertifications?: any[];
 }
 
 const { 
   volunteering = [], 
   allProjects = [], 
-  allAwards = [], 
-  allCertifications = [] 
+  allAwards = [],
 } = Astro.props;
 
 // Sort by order

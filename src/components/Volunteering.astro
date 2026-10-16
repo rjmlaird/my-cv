@@ -1,10 +1,11 @@
 ---
-import type { VolunteeringItem } from "@/lib/schemas/volunteering.schema";
+import type { ResolvedAward, ResolvedVolunteering as VolunteeringItem } from "@/lib/api";
+import type { ProjectItem } from "@/lib/schemas/project.schema";
 
 interface Props {
   volunteering: VolunteeringItem[];
-  allProjects?: any[];
-  allAwards?: any[];
+  allProjects?: ProjectItem[];
+  allAwards?: ResolvedAward[];
 }
 
 const { 
@@ -18,8 +19,8 @@ const entries = Array.isArray(volunteering)
   ? [...volunteering].sort((a, b) => (a.order ?? 0) - (b.order ?? 0)) 
   : [];
 
-const projectMap = new Map(allProjects.map((p: any) => [p.slug, p]));
-const awardMap = new Map(allAwards.map((a: any) => [a.id, a]));
+const projectMap = new Map(allProjects.map((p) => [p.slug, p]));
+const awardMap = new Map(allAwards.map((a) => [a.id, a]));
 
 const hasMoreDetail = (item: VolunteeringItem) =>
   (item.projects?.length ?? 0) > 0 ||
@@ -44,7 +45,8 @@ const hasMoreDetail = (item: VolunteeringItem) =>
             <div class="role-header">
               <div>
                 <span class="role-title">{item.role}</span>
-                {item.organisation ? <> · <span class="role-org">{item.organisation}</span></> : null}
+                {item.organisation.name ? <> · <span class="role-org">{item.organisation.name}</span></> : null}
+                {item.event ? <> · <span class="role-event">{item.event}</span></> : null}
                 {location ? <> · <span class="role-location">{location}</span></> : null}
               </div>
               {(item.startDate || item.endDate) ? (
@@ -73,7 +75,7 @@ const hasMoreDetail = (item: VolunteeringItem) =>
                         return a ? (
                           <li>
                             <strong>{a.title}</strong>
-                            {a.issuer ? <> · {a.issuer}</> : null}
+                            {a.organisation.name ? <> · {a.organisation.name}</> : null}
                           </li>
                         ) : null;
                       })}

@@ -1,22 +1,7 @@
 ---
 import { getMemberships } from "@/lib/api";
 
-type MembershipItem = {
-  organisation: string;
-  role: string;
-  type: string;
-  description?: string;
-};
-
-type MembershipGroup = {
-  title: string;
-  items: MembershipItem[];
-};
-
-const membershipsResponse = await getMemberships();
-const memberships: MembershipGroup[] = Array.isArray(membershipsResponse)
-  ? membershipsResponse
-  : [];
+const memberships = await getMemberships();
 ---
 
 <section id="memberships" aria-labelledby="memberships-heading">
@@ -31,7 +16,13 @@ const memberships: MembershipGroup[] = Array.isArray(membershipsResponse)
         <ul class="membership-list">
           {group.items.map((item) => (
             <li class="membership-item">
-              <strong>{item.organisation}</strong>
+              <strong>
+                {item.organisation.url ? (
+                  <a href={item.organisation.url} target="_blank" rel="noopener noreferrer">{item.organisation.name}</a>
+                ) : (
+                  item.organisation.name
+                )}
+              </strong>
               {item.role ? <span class="membership-role"> — {item.role}</span> : null}
             </li>
           ))}

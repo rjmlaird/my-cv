@@ -4,18 +4,18 @@ export const certificationItemSchema = z.object({
   id: z.string(),
   name: z.string(),
   type: z.string(),
-  issuer: z.string(),
+  /** Issuing organisation (registry slug). */
+  organisationSlug: z.string(),
   issueDate: z.string().nullable().optional(),
   badgeId: z.string().optional(),
-  badgeUrl: z.url().optional(), 
+  badgeUrl: z.url().optional(),
   expiryDate: z.string().nullable().optional(),
   level: z.string().nullable().optional(),
-  
+
   // This is the ID you pass to getCdnUrl()
-  cdnId: z.string().optional(), 
+  cdnId: z.string().optional(),
   
-  // Fixed: z.url() is not valid, must be z.string().url()
-  imageUrl: z.url().nullable().optional(), 
+  imageUrl: z.url().nullable().optional(),
   
   relatedExperience: z.array(z.string()).default([]),
   relatedEducation: z.array(z.string()).default([]),

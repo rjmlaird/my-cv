@@ -12,8 +12,7 @@ try {
   education = [];
 }
 
-const orgName = (role: (typeof experience)[number]) =>
-  (typeof role.organisation === "string" ? role.organisation : role.organisation?.name) ?? "";
+const orgName = (role: (typeof experience)[number]) => role.organisation.name;
 
 const makeRefLabel = (...parts: Array<string | undefined | null>) =>
   parts.filter(Boolean).join(" · ");
@@ -29,7 +28,7 @@ const sources: SkillSource[] = [
   ...education.map((item) => ({
     tags: item.skills,
     ref: {
-      label: makeRefLabel(item.qualification || item.role, item.institution),
+      label: makeRefLabel(item.qualification || item.role, item.organisation.name),
       href: `#edu-${item.id}`,
     },
   })),

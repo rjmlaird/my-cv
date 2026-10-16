@@ -1,13 +1,17 @@
 ---
-import { getExperience, getProjects } from "@/lib/api";
+import { getExperience, getOrganisationIndex, getProjects, type ResolvedExperience as ExperienceItem } from "@/lib/api";
 import { resolveSkillTags } from "@/lib/skills";
-import type { ExperienceItem } from "@/lib/schemas/experience.schema";
 
 const experience = (await getExperience()) ?? [];
 const allProjects = (await getProjects()) ?? [];
+const organisations = await getOrganisationIndex();
 
 // Create a map for quick lookup: slug -> title
 const projectMap = new Map(allProjects.map((p) => [p.slug, p.title]));
+
+// Organisation website, if the registry has one (adjust field names here if needed)
+const orgUrl = (o?: { url?: string | null; website?: string | null } | null) =>
+  o?.url ?? o?.website ?? undefined;
 
 const rows = await Promise.all(
   experience.map(async (role: ExperienceItem) => ({
@@ -39,9 +43,8 @@ const hasMoreDetail = (role: ExperienceItem) =>
 
   {rows.length > 0 ? (
     rows.map(({ role, skills }) => {
-      const organisation =
-        (typeof role.organisation === "string" ? role.organisation : role.organisation?.name) ??
-        "Self-employed";
+      const organisation = role.organisation.name || "Self-employed";
+      const organisationHref = role.organisation.name ? orgUrl(role.organisation) : undefined;
 
       const city = role.city || role.location?.city;
       const country = role.country || role.location?.country;
@@ -59,7 +62,15 @@ const hasMoreDetail = (role: ExperienceItem) =>
             <div>
               <span class="role-title">{role.role}</span>
               {" · "}
-              <span class="role-org">{organisation}</span>
+              <span class="role-org">
+                {organisationHref ? (
+                  <a href={organisationHref} target="_blank" rel="noopener noreferrer">
+                    {organisation}
+                  </a>
+                ) : (
+                  organisation
+                )}
+              </span>
               {location ? (
                 <>
                   {" · "}
@@ -194,7 +205,7 @@ const hasMoreDetail = (role: ExperienceItem) =>
                 <>
                   <h4 class="role-subheading">Related organisations</h4>
                   <ul class="role-list">
-                    {role.relatedOrg.map((org) => <li>{org}</li>)}
+                    {role.relatedOrg.map((slug) => <li>{organisations.nameOf(slug)}</li>)}
                   </ul>
                 </>
               ) : null}

@@ -29,7 +29,7 @@ type CertGroup = {
 
 // 4. Grouping Logic
 const grouped = certifications.reduce<Record<string, CertItem[]>>((acc, item) => {
-  const issuer = (item.issuer ?? "Other").trim() || "Other";
+  const issuer = item.organisation.name.trim() || "Other";
 
   const normalizedItem: CertItem = {
     id: String(item.id ?? ""),

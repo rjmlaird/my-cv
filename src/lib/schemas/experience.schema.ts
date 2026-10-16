@@ -1,6 +1,7 @@
 import { z } from "zod";
 
-const organisationSchema = z
+// Legacy shape, still accepted so older API payloads keep working.
+const legacyOrganisationSchema = z
   .union([
     z.object({
       name: z.string().optional(),
@@ -17,9 +18,12 @@ const locationSchema = z
   })
   .nullish();
 
-export const experienceItemSchema = z.object({
+export const experienceSourceSchema = z.object({
   id: z.string(),
-  organisation: organisationSchema,
+  /** Employer (registry slug). Optional for self-employed / unattributed roles. */
+  organisationSlug: z.string().optional(),
+  // Legacy field, superseded by `organisationSlug`; normalised in `experienceItemSchema` below.
+  organisation: legacyOrganisationSchema,
   department: z.string().optional(),
   role: z.string(),
   employmentType: z.string(),
@@ -49,6 +53,23 @@ export const experienceItemSchema = z.object({
   relatedCertifications: z.array(z.string()).default([]),
   relatedAwards: z.array(z.string()).default([]),
 });
+
+/**
+ * Normalises the organisation reference: prefers `organisationSlug`, otherwise
+ * falls back to the legacy `organisation` ({ name, slug } or a plain string).
+ * The name is kept only so it can be matched against the registry.
+ */
+export const experienceItemSchema = experienceSourceSchema.transform(
+  ({ organisation, organisationSlug, ...rest }) => {
+    const legacy = typeof organisation === "string" ? { name: organisation } : (organisation ?? {});
+
+    return {
+      ...rest,
+      organisationSlug: organisationSlug ?? legacy.slug,
+      legacyOrganisationName: legacy.name,
+    };
+  },
+);
 
 export const experienceSchema = z.array(experienceItemSchema);
 

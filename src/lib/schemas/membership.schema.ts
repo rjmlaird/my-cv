@@ -1,11 +1,9 @@
 import { z } from "zod";
 
 export const membershipItemSchema = z.object({
-  organisation: z.string(),
+  /** Organisation the membership is with (registry slug). */
   organisationSlug: z.string(),
   role: z.string(),
-  type: z.string(),
-  description: z.string().optional(),
 });
 
 export const membershipGroupSchema = z.object({

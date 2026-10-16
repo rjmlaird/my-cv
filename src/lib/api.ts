@@ -1,18 +1,42 @@
 import { z } from "zod";
 import { awardItemSchema } from "@/lib/schemas/award.schema";
 import { certificationItemSchema } from "@/lib/schemas/certification.schema";
+import { credentialItemSchema } from "@/lib/schemas/credential.schema";
 import { educationItemSchema } from "@/lib/schemas/education.schema";
 import { experienceItemSchema } from "@/lib/schemas/experience.schema";
 import { languageItemSchema } from "@/lib/schemas/languages.schema";
-import { organisationItemSchema } from "@/lib/schemas/organisation.schema";
-import { volunteeringItemSchema } from "@/lib/schemas/volunteering.schema";
-import { projectSchema } from "@/lib/schemas/project.schema";
-import { profileSchema } from "@/lib/schemas/profile.schema";
-import { socialSchema } from "@/lib/schemas/social.schema";
 import { membershipsSchema } from "@/lib/schemas/membership.schema";
+import { profileSchema } from "@/lib/schemas/profile.schema";
+import { projectSchema } from "@/lib/schemas/project.schema";
+import { socialSchema } from "@/lib/schemas/social.schema";
 import { ToolDataSchema } from "@/lib/schemas/tool.schema";
+import { volunteeringItemSchema } from "@/lib/schemas/volunteering.schema";
+import {
+  buildOrganisationIndex,
+  type OrganisationIndex,
+  type Resolved,
+} from "@/lib/organisations";
 
 export type Profile = z.infer<typeof profileSchema>;
+
+export const organisationItemSchema = z.object({
+  slug: z.string().min(1),
+  name: z.string().min(1),
+  shortName: z.string().nullable().optional(),
+  aliases: z.array(z.string()).default([]),
+  legacySlugs: z.array(z.string()).default([]),
+  kind: z.string().default("other"),
+  sectors: z.array(z.string()).default([]),
+  relationships: z.array(z.string()).default([]),
+  url: z.string().nullable().optional(),
+  hubspotId: z.string().nullable().optional(),
+  logo: z.string().nullable().optional(),
+  featured: z.boolean().default(false),
+});
+
+export const organisationsSchema = z.array(organisationItemSchema);
+
+export type OrganisationItem = z.infer<typeof organisationItemSchema>;
 
 const API_ROOT = process.env.CV_API_BASE ?? "https://api.rjmlaird.co.uk/v1";
 
@@ -30,7 +54,7 @@ const ALLOW_PARTIAL = process.env.ALLOW_PARTIAL === "1";
 function critical(label: string, detail: unknown): void {
   const message =
     `[API] CRITICAL: ${label} unavailable or invalid. ` +
-    `Refusing to build a partial CV (set ALLOW_PARTIAL=1 to override).`;
+    "Refusing to build a partial CV (set ALLOW_PARTIAL=1 to override).";
 
   console.error(message, detail ?? "");
 
@@ -93,6 +117,7 @@ function fetchJson<T>(url: string, isFullUrl = false): Promise<T | null> {
   })();
 
   requestCache.set(fullUrl, request);
+
   return request as Promise<T | null>;
 }
 
@@ -100,10 +125,6 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-/**
- * Unwrap the standard v1 envelope (`{ data: ... }`) and, when supplied,
- * a named nested collection (`{ data: { certifications: [...] } }`).
- */
 function unwrap(data: unknown, key?: string): unknown {
   let value = data;
 
@@ -152,17 +173,6 @@ function normaliseStringArray(value: unknown): string[] {
     .filter(Boolean);
 }
 
-/**
- * Adapt the v1 `/bio` object to the existing frontend profile schema.
- *
- * The v1 response includes:
- * - `location: { city, country, countryCode }`
- * - `summary: string`
- *
- * The legacy profile schema requires:
- * - `location: string`
- * - `summary: string[]`
- */
 function normaliseProfile(value: unknown): unknown {
   if (!isRecord(value)) {
     return value;
@@ -216,22 +226,165 @@ export async function getDocuments() {
   return Array.isArray(data) ? data : [];
 }
 
+export async function getOrganisations(): Promise<OrganisationItem[]> {
+  const data = await fetchJson<unknown>("organisations");
+  const root = unwrap(data, "organisations");
+  const result = organisationsSchema.safeParse(root);
+
+  if (!result.success) {
+    console.error("[API] Organisations validation failed:", {
+      endpoint: `${CV_API_BASE}/organisations`,
+      received: data,
+      extracted: root,
+      issues: result.error.issues,
+    });
+
+    return [];
+  }
+
+  const duplicateSlugs = new Set<string>();
+  const knownSlugs = new Set<string>();
+  const duplicateHubspotIds = new Set<string>();
+  const knownHubspotIds = new Set<string>();
+
+  for (const organisation of result.data) {
+    for (const slug of [organisation.slug, ...organisation.legacySlugs]) {
+      if (knownSlugs.has(slug)) {
+        duplicateSlugs.add(slug);
+      }
+
+      knownSlugs.add(slug);
+    }
+
+    if (organisation.hubspotId) {
+      if (knownHubspotIds.has(organisation.hubspotId)) {
+        duplicateHubspotIds.add(organisation.hubspotId);
+      }
+
+      knownHubspotIds.add(organisation.hubspotId);
+    }
+  }
+
+  if (duplicateSlugs.size > 0 || duplicateHubspotIds.size > 0) {
+    console.warn("[API] Organisation registry has data issues:", {
+      duplicateSlugs: [...duplicateSlugs],
+      duplicateHubspotIds: [...duplicateHubspotIds],
+    });
+  }
+
+  return result.data;
+}
+
+let organisationIndex: Promise<OrganisationIndex> | undefined;
+const reportedMisses = new Set<string>();
+
+export function getOrganisationIndex(): Promise<OrganisationIndex> {
+  organisationIndex ??= getOrganisations().then((list) => {
+    if (list.length === 0) {
+      critical("Organisations", "registry empty or invalid");
+    }
+
+    return buildOrganisationIndex(list);
+  });
+
+  return organisationIndex;
+}
+
+function resolveOrganisation(
+  index: OrganisationIndex,
+  label: string,
+  ref: {
+    slug?: string | null;
+    name?: string | null;
+    id?: string;
+  },
+  strict = false,
+): OrganisationItem {
+  const found = index.lookup(ref.slug, ref.name);
+
+  if (found) {
+    return found;
+  }
+
+  if (ref.slug || ref.name) {
+    const detail = {
+      item: ref.id,
+      slug: ref.slug,
+      name: ref.name,
+    };
+
+    const key =
+      `${label}|${ref.id ?? ""}|${ref.slug ?? ""}|${ref.name ?? ""}`;
+
+    if (!reportedMisses.has(key)) {
+      reportedMisses.add(key);
+      console.error(`[API] ${label}: unknown organisation reference`, detail);
+    }
+
+    if (strict) {
+      critical(`${label} organisation reference`, detail);
+    }
+  }
+
+  return index.stub(ref.slug, ref.name);
+}
+
+type OrgRef = {
+  id?: string;
+  organisationSlug?: string | null;
+  legacyOrganisationName?: string | null;
+};
+
+function withOrganisation<T extends OrgRef>(
+  items: T[],
+  index: OrganisationIndex,
+  label: string,
+  strict = false,
+): Array<Resolved<T>> {
+  return items.map((item) => ({
+    ...item,
+    organisation: resolveOrganisation(
+      index,
+      label,
+      {
+        slug: item.organisationSlug,
+        name: item.legacyOrganisationName,
+        id: item.id,
+      },
+      strict,
+    ),
+  }));
+}
+
 export async function getExperience() {
-  return getRequiredArray(
-    "experience",
-    "experience",
-    "Experience",
-    experienceItemSchema,
-  );
+  const [items, index] = await Promise.all([
+    getRequiredArray(
+      "experience",
+      "experience",
+      "Experience",
+      experienceItemSchema,
+    ),
+    getOrganisationIndex(),
+  ]);
+
+  return withOrganisation(items, index, "Experience");
 }
 
 export async function getEducation() {
-  return getRequiredArray(
-    "education",
-    "education",
-    "Education",
-    educationItemSchema,
-  );
+  const [items, index] = await Promise.all([
+    getRequiredArray("education", "education", "Education", educationItemSchema),
+    getOrganisationIndex(),
+  ]);
+
+  return withOrganisation(items, index, "Education", true).map((item) => ({
+    ...item,
+    awardingBody: item.awardingBodySlug
+      ? resolveOrganisation(index, "Education awarding body", {
+          slug: item.awardingBodySlug,
+          id: item.id,
+        })
+      : undefined,
+  }));
 }
 
 export async function getLanguages() {
@@ -241,22 +394,6 @@ export async function getLanguages() {
 
   if (!result.success) {
     console.error("[API] Languages validation failed:", {
-      received: data,
-      extracted: root,
-      issues: result.error.issues,
-    });
-  }
-
-  return result.success ? result.data : [];
-}
-
-export async function getOrganisations() {
-  const data = await fetchJson<unknown>("organisations");
-  const root = unwrap(data, "organisations");
-  const result = z.array(organisationItemSchema).safeParse(root);
-
-  if (!result.success) {
-    console.error("[API] Organisations validation failed:", {
       received: data,
       extracted: root,
       issues: result.error.issues,
@@ -277,9 +414,15 @@ export async function getVolunteering() {
       extracted: root,
       issues: result.error.issues,
     });
+
+    return [];
   }
 
-  return result.success ? result.data : [];
+  return withOrganisation(
+    result.data,
+    await getOrganisationIndex(),
+    "Volunteering",
+  );
 }
 
 export async function getProjects() {
@@ -361,9 +504,37 @@ export async function getCertifications() {
       extracted: root,
       issues: result.error.issues,
     });
+
+    return [];
   }
 
-  return result.success ? result.data : [];
+  return withOrganisation(
+    result.data,
+    await getOrganisationIndex(),
+    "Certifications",
+  );
+}
+
+export async function getCredentials() {
+  const data = await fetchJson<unknown>("credentials");
+  const root = unwrap(data, "credentials");
+  const result = z.array(credentialItemSchema).safeParse(root);
+
+  if (!result.success) {
+    console.error("[API] Credentials validation failed:", {
+      received: data,
+      extracted: root,
+      issues: result.error.issues,
+    });
+
+    return [];
+  }
+
+  return withOrganisation(
+    result.data,
+    await getOrganisationIndex(),
+    "Credentials",
+  );
 }
 
 export async function getMemberships() {
@@ -380,9 +551,21 @@ export async function getMemberships() {
       extracted: root,
       issues: result.error.issues,
     });
+
+    return [];
   }
 
-  return result.success ? result.data.memberships : [];
+  const index = await getOrganisationIndex();
+
+  return result.data.memberships.map((group) => ({
+    title: group.title,
+    items: group.items.map((item) => ({
+      role: item.role,
+      organisation: resolveOrganisation(index, "Memberships", {
+        slug: item.organisationSlug,
+      }),
+    })),
+  }));
 }
 
 export async function getAwards() {
@@ -396,9 +579,38 @@ export async function getAwards() {
       extracted: root,
       issues: result.error.issues,
     });
+
+    return [];
   }
 
-  return result.success ? result.data : [];
+  const index = await getOrganisationIndex();
+
+  return result.data.map(
+    ({
+      organisationSlug,
+      additionalOrganisationSlugs,
+      clientOrganisationSlug,
+      ...award
+    }) => ({
+      ...award,
+      organisation: resolveOrganisation(index, "Awards", {
+        slug: organisationSlug,
+        id: award.id,
+      }),
+      additionalOrganisations: additionalOrganisationSlugs.map((slug) =>
+        resolveOrganisation(index, "Awards", {
+          slug,
+          id: award.id,
+        }),
+      ),
+      clientOrganisation: clientOrganisationSlug
+        ? resolveOrganisation(index, "Awards", {
+            slug: clientOrganisationSlug,
+            id: award.id,
+          })
+        : undefined,
+    }),
+  );
 }
 
 export async function getTools() {
@@ -422,16 +634,35 @@ export async function getTools() {
   return result.success ? result.data : { categories: [] };
 }
 
+export type ResolvedExperience =
+  Awaited<ReturnType<typeof getExperience>>[number];
+
+export type ResolvedEducation =
+  Awaited<ReturnType<typeof getEducation>>[number];
+
+export type ResolvedVolunteering =
+  Awaited<ReturnType<typeof getVolunteering>>[number];
+
+export type ResolvedCertification =
+  Awaited<ReturnType<typeof getCertifications>>[number];
+
+export type ResolvedAward = Awaited<ReturnType<typeof getAwards>>[number];
+
+export type ResolvedMembershipGroup =
+  Awaited<ReturnType<typeof getMemberships>>[number];
+
 const api = {
   getDocuments,
   getExperience,
   getEducation,
   getCertifications,
+  getCredentials,
   getMemberships,
   getAwards,
   getLanguages,
   getProfile,
   getOrganisations,
+  getOrganisationIndex,
   getVolunteering,
   getProjects,
   getSocials,

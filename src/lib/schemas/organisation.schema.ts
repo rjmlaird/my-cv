@@ -1,53 +1,26 @@
-// lib/schemas/organisation.schema.ts
+// lib/schemas/organisation-refs.schema.ts
+// One vocabulary for "which organisation is this content about", shared by every content type.
+// Names are resolved through the registry (organisations.json); never store organisation names inline.
 import { z } from "zod";
-import type { Slug } from "./base.schema";
 
-export type OrganisationType =
-  | "partner"
-  | "client"
-  | "employer"
-  | "publisher"
-  | "community"
-  | "institution"
-  | "other";
+const slug = z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/);
 
-export type OrganisationIndustry =
-  | "space"
-  | "marketing"
-  | "climate"
-  | "technology"
-  | "education"
-  | "research"
-  | "other";
-
-export type Organisation = {
-  organisation: string;
-  slug: Slug;
-  description?: string;
-  url?: string;
-  hubspotId?: string;
-  industry?: OrganisationIndustry;
-  category?: string;
-  type?: OrganisationType;
-  logo?: string;
-  featured?: boolean;
-};
-
-export const organisationItemSchema = z.object({
-  organisation: z.string(),
-  slug: z.string(),
-  description: z.string().optional(),
-  url: z.url().optional(),
-  hubspotId: z.string().optional(),
-  industry: z
-    .enum(["space", "marketing", "climate", "technology", "education", "research", "other"])
-    .optional(),
-  category: z.string().optional(),
-  type: z
-    .enum(["partner", "client", "employer", "publisher", "community", "institution", "other"])
-    .optional(),
-  logo: z.string().optional(),
-  featured: z.boolean().default(false),
+export const organisationRefsSchema = z.object({
+  /** Primary organisation: employer, issuer, publisher, organiser, institution. */
+  organisationSlug: slug.optional(),
+  /** Further organisations alongside the primary one (joint issuers, co-clients). */
+  additionalOrganisationSlugs: z.array(slug).default([]),
+  /** Who the work was done for (projects, videos, case studies, events, awards). */
+  clientOrganisationSlug: slug.optional(),
 });
 
-export type OrganisationItem = z.infer<typeof organisationItemSchema>;
+/** Events only: venue/host and co-organising bodies. */
+export const eventOrganisationRefsSchema = organisationRefsSchema.extend({
+  hostOrganisationSlugs: z.array(slug).default([]),
+  coOrganisationSlugs: z.array(slug).default([]),
+  /** Only when the organiser is a person rather than an organisation. */
+  organiser: z.string().optional(),
+});
+
+// Usage: projectSchema.extend(organisationRefsSchema.shape) and drop the old
+// `client`, `organisation` and `institution` string fields from projectSchema.

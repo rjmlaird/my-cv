@@ -28,9 +28,6 @@ const getLoc = (item: Located) => {
   return joinParts([item.city || loc?.city, item.country || loc?.country], ", ");
 };
 
-const orgName = (o: unknown): string =>
-  typeof o === "string" ? o : ((o as { name?: string } | null | undefined)?.name ?? "");
-
 const byStartDesc = <T extends { startDate?: string | null }>(arr: T[]) =>
   [...arr].sort((a, b) => new Date(b.startDate ?? 0).getTime() - new Date(a.startDate ?? 0).getTime());
 
@@ -49,13 +46,13 @@ const sources: SkillSource[] = [
 const skillGroups = groupSkillsByCategory(await aggregateSkills(sources));
 
 const certsByIssuer = certifications.reduce<Record<string, string[]>>((acc, c) => {
-  const key = c.issuer || "Other";
+  const key = c.organisation.name || "Other";
   (acc[key] ??= []).push(joinParts([c.name, c.level ? `(${c.level})` : ""], " "));
   return acc;
 }, {});
 
 const membershipLines = memberships.flatMap((g) =>
-  g.items.map((i) => joinParts([i.organisation, i.role], " — ")),
+  g.items.map((i) => joinParts([i.organisation.name, i.role], " — ")),
 );
 
 const linkedin = socials.find((s) => /linkedin/i.test(s.name) || /linkedin\.com/i.test(s.url));
@@ -116,7 +113,7 @@ const summary = profile?.summary?.length ? profile.summary : (profile?.biography
               {exp.current ? "Present" : <time datetime={toISODate(exp.endDate)}>{formatDate(exp.endDate)}</time>}
             </p>
           </div>
-          <p class="ats-sub">{joinParts([orgName(exp.organisation), exp.department, getLoc(exp), exp.employmentType], " | ")}</p>
+          <p class="ats-sub">{joinParts([exp.organisation.name, exp.department, getLoc(exp), exp.employmentType], " | ")}</p>
           {exp.summary && <p>{exp.summary}</p>}
           {exp.responsibilities.length > 0 && (
             <ul>{exp.responsibilities.map((r) => <li>{r}</li>)}</ul>
@@ -144,7 +141,7 @@ const summary = profile?.summary?.length ? profile.summary : (profile?.biography
             <h3>{joinParts([edu.qualification, edu.field], " — ")}</h3>
             <p class="ats-dates">{range(edu.startDate, edu.endDate, edu.current)}</p>
           </div>
-          <p class="ats-sub">{joinParts([edu.institution, getLoc(edu)], " | ")}</p>
+          <p class="ats-sub">{joinParts([edu.organisation.name, getLoc(edu)], " | ")}</p>
         </article>
       ))}
     </section>
@@ -173,7 +170,7 @@ const summary = profile?.summary?.length ? profile.summary : (profile?.biography
       <h2 id="ats-awards">Awards and Recognition</h2>
       <ul>
         {awards.map((a) => (
-          <li>{joinParts([a.title, Array.isArray(a.issuer) ? a.issuer.join(", ") : a.issuer, String(a.year)], " — ")}</li>
+          <li>{joinParts([a.title, [a.organisation, ...a.additionalOrganisations].map((o) => o.name).join(", "), String(a.year)], " — ")}</li>
         ))}
       </ul>
     </section>
@@ -188,7 +185,7 @@ const summary = profile?.summary?.length ? profile.summary : (profile?.biography
             <h3>{v.role}</h3>
             <p class="ats-dates">{range(v.startDate, v.endDate, v.current)}</p>
           </div>
-          <p class="ats-sub">{joinParts([v.organisation, getLoc(v)], " | ")}</p>
+          <p class="ats-sub">{joinParts([v.organisation.name, v.event, getLoc(v)], " | ")}</p>
         </article>
       ))}
     </section>

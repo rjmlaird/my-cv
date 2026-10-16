@@ -3,7 +3,10 @@ import { z } from "zod";
 export const awardItemSchema = z.object({
   id: z.string(),
   title: z.string(),
-  issuer: z.union([z.string(), z.array(z.string())]),
+  /** Primary issuing organisation (registry slug). */
+  organisationSlug: z.string(),
+  /** Further issuers/funders, e.g. a scholarship jointly awarded by two bodies. */
+  additionalOrganisationSlugs: z.array(z.string()).default([]),
   year: z.number(),
   type: z.string().optional(),
   role: z.string().optional(),
@@ -12,7 +15,7 @@ export const awardItemSchema = z.object({
   session_title: z.string().optional(),
   project: z.string().optional(),
   category: z.string().optional(),
-  client: z.string().optional(),
+  clientOrganisationSlug: z.string().optional(),
   value: z.string().optional(),
   programme: z.string().optional(),
   funded_by: z.array(z.string()).default([]),

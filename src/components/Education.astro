@@ -1,13 +1,17 @@
 ---
 import { getEducation, getProjects } from "@/lib/api";
 import { resolveSkillTags } from "@/lib/skills";
-import type { EducationItem } from "@/lib/schemas/education.schema";
+import type { ResolvedEducation as EducationItem } from "@/lib/api";
 
 // 1. Fetch and process data
 const education = (await getEducation()) ?? [];
 const allProjects = (await getProjects()) ?? [];
 
 const projectMap = new Map(allProjects.map((p) => [p.slug, p.title]));
+
+// Organisation website, if the registry has one (adjust field names here if needed)
+const orgUrl = (o?: { url?: string | null; website?: string | null } | null) =>
+  o?.url ?? o?.website ?? undefined;
 
 const formatDate = (value?: string | null) => {
   if (!value) return "";
@@ -30,7 +34,7 @@ const rows = await Promise.all(
 // Helper to check for content existence safely
 const hasMoreDetail = (item: EducationItem) =>
   Boolean(
-    (item as any).keyActivities?.length ||
+    item.keyActivities?.length ||
     item.achievements?.length ||
     item.articles?.length ||
     item.talks?.length ||
@@ -50,12 +54,49 @@ const hasMoreDetail = (item: EducationItem) =>
     const endDate = item.current ? "Present" : formatDate(item.endDate);
     const location = [item.city, item.country].filter(Boolean).join(", ");
 
+    const organisationHref = orgUrl(item.organisation);
+    // Only show the awarding body when it differs from the teaching institution
+    const awardingBody =
+      item.awardingBody && item.awardingBody.slug !== item.organisation.slug
+        ? item.awardingBody
+        : undefined;
+    const awardingBodyHref = orgUrl(awardingBody);
+    const awardingBodyName = awardingBody?.shortName ?? awardingBody?.name ?? "";
+
     return (
       <article id={`edu-${item.id}`} class="role-item edu-item">
         <div class="role-header">
           <div>
             <span class="role-title">{title}</span>
-            {item.institution ? <>{" · "}<span class="role-org">{item.institution}</span></> : null}
+            {item.organisation.name ? (
+              <>
+                {" · "}
+                <span class="role-org">
+                  {organisationHref ? (
+                    <a href={organisationHref} target="_blank" rel="noopener noreferrer">
+                      {item.organisation.name}
+                    </a>
+                  ) : (
+                    item.organisation.name
+                  )}
+                </span>
+              </>
+            ) : null}
+            {awardingBody && awardingBodyName ? (
+              <>
+                {" · "}
+                <span class="role-awarded-by">
+                  awarded by{" "}
+                  {awardingBodyHref ? (
+                    <a href={awardingBodyHref} target="_blank" rel="noopener noreferrer">
+                      {awardingBodyName}
+                    </a>
+                  ) : (
+                    awardingBodyName
+                  )}
+                </span>
+              </>
+            ) : null}
             {location ? <>{" · "}<span class="role-location">{location}</span></> : null}
           </div>
 
@@ -83,7 +124,7 @@ const hasMoreDetail = (item: EducationItem) =>
         {hasMoreDetail(item) ? (
           <details class="more-detail">
             <summary>More detail</summary>
-            
+
             {item.projects?.length ? (
               <>
                 <h4 class="role-subheading">Projects</h4>
@@ -102,11 +143,11 @@ const hasMoreDetail = (item: EducationItem) =>
               </>
             ) : null}
 
-            {(item as any).keyActivities?.length ? (
+            {item.keyActivities?.length ? (
               <>
                 <h4 class="role-subheading">Key Activities</h4>
                 <ul class="role-list">
-                  {(item as any).keyActivities.map((r: string) => <li>{r}</li>)}
+                  {item.keyActivities.map((r: string) => <li>{r}</li>)}
                 </ul>
               </>
             ) : null}

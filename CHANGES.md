@@ -57,3 +57,25 @@ October 2026 overhaul.
 - Fonts self-hosted via Fontsource (no Google Fonts requests).
 - Removed `<meta name="keywords">`; OG/Twitter titles and descriptions now follow page props; `<html lang="en-GB">`.
 - Removed debug logging and `as any` casts in the API client; removed `!important` overrides in `Skills.astro`.
+
+## 2026-10 organisation registry
+
+Every organisation (employers, universities, certificate issuers, memberships, volunteering bodies, award issuers) now
+lives once in the `organisations` registry. All other content refers to it by slug and the API client resolves it.
+
+- **Schemas:** `issuer`, `institution` and `organisation` strings are replaced by `organisationSlug` on awards,
+  certifications, credentials, education, memberships and volunteering. Awards also take `additionalOrganisationSlugs`
+  and `clientOrganisationSlug`; education takes an optional `awardingBodySlug`; volunteering takes an optional `event`.
+  `institutionType` is gone (it is the organisation's `kind`).
+- **Organisation schema:** `organisation` → `name`; `type`/`industry`/`category` → `kind`, `sectors`, `relationships`;
+  added `shortName`, `aliases`, `legacySlugs`, `shortDescription`. `url`, `hubspotId` and `logo` are nullable.
+- **Experience** still accepts the legacy `organisation` ({ name, slug } or string) and matches it to the registry by
+  name, but should be migrated to `organisationSlug`. An unresolvable reference is logged once and rendered by name.
+- **API client:** `getOrganisationIndex()` loads the registry once; `getExperience`, `getEducation`, `getAwards`,
+  `getCertifications`, `getMemberships`, `getVolunteering` and the new `getCredentials` return items with a resolved
+  `organisation`. A missing registry or an unknown education slug fails the build (override with `ALLOW_PARTIAL=1`).
+  Registry data problems (duplicate slug or HubSpot id) are warned about, not fatal.
+- **Components:** read `organisation.name` instead of raw strings; `Awards` and `Education` no longer re-parse data the
+  API client has already validated, and the `as any` casts in `Education` are gone; memberships link to the
+  organisation's site; "Related organisations" on experience shows names instead of slugs.
+- **Fixes:** `.nvmrc` said Node 18 while `engines` requires ≥22.12 and CI runs 24.

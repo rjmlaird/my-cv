@@ -2,11 +2,13 @@ import { z } from "zod";
 
 export const educationSourceSchema = z.object({
   id: z.union([z.string(), z.number()]),
-  institution: z.string(),
+  /** Teaching institution (registry slug). */
+  organisationSlug: z.string(),
+  /** Body that awards the qualification, when different from the institution. */
+  awardingBodySlug: z.string().optional(),
   role: z.string().optional(),
   qualification: z.string().optional(),
   field: z.string().optional(),
-  institutionType: z.string().optional(),
   startDate: z.string().nullable().optional(),
   endDate: z.string().nullable().optional(),
   current: z.boolean().default(false),
@@ -14,7 +16,7 @@ export const educationSourceSchema = z.object({
   country: z.string(),
   summary: z.string().default(""),
   responsibilities: z.array(z.string()).default([]),
-  keyActivities: z.array(z.string()).default([]), // Added this field
+  keyActivities: z.array(z.string()).default([]),
   achievements: z.array(z.string()).default([]),
   skills: z.array(z.string()).default([]),
   projects: z.array(z.string()).default([]),
@@ -34,11 +36,11 @@ export const educationSourceSchema = z.object({
 
 export const educationItemSchema = educationSourceSchema.transform((item) => ({
   id: String(item.id),
-  institution: item.institution,
+  organisationSlug: item.organisationSlug,
+  awardingBodySlug: item.awardingBodySlug,
   role: item.role ?? item.qualification ?? "",
   qualification: item.qualification ?? item.role ?? "",
   field: item.field ?? "",
-  institutionType: item.institutionType ?? "",
   startDate: item.startDate ?? null,
   endDate: item.current ? null : item.endDate ?? null,
   current: item.current,
@@ -46,7 +48,7 @@ export const educationItemSchema = educationSourceSchema.transform((item) => ({
   country: item.country,
   summary: item.summary,
   responsibilities: item.responsibilities,
-  keyActivities: item.keyActivities, // Transformed field
+  keyActivities: item.keyActivities,
   achievements: item.achievements,
   skills: item.skills,
   projects: item.projects,

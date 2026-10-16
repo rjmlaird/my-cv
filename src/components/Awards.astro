@@ -1,16 +1,22 @@
 ---
-import { getAwards, getExperience, getEducation } from "@/lib/api";
-import { awardItemSchema, type AwardItem } from "@/lib/schemas/award.schema";
-import { educationItemSchema, type EducationItem } from "@/lib/schemas/education.schema";
-import { experienceItemSchema, type ExperienceItem } from "@/lib/schemas/experience.schema";
+import {
+  getAwards,
+  getExperience,
+  getEducation,
+  type ResolvedAward as AwardItem,
+  type ResolvedEducation as EducationItem,
+  type ResolvedExperience as ExperienceItem,
+} from "@/lib/api";
 
-const rawAwards = await getAwards();
-const rawExperience = await getExperience();
-const rawEducation = await getEducation();
+// getAwards / getExperience / getEducation already return validated, organisation-resolved items.
+const [awards, experiences, educations] = await Promise.all([
+  getAwards(),
+  getExperience(),
+  getEducation(),
+]);
 
-const awards: AwardItem[] = Array.isArray(rawAwards) ? rawAwards.map((item) => awardItemSchema.parse(item)) : [];
-const experiences: ExperienceItem[] = Array.isArray(rawExperience) ? rawExperience.map((item) => experienceItemSchema.parse(item)) : [];
-const educations: EducationItem[] = Array.isArray(rawEducation) ? rawEducation.map((item) => educationItemSchema.parse(item)) : [];
+const issuerNames = (award: AwardItem) =>
+  [award.organisation, ...award.additionalOrganisations].map((org) => org.name).filter(Boolean);
 
 const getExperienceMatches = (award: AwardItem) => {
   const ids = new Set((award.relatedExperience ?? []).map((id) => String(id).trim()));
@@ -23,17 +29,13 @@ const getEducationMatches = (award: AwardItem) => {
 };
 
 const getExperienceLabel = (item: ExperienceItem) => item.role || item.id;
-const getExperienceOrg = (item: ExperienceItem) => {
-  const org = item.organisation;
-  if (typeof org === 'string') return org;
-  return (org && typeof org === 'object' && 'name' in org) ? org.name : "";
-};
+const getExperienceOrg = (item: ExperienceItem) => item.organisation.name;
 
-const getEducationLabel = (item: EducationItem) => item.qualification || item.role || item.institution || item.id;
-const getEducationOrg = (item: EducationItem) => item.institution || "";
+const getEducationLabel = (item: EducationItem) => item.qualification || item.role || item.organisation.name || item.id;
+const getEducationOrg = (item: EducationItem) => item.organisation.name;
 
 const hasMoreDetail = (award: AwardItem) => 
-  (award.session_title || award.project || award.category || award.client || award.programme || award.value || award.instrument || award.duration || award.research_area || award.funded_by?.length || award.items?.length || getExperienceMatches(award).length > 0 || getEducationMatches(award).length > 0);
+  (award.session_title || award.project || award.category || award.clientOrganisation || award.programme || award.value || award.instrument || award.duration || award.research_area || award.funded_by?.length || award.items?.length || getExperienceMatches(award).length > 0 || getEducationMatches(award).length > 0);
 ---
 
 <section id="awards" aria-labelledby="awards-heading">
@@ -50,7 +52,7 @@ const hasMoreDetail = (award: AwardItem) =>
           <div class="role-header">
             <div>
               <span class="role-title">{award.title}</span>
-              {award.issuer ? <> · <span class="role-org">{award.issuer}</span></> : null}
+              {issuerNames(award).length ? <> · <span class="role-org">{issuerNames(award).join(", ")}</span></> : null}
               {award.year ? <> · <span class="role-location">{award.year}</span></> : null}
             </div>
           </div>
@@ -64,7 +66,7 @@ const hasMoreDetail = (award: AwardItem) =>
                 {award.session_title && <li>Session: {award.session_title}</li>}
                 {award.project && <li>Project: {award.project}</li>}
                 {award.category && <li>Category: {award.category}</li>}
-                {award.client && <li>Client: {award.client}</li>}
+                {award.clientOrganisation && <li>Client: {award.clientOrganisation.name}</li>}
                 {award.programme && <li>Programme: {award.programme}</li>}
                 {award.value && <li>Value: {award.value}</li>}
                 {award.instrument && <li>Instrument: {award.instrument}</li>}

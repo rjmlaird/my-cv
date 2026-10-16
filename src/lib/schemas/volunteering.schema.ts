@@ -2,7 +2,10 @@ import { z } from "zod";
 
 export const volunteeringItemSchema = z.object({
   id: z.string(),
-  organisation: z.string(),
+  /** Organisation volunteered with (registry slug). */
+  organisationSlug: z.string(),
+  /** Specific event or campaign, when it sits under a parent organisation. */
+  event: z.string().optional(),
   role: z.string(),
   startDate: z.string().nullable().optional(),
   endDate: z.string().nullable().optional(),
